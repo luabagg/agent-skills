@@ -1,0 +1,159 @@
+{
+  "$schema": "./schemas/curated-skills.schema.json",
+  "version": 1,
+  "agents": ["cursor", "claude-code", "codex"],
+  "installPolicy": {
+    "defaultMethod": "symlink",
+    "copyFallback": "npm run install:personal:copy",
+    "installer": "npx skills"
+  },
+  "sources": [
+    {
+      "name": "superpowers",
+      "description": "Core software development workflow skills: brainstorming, planning, TDD, debugging, review, and branch finishing.",
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "notes": "Official plugin installs are also available for Cursor, Claude Code, and Codex. Use this entry when you want this repo's curated install script to manage it.",
+      "skills": ["*"]
+    },
+    {
+      "name": "caveman",
+      "description": "Compressed communication, commit, review, and memory-file compression skills.",
+      "source": "git@github.com:JuliusBrussee/caveman.git",
+      "sourceType": "git",
+      "preferredInstall": "skills-cli",
+      "skills": [
+        "caveman",
+        "caveman-commit",
+        "caveman-compress",
+        "caveman-help",
+        "caveman-review",
+        "compress"
+      ]
+    },
+    {
+      "name": "obsidian-skills",
+      "description": "Obsidian vault, Markdown, Bases, Canvas, and web extraction skills.",
+      "source": "git@github.com:kepano/obsidian-skills.git",
+      "sourceType": "git",
+      "preferredInstall": "skills-cli",
+      "skills": [
+        "defuddle",
+        "json-canvas",
+        "obsidian-bases",
+        "obsidian-cli",
+        "obsidian-markdown"
+      ]
+    },
+    {
+      "name": "find-skills",
+      "description": "Discover and install skills from the open agent skills ecosystem.",
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "skills": ["find-skills"]
+    },
+    {
+      "name": "emil-design-eng",
+      "description": "Emil Kowalski-inspired guidance for UI polish, component design, animation decisions, and invisible interaction details.",
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "skills": ["emil-design-eng"]
+    },
+    {
+      "name": "sentry",
+      "description": "Read-only Sentry issue, event, and production error investigation skill.",
+      "source": "cursor-public/sentry",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Installed as a plugin skill in local Claude/Cursor environments. Keep as a reference here rather than vendoring plugin files.",
+      "skills": ["sentry"]
+    },
+    {
+      "name": "github-review-workflows",
+      "description": "GitHub PR comment triage and GitHub Actions CI debugging skills.",
+      "source": "github-plugin-skills",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Local skills are gh-address-comments and gh-fix-ci. They come from plugin-style installs, not the Vercel skills CLI lockfile.",
+      "skills": ["gh-address-comments", "gh-fix-ci"]
+    },
+    {
+      "name": "notion-research-documentation",
+      "description": "Research across Notion and synthesize briefs, reports, comparisons, and documentation with citations.",
+      "source": "notion-plugin-skills",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Installed as a plugin skill in local Claude/Cursor environments.",
+      "skills": ["notion-research-documentation"]
+    },
+    {
+      "name": "figma",
+      "description": "Figma MCP and Figma-to-code implementation skills.",
+      "source": "figma-plugin-skills",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Installed as plugin skills in local Claude/Cursor environments.",
+      "skills": ["figma", "figma-implement-design"]
+    },
+    {
+      "name": "linear",
+      "description": "Linear issue, project, and team workflow management skill using Linear MCP.",
+      "source": "linear-plugin-skills",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Installed as a plugin skill in local Claude/Cursor environments.",
+      "skills": ["linear"]
+    },
+    {
+      "name": "frontend-design",
+      "description": "Production-grade frontend UI design skill for distinctive, polished interfaces.",
+      "source": "frontend-design-plugin",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Installed through the frontend-design plugin, not vendored in this repo.",
+      "skills": ["frontend-design"]
+    },
+    {
+      "name": "claude-mem",
+      "description": "Episodic memory skills for cross-session transcript search, codebase exploration, planning, and timeline reports.",
+      "source": "thedotmack/claude-mem",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Plugin also provides MCP search tools. This repo tracks the skill pack as a curated dependency.",
+      "skills": [
+        "mem-search",
+        "learn-codebase",
+        "smart-explore",
+        "knowledge-agent",
+        "pathfinder",
+        "make-plan",
+        "do",
+        "babysit",
+        "timeline-report",
+        "version-bump",
+        "how-it-works"
+      ]
+    },
+    {
+      "name": "browser-use",
+      "description": "Browser inspection and localhost UI testing skill.",
+      "source": "browser-use-plugin",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Tracked as browser-use:browser in the broader skill inventory.",
+      "skills": ["browser"]
+    },
+    {
+      "name": "github-codex-commands",
+      "description": "Codex-only GitHub workflow commands such as yeet.",
+      "source": "github-plugin-skills",
+      "sourceType": "plugin",
+      "preferredInstall": "plugin",
+      "notes": "Codex-only routing; not a local SKILL.md in this repo.",
+      "skills": ["yeet"]
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "./schemas/curated-tools.schema.json",
+  "version": 1,
+  "tools": [
+    {
+      "name": "@google/design.md",
+      "kind": "npm-package",
+      "description": "DESIGN.md format, linter, and diff tooling for giving agents a structured visual identity and design-system contract.",
+      "source": "https://github.com/google-labs-code/design.md",
+      "package": "@google/design.md",
+      "install": "npm install @google/design.md",
+      "commands": [
+        {
+          "name": "lint",
+          "command": "npx @google/design.md lint DESIGN.md",
+          "purpose": "Validate a DESIGN.md file against the spec and report contrast, token, and structure findings."
+        },
+        {
+          "name": "diff",
+          "command": "npx @google/design.md diff DESIGN.md DESIGN-v2.md",
+          "purpose": "Compare two DESIGN.md files for token-level and prose regressions."
+        }
+      ],
+      "agentUse": "Reference when creating or reviewing UI that should follow a persistent visual identity. This is tooling/documentation, not an agent skill."
+    },
+    {
+      "name": "rtk",
+      "kind": "cli",
+      "description": "Rust Token Killer: CLI proxy that compresses verbose shell command output before it reaches an LLM context.",
+      "source": "https://github.com/rtk-ai/rtk",
+      "package": null,
+      "install": "brew install rtk",
+      "commands": [
+        {
+          "name": "verify",
+          "command": "rtk --version && rtk gain",
+          "purpose": "Confirm this is Rust Token Killer, not the unrelated Rust Type Kit package."
+        },
+        {
+          "name": "init-claude",
+          "command": "rtk init -g",
+          "purpose": "Install global Claude Code hook and RTK.md guidance."
+        },
+        {
+          "name": "init-codex",
+          "command": "rtk init -g --codex",
+          "purpose": "Install Codex AGENTS.md and RTK.md guidance."
+        },
+        {
+          "name": "init-cursor",
+          "command": "rtk init -g --agent cursor",
+          "purpose": "Install Cursor preToolUse hook configuration."
+        },
+        {
+          "name": "usage-stats",
+          "command": "rtk gain --graph",
+          "purpose": "Show token savings and recent RTK usage history."
+        }
+      ],
+      "agentUse": "Use RTK as a shell-output proxy for verbose commands like git status, git diff, test runners, package managers, Docker, and Kubernetes. Do not use it for commands where raw output is explicitly required."
+    },
+    {
+      "name": "codeburn",
+      "kind": "cli",
+      "description": "Local dashboard and reporting CLI for visualizing AI coding token usage, cost, providers, models, projects, and task categories.",
+      "source": "https://github.com/getagentseal/codeburn",
+      "package": "codeburn",
+      "install": "npm install -g codeburn",
+      "commands": [
+        {
+          "name": "dashboard",
+          "command": "codeburn",
+          "purpose": "Open the interactive token/cost dashboard."
+        },
+        {
+          "name": "status",
+          "command": "codeburn status",
+          "purpose": "Show a compact today/month usage summary."
+        },
+        {
+          "name": "report-json",
+          "command": "codeburn report --format json",
+          "purpose": "Export structured usage data for analysis."
+        },
+        {
+          "name": "optimize",
+          "command": "codeburn optimize",
+          "purpose": "Find token waste and setup improvements."
+        },
+        {
+          "name": "models",
+          "command": "codeburn models --format markdown",
+          "purpose": "Generate a paste-friendly model usage and cost table."
+        }
+      ],
+      "agentUse": "Use CodeBurn when the user asks about AI token usage, cost, model comparisons, expensive sessions, or token waste. It is an observability/reporting tool, not a skill."
+    }
+  ]
+}

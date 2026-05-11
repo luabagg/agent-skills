@@ -1,0 +1,15 @@
+{
+  "name": "personal-agent-skills",
+  "displayName": "Personal Agent Skills",
+  "description": "Luan Baggio's personal agent skills.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Luan Baggio",
+    "url": "https://github.com/luabagg"
+  },
+  "homepage": "https://github.com/luabagg/agent-skills",
+  "repository": "https://github.com/luabagg/agent-skills",
+  "license": "MIT",
+  "keywords": ["skills", "agent-skills", "personal-workflows"],
+  "skills": "./skills/"
+}
