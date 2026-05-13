@@ -29,6 +29,7 @@ This is the curated operating map of skills, plugin packs, MCP-only tools, and t
 
 - `dispatching-parallel-agents` — splitting independent tasks across parallel agents.
 - `using-superpowers` — framework entry skill for the superpowers agent toolkit.
+- `gnhf` — Good Night, Have Fun: launch, supervise, and review bounded long-running agent coding runs.
 
 ### Frontend and design
 
@@ -117,6 +118,7 @@ These skills ship with the `claude-mem` plugin (`thedotmack/claude-mem`). They o
 ### Utilities
 
 - `defuddle` — also listed under web fetching.
+- `gnhf` — also tracked as a CLI for agent-managed coding loops.
 
 ## Installed plugin packs
 

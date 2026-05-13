@@ -90,6 +90,7 @@ The curated list currently tracks:
 | `kepano/obsidian-skills` | Obsidian, Markdown, Bases, Canvas, and Defuddle skills |
 | `vercel-labs/skills` | `find-skills` for discovering more skills |
 | `emilkowalski/skill` | `emil-design-eng` for UI polish, component design, and animation guidance |
+| `kunchenguid/gnhf` | `gnhf` for launching, supervising, and reviewing long-running agent-managed coding runs |
 | `cursor-public/sentry` | `sentry` for read-only Sentry issue and event investigation |
 | GitHub plugin skills | `gh-address-comments` and `gh-fix-ci` for PR comments and GitHub Actions CI triage |
 | Notion plugin skills | `notion-research-documentation` for Notion research and documentation |
@@ -127,6 +128,7 @@ Examples:
 | `@google/design.md` | npm package / CLI | Installed as a dependency; use `npx @google/design.md lint DESIGN.md` or `npm run design:lint` |
 | `rtk` | CLI | `rtk-ai/rtk`; use as a token-saving proxy for verbose shell commands |
 | `codeburn` | CLI | `getagentseal/codeburn`; use to visualize token usage, cost, models, and waste |
+| `gnhf` | CLI plus skill | `kunchenguid/gnhf`; use for bounded long-running agent loops with concrete stop conditions |
 
 `@google/design.md` is a good example: it is a design-system format and linter, not an agent skill. Keeping it in `curated-tools.json` lets this repo remember the tool and the commands without exposing it as something an agent should invoke as a skill.
 
@@ -149,6 +151,13 @@ CodeBurn commands:
 ```bash
 npm run codeburn:status
 npm run codeburn:optimize
+```
+
+GNHF commands:
+
+```bash
+npm run gnhf:verify
+gnhf --worktree --max-iterations 5 "improve this branch and stop when relevant checks pass"
 ```
 
 ## AGENTS.md

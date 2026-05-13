@@ -8,13 +8,14 @@
     "skills:list": "sh -c 'if ls skills/*/SKILL.md >/dev/null 2>&1; then npx --yes skills add . --list; else echo \"No personal skills found under skills/.\"; fi'",
     "install:personal": "sh -c 'if ls skills/*/SKILL.md >/dev/null 2>&1; then npx --yes skills add . --global --agent cursor --agent claude-code --agent codex --skill \"*\" --yes; else echo \"No personal skills found under skills/; skipping.\"; fi'",
     "install:personal:copy": "sh -c 'if ls skills/*/SKILL.md >/dev/null 2>&1; then npx --yes skills add . --global --agent cursor --agent claude-code --agent codex --skill \"*\" --copy --yes; else echo \"No personal skills found under skills/; skipping.\"; fi'",
-    "install:curated": "npm run install:curated:superpowers && npm run install:curated:caveman && npm run install:curated:obsidian && npm run install:curated:find-skills && npm run install:curated:emil-design-eng",
+    "install:curated": "npm run install:curated:superpowers && npm run install:curated:caveman && npm run install:curated:obsidian && npm run install:curated:find-skills && npm run install:curated:emil-design-eng && npm run install:curated:gnhf",
     "install:all": "npm run install:personal && npm run install:curated",
     "install:curated:superpowers": "npx --yes skills add obra/superpowers --global --agent cursor --agent claude-code --agent codex --skill '*' --yes",
     "install:curated:caveman": "npx --yes skills add git@github.com:JuliusBrussee/caveman.git --global --agent cursor --agent claude-code --agent codex --skill caveman --skill caveman-commit --skill caveman-compress --skill caveman-help --skill caveman-review --skill compress --yes",
     "install:curated:obsidian": "npx --yes skills add git@github.com:kepano/obsidian-skills.git --global --agent cursor --agent claude-code --agent codex --skill defuddle --skill json-canvas --skill obsidian-bases --skill obsidian-cli --skill obsidian-markdown --yes",
     "install:curated:find-skills": "npx --yes skills add vercel-labs/skills --global --agent cursor --agent claude-code --agent codex --skill find-skills --yes",
     "install:curated:emil-design-eng": "npx --yes skills add emilkowalski/skill --global --agent cursor --agent claude-code --agent codex --skill emil-design-eng --yes",
+    "install:curated:gnhf": "npx --yes skills add kunchenguid/gnhf --global --agent cursor --agent claude-code --agent codex --skill gnhf --yes",
     "update:skills": "npx --yes skills update --global --yes",
     "design:lint": "design.md lint DESIGN.md",
     "design:diff": "design.md diff",
@@ -22,7 +23,8 @@
     "rtk:stats": "rtk gain --graph",
     "codeburn:status": "npx --yes codeburn status",
     "codeburn:report": "npx --yes codeburn report --format json",
-    "codeburn:optimize": "npx --yes codeburn optimize"
+    "codeburn:optimize": "npx --yes codeburn optimize",
+    "gnhf:verify": "gnhf --version && gnhf --help"
   },
   "keywords": [
     "agent-skills",

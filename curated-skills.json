@@ -63,6 +63,15 @@
       "skills": ["emil-design-eng"]
     },
     {
+      "name": "gnhf",
+      "description": "Good Night, Have Fun: guidance for launching, supervising, and reviewing long-running agent-managed coding runs.",
+      "source": "kunchenguid/gnhf",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "notes": "The npm package also ships this skill under skills/gnhf/SKILL.md. Track it as an upstream curated skill rather than vendoring the installed package copy.",
+      "skills": ["gnhf"]
+    },
+    {
       "name": "sentry",
       "description": "Read-only Sentry issue, event, and production error investigation skill.",
       "source": "cursor-public/sentry",
@@ -154,6 +163,27 @@
       "preferredInstall": "plugin",
       "notes": "Codex-only routing; not a local SKILL.md in this repo.",
       "skills": ["yeet"]
+    },
+    {
+      "name": "taste-skill",
+      "description": "Anti-slop frontend design skills: stronger layout, typography, motion, and spacing for AI-built interfaces. Includes image-generation skills for reference boards.",
+      "source": "Leonxlnx/taste-skill",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "skills": [
+        "design-taste-frontend",
+        "gpt-taste",
+        "image-to-code",
+        "redesign-existing-projects",
+        "high-end-visual-design",
+        "full-output-enforcement",
+        "minimalist-ui",
+        "industrial-brutalist-ui",
+        "stitch-design-taste",
+        "imagegen-frontend-web",
+        "imagegen-frontend-mobile",
+        "brandkit"
+      ]
     }
   ]
 }

@@ -94,6 +94,68 @@
         }
       ],
       "agentUse": "Use CodeBurn when the user asks about AI token usage, cost, model comparisons, expensive sessions, or token waste. It is an observability/reporting tool, not a skill."
+    },
+    {
+      "name": "gnhf",
+      "kind": "cli",
+      "description": "Good Night, Have Fun: an agent orchestrator for bounded, long-running coding loops while the user is away.",
+      "source": "https://github.com/kunchenguid/gnhf",
+      "package": "gnhf",
+      "install": "npm install -g gnhf",
+      "commands": [
+        {
+          "name": "verify",
+          "command": "gnhf --version && gnhf --help",
+          "purpose": "Confirm the installed CLI and inspect supported flags before launching a run."
+        },
+        {
+          "name": "hands-off-run",
+          "command": "gnhf --max-iterations 10 --stop-when \"relevant checks pass and no unrelated files changed\" \"<objective>\"",
+          "purpose": "Start a bounded overnight-style coding run with a concrete stop condition."
+        },
+        {
+          "name": "worktree-run",
+          "command": "gnhf --worktree --max-iterations 5 \"<objective>\"",
+          "purpose": "Run a GNHF worker in an isolated git worktree so the main checkout stays clean."
+        }
+      ],
+      "agentUse": "Use GNHF when the user asks for a long-running, agent-managed coding loop, overnight work, or supervised iterative work. Keep stop conditions concrete and independently verify results before acceptance."
+    },
+    {
+      "name": "code-review-graph",
+      "kind": "cli",
+      "description": "Local knowledge graph for AI coding tools. Builds a structural map of your codebase with Tree-sitter for precise context and 6-8x token reduction on reviews.",
+      "source": "https://github.com/tirth8205/code-review-graph",
+      "package": "code-review-graph",
+      "install": "pip install code-review-graph",
+      "commands": [
+        {
+          "name": "install",
+          "command": "code-review-graph install",
+          "purpose": "Auto-detect and configure all supported AI platforms (Codex, Cursor, Claude Code, etc.)"
+        },
+        {
+          "name": "build",
+          "command": "code-review-graph build",
+          "purpose": "Parse entire codebase into the graph database"
+        },
+        {
+          "name": "review-delta",
+          "command": "/code-review-graph:review-delta",
+          "purpose": "Review changes since last commit with blast-radius analysis"
+        },
+        {
+          "name": "visualize",
+          "command": "code-review-graph visualize",
+          "purpose": "Generate interactive HTML graph or export to GraphML/SVG/Obsidian"
+        },
+        {
+          "name": "daemon-start",
+          "command": "code-review-graph daemon start",
+          "purpose": "Start multi-repo watch daemon for automatic graph updates"
+        }
+      ],
+      "agentUse": "Use code-review-graph when working with large codebases where token efficiency matters. The graph provides blast-radius analysis, semantic search, and minimal-context queries via MCP. Particularly useful for code reviews and navigating monorepos."
     }
   ]
 }
