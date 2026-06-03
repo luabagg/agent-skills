@@ -156,6 +156,27 @@
         }
       ],
       "agentUse": "Use code-review-graph when working with large codebases where token efficiency matters. The graph provides blast-radius analysis, semantic search, and minimal-context queries via MCP. Particularly useful for code reviews and navigating monorepos."
+    },
+    {
+      "name": "autoskills",
+      "kind": "cli",
+      "description": "CLI for automatically discovering and applying relevant agent skills from the current context.",
+      "source": null,
+      "package": "autoskills",
+      "install": "npx autoskills",
+      "commands": [
+        {
+          "name": "run",
+          "command": "npx autoskills",
+          "purpose": "Run autoskills through npx to inspect context and surface useful skills."
+        },
+        {
+          "name": "repo-wrapper",
+          "command": "npm run autoskills",
+          "purpose": "Use this repo's convenience wrapper for npx autoskills."
+        }
+      ],
+      "agentUse": "Use autoskills when the user wants automatic skill discovery or a quick context-aware skill recommendation pass."
     }
   ]
 }

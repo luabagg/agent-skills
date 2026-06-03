@@ -1,12 +1,13 @@
 # Personal Agent Skills
 
-Public source of truth for my personal agent skills and the third-party skills I want on my machines.
+Published source of truth for my global agent instructions, personal agent skills, curated third-party skill list, and related agent tooling references.
 
-This repo has two jobs:
+This repo has four jobs:
 
-1. Own and publish skills I write in `skills/`.
-2. Track the curated third-party skills I use in `curated-skills.json`.
-3. Track non-skill tools and references I use in `curated-tools.json`.
+1. Own the global `AGENTS.md` guidance I want agents to inherit.
+2. Own and publish skills I write in `skills/`.
+3. Track the curated third-party skills I use in `curated-skills.json`.
+4. Track non-skill tools and references I use in `curated-tools.json`.
 
 It intentionally does not include a custom installer. Installs and updates use the open `skills` CLI from Vercel:
 
@@ -19,7 +20,7 @@ npx skills --help
 ```text
 .
 ├── skills/                  # Personal skills authored in this repo
-├── AGENTS.md                # Public-safe guidance for agents working in this repo
+├── AGENTS.md                # Global agent instruction source of truth
 ├── curated-skills.json      # Third-party skills I use, with sources and selected skill names
 ├── curated-tools.json       # Non-skill tools, packages, apps, and reference docs I use
 ├── docs/skill-inventory.md  # Full curated skill/plugin/MCP inventory
@@ -28,6 +29,32 @@ npx skills --help
 ├── .codex-plugin/           # Codex plugin metadata
 ├── .cursor-plugin/          # Cursor plugin metadata
 └── package.json             # Convenience scripts around npx skills
+```
+
+## Install
+
+Install the published personal skills globally for Cursor, Claude Code, and Codex:
+
+```bash
+npx skills add luabagg/agent-skills --global --agent cursor --agent claude-code --agent codex --skill '*'
+```
+
+For local development from a checkout, install from the working tree instead:
+
+```bash
+npm run install:personal
+```
+
+By default, `npx skills` may install with symlinks so the installed agent paths point back to the source. If an agent or filesystem has trouble with symlinks, copy instead:
+
+```bash
+npm run install:personal:copy
+```
+
+List the skills exposed by the local checkout:
+
+```bash
+npm run skills:list
 ```
 
 ## Personal Skills
@@ -51,29 +78,7 @@ Current personal skills:
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
 | `thorough-pr-review` | Review PRs and branches for correctness, reliability, and merge-readiness |
 
-List skills available from this repo:
-
-```bash
-pnpm skills:list
-```
-
-Install personal skills globally for Cursor, Claude Code, and Codex:
-
-```bash
-pnpm install:personal
-```
-
-By default, `npx skills` may install with symlinks so the installed agent paths point back to the canonical source. If an agent or filesystem has trouble with symlinks, copy instead:
-
-```bash
-pnpm install:personal:copy
-```
-
-Once this repository is pushed, the same install can be done from GitHub:
-
-```bash
-npx skills add luabagg/agent-skills --global --agent cursor --agent claude-code --agent codex --skill '*'
-```
+Every published skill in `skills/` must be public-safe. Do not include private dashboards, tokens, org IDs, internal URLs, generated memory context, or workflow details that only make sense inside a private environment. External IDs or URLs are acceptable only when they are intentionally part of the skill's public purpose or point back to this repo's own public references.
 
 ## Curated Third-Party Skills
 
@@ -100,7 +105,7 @@ The curated list currently tracks:
 Install the curated third-party set globally:
 
 ```bash
-pnpm install:curated
+npm run install:curated
 ```
 
 The install script covers sources that `npx skills` can install directly. Plugin-style skills are tracked in `curated-skills.json` as references and should be installed through their agent/plugin marketplace flow.
@@ -108,13 +113,13 @@ The install script covers sources that `npx skills` can install directly. Plugin
 Install personal plus curated skills:
 
 ```bash
-pnpm install:all
+npm run install:all
 ```
 
 Update globally installed skills managed by `npx skills`:
 
 ```bash
-pnpm update:skills
+npm run update:skills
 ```
 
 ## Curated Tools And References
@@ -129,6 +134,7 @@ Examples:
 | `rtk` | CLI | `rtk-ai/rtk`; use as a token-saving proxy for verbose shell commands |
 | `codeburn` | CLI | `getagentseal/codeburn`; use to visualize token usage, cost, models, and waste |
 | `gnhf` | CLI plus skill | `kunchenguid/gnhf`; use for bounded long-running agent loops with concrete stop conditions |
+| `autoskills` | CLI | Use `npx autoskills` or `npm run autoskills` for automatic context-aware skill discovery |
 
 `@google/design.md` is a good example: it is a design-system format and linter, not an agent skill. Keeping it in `curated-tools.json` lets this repo remember the tool and the commands without exposing it as something an agent should invoke as a skill.
 
@@ -160,19 +166,24 @@ npm run gnhf:verify
 gnhf --worktree --max-iterations 5 "improve this branch and stop when relevant checks pass"
 ```
 
+Autoskills commands:
+
+```bash
+npx autoskills
+npm run autoskills
+```
+
 ## AGENTS.md
 
-This repo includes a public-safe `AGENTS.md` for agents working inside this repository. It documents the source-of-truth model and tool guidance without copying generated local memory context or private project instructions.
+`AGENTS.md` is the public global agent-instruction source of truth for this setup. It should describe durable cross-agent behavior, default skill routing, editing rules, and public-safe tool guidance.
+
+It is not just repo-local guidance. Keep it suitable for reuse by global agent configuration flows and do not copy generated local memory context or private project instructions into it.
 
 ## Reference vs Fork
 
 Use `curated-skills.json` when the upstream skill works as-is.
 
 Fork a third-party skill into `skills/` only when I need to change its behavior. When forking, keep the original source in the skill body or references so the upstream lineage is clear.
-
-## Private/Internal Skills
-
-Some local skills may contain company-specific IDs, dashboard URLs, or workflow details that should not be published as-is. Keep those out of this public repo until they are sanitized into reusable templates.
 
 ## Plugin Metadata
 
