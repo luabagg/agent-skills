@@ -9,7 +9,7 @@ This repo has four jobs:
 3. Track the curated third-party skills I use in `curated-skills.json`.
 4. Track non-skill tools and references I use in `curated-tools.json`.
 
-It intentionally does not include a custom installer. Installs and updates use the open `skills` CLI from Vercel:
+Installs and updates use the open `skills` CLI from Vercel. The local curated installer is a thin wrapper around `curated-skills.json` and `npx skills add`:
 
 ```bash
 npx skills --help
@@ -39,11 +39,23 @@ Install the published personal skills globally for Cursor, Claude Code, and Code
 npx skills add luabagg/agent-skills --global --agent cursor --agent claude-code --agent codex --skill '*'
 ```
 
+That command installs only the personal skills stored in this repo's `skills/` directory. Curated third-party skills are references in `curated-skills.json`, so they must be installed from their upstream sources.
+
+Without cloning this repo, install curated `skills-cli` entries by reading `curated-skills.json` and running `npx skills add` for sources where `preferredInstall` is `skills-cli`. Plugin-style entries are not installable through this repo's GitHub command; install those through each agent's plugin or connector marketplace.
+
 For local development from a checkout, install from the working tree instead:
 
 ```bash
 npm run install:personal
 ```
+
+If the `skills` CLI installs into `~/.agents/skills` but Codex does not pick those skills up, mirror the active skill tree into `~/.codex/skills`:
+
+```bash
+npm run sync:codex-skills
+```
+
+The sync preserves Codex's `.system` skills, skips archives and dot directories, and refuses to overwrite a real directory that already exists in `~/.codex/skills`.
 
 By default, `npx skills` may install with symlinks so the installed agent paths point back to the source. If an agent or filesystem has trouble with symlinks, copy instead:
 
@@ -108,7 +120,19 @@ Install the curated third-party set globally:
 npm run install:curated
 ```
 
-The install script covers sources that `npx skills` can install directly. Plugin-style skills are tracked in `curated-skills.json` as references and should be installed through their agent/plugin marketplace flow.
+The install script reads `curated-skills.json` and installs sources where `preferredInstall` is `skills-cli`. Plugin-style skills are tracked as references and should be installed through their agent/plugin marketplace flow.
+
+Preview the generated curated install commands without installing:
+
+```bash
+npm run install:curated:dry-run
+```
+
+Preview the Codex skill sync without changing `~/.codex/skills`:
+
+```bash
+npm run sync:codex-skills:dry-run
+```
 
 Install personal plus curated skills:
 
