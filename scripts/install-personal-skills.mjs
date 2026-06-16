@@ -53,6 +53,7 @@ if (dryRun) {
 
 const result = spawnSync(command[0], command.slice(1), {
   cwd: new URL("../", import.meta.url),
+  shell: process.platform === "win32",
   stdio: "inherit",
 });
 

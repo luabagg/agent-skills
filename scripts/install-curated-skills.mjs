@@ -65,6 +65,7 @@ for (const source of installable) {
   }
 
   const result = spawnSync(command[0], command.slice(1), {
+    shell: process.platform === "win32",
     stdio: "inherit",
   });
 
