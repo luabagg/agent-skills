@@ -3,6 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 
+const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const copy = args.has("--copy");
@@ -41,7 +42,7 @@ console.log(`Found ${installable.length} skills-cli sources to install.`);
 
 for (const source of installable) {
   const command = [
-    "npx",
+    npx,
     "--yes",
     "skills",
     "add",

@@ -3,6 +3,7 @@
 import { readdir } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 
+const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const copy = args.has("--copy");
@@ -28,7 +29,7 @@ if (!(await hasPersonalSkills())) {
 }
 
 const command = [
-  "npx",
+  npx,
   "--yes",
   "skills",
   "add",
