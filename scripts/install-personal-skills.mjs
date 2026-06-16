@@ -18,6 +18,23 @@ function shellQuote(value) {
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
+function windowsQuote(value) {
+  if (/^[A-Za-z0-9_./:@=*-]+$/.test(value)) {
+    return value;
+  }
+
+  return `"${value.replaceAll('"', '\\"')}"`;
+}
+
+function runCommand(command, options = {}) {
+  if (process.platform !== "win32") {
+    return spawnSync(command[0], command.slice(1), options);
+  }
+
+  const commandLine = command.map(windowsQuote).join(" ");
+  return spawnSync(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", commandLine], options);
+}
+
 async function hasPersonalSkills() {
   const entries = await readdir(skillsDir, { withFileTypes: true });
   return entries.some((entry) => entry.isDirectory() && !entry.name.startsWith("."));
@@ -51,9 +68,8 @@ if (dryRun) {
   process.exit(0);
 }
 
-const result = spawnSync(command[0], command.slice(1), {
+const result = runCommand(command, {
   cwd: new URL("../", import.meta.url),
-  shell: process.platform === "win32",
   stdio: "inherit",
 });
 

@@ -19,6 +19,23 @@ function shellQuote(value) {
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
+function windowsQuote(value) {
+  if (/^[A-Za-z0-9_./:@=*-]+$/.test(value)) {
+    return value;
+  }
+
+  return `"${value.replaceAll('"', '\\"')}"`;
+}
+
+function runCommand(command, options = {}) {
+  if (process.platform !== "win32") {
+    return spawnSync(command[0], command.slice(1), options);
+  }
+
+  const commandLine = command.map(windowsQuote).join(" ");
+  return spawnSync(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", commandLine], options);
+}
+
 if (agents.length === 0) {
   throw new Error("curated-skills.json must list at least one agent.");
 }
@@ -64,8 +81,7 @@ for (const source of installable) {
     continue;
   }
 
-  const result = spawnSync(command[0], command.slice(1), {
-    shell: process.platform === "win32",
+  const result = runCommand(command, {
     stdio: "inherit",
   });
 

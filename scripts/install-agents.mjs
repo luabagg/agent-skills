@@ -12,11 +12,12 @@ import {
 } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const copy = args.has("--copy");
-const sourceFile = resolve(new URL("../AGENTS.md", import.meta.url).pathname);
+const sourceFile = resolve(fileURLToPath(new URL("../AGENTS.md", import.meta.url)));
 const mode = copy ? "copy" : "symlink";
 
 const targets = {
