@@ -5,34 +5,25 @@
   "private": false,
   "type": "module",
   "scripts": {
-    "skills:list": "sh -c 'if ls skills/*/SKILL.md >/dev/null 2>&1; then npx --yes skills add . --list; else echo \"No personal skills found under skills/.\"; fi'",
-    "install:personal": "sh -c 'if ls skills/*/SKILL.md >/dev/null 2>&1; then npx --yes skills add . --global --agent cursor --agent claude-code --agent codex --skill \"*\" --yes; else echo \"No personal skills found under skills/; skipping.\"; fi'",
-    "install:personal:copy": "sh -c 'if ls skills/*/SKILL.md >/dev/null 2>&1; then npx --yes skills add . --global --agent cursor --agent claude-code --agent codex --skill \"*\" --copy --yes; else echo \"No personal skills found under skills/; skipping.\"; fi'",
+    "skills:list": "npx --yes skills add . --list",
+    "install:skills": "node scripts/install-personal-skills.mjs",
     "install:curated": "node scripts/install-curated-skills.mjs",
     "install:curated:dry-run": "node scripts/install-curated-skills.mjs --dry-run",
-    "sync:codex-skills": "node scripts/sync-codex-skills.mjs",
-    "sync:codex-skills:dry-run": "node scripts/sync-codex-skills.mjs --dry-run",
-    "install:all": "npm run install:personal && npm run install:curated && npm run sync:codex-skills",
+    "install:agents": "node scripts/install-agents.mjs",
+    "setup:memory-palace": "node scripts/configure-memory-palace.mjs",
+    "setup": "node scripts/install-personal-skills.mjs && node scripts/install-curated-skills.mjs && node scripts/install-agents.mjs",
+    "setup:copy": "node scripts/install-personal-skills.mjs --copy && node scripts/install-curated-skills.mjs --copy && node scripts/install-agents.mjs --copy",
     "update:skills": "npx --yes skills update --global --yes",
-    "design:lint": "design.md lint DESIGN.md",
-    "design:diff": "design.md diff",
-    "rtk:verify": "rtk --version && rtk gain",
-    "rtk:stats": "rtk gain --graph",
-    "codeburn:status": "npx --yes codeburn status",
-    "codeburn:report": "npx --yes codeburn report --format json",
-    "codeburn:optimize": "npx --yes codeburn optimize",
-    "gnhf:verify": "gnhf --version && gnhf --help",
-    "autoskills": "npx --yes autoskills"
+    "verify": "npm run skills:list && npm run install:curated:dry-run && node scripts/install-agents.mjs --dry-run"
   },
   "keywords": [
     "agent-skills",
     "skills",
-    "cursor",
     "claude-code",
-    "codex"
+    "codex",
+    "copilot",
+    "opencode"
   ],
   "license": "MIT",
-  "dependencies": {
-    "@google/design.md": "^0.1.1"
-  }
+  "dependencies": {}
 }

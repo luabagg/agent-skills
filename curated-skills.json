@@ -1,10 +1,9 @@
 {
-  "$schema": "./schemas/curated-skills.schema.json",
   "version": 1,
-  "agents": ["cursor", "claude-code", "codex"],
+  "agents": ["claude-code", "codex", "github-copilot", "opencode"],
   "installPolicy": {
     "defaultMethod": "symlink",
-    "copyFallback": "npm run install:personal:copy",
+    "copyFallback": "npm run setup:copy",
     "installer": "npx skills"
   },
   "sources": [
@@ -124,27 +123,6 @@
       "preferredInstall": "plugin",
       "notes": "Installed through the frontend-design plugin, not vendored in this repo.",
       "skills": ["frontend-design"]
-    },
-    {
-      "name": "claude-mem",
-      "description": "Episodic memory skills for cross-session transcript search, codebase exploration, planning, and timeline reports.",
-      "source": "thedotmack/claude-mem",
-      "sourceType": "plugin",
-      "preferredInstall": "plugin",
-      "notes": "Plugin also provides MCP search tools. This repo tracks the skill pack as a curated dependency.",
-      "skills": [
-        "mem-search",
-        "learn-codebase",
-        "smart-explore",
-        "knowledge-agent",
-        "pathfinder",
-        "make-plan",
-        "do",
-        "babysit",
-        "timeline-report",
-        "version-bump",
-        "how-it-works"
-      ]
     },
     {
       "name": "browser-use",

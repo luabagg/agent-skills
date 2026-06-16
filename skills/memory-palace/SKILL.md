@@ -9,13 +9,22 @@ description: >
 
 # Memory palace
 
-The user maintains a personal knowledge vault at:
+Before touching the vault, resolve `$VAULT` using this precedence:
 
-```text
-{{VAULT_PATH}}
+1. Explicit path in the current user request, if provided.
+2. `MEMORY_PALACE_VAULT`, if available in the runtime environment.
+3. Persisted default at `~/.agents/memory-palace/config.json` (`vaultPath`).
+4. Current-directory fallback: walk upward from cwd and use the first directory that looks like this vault.
+
+The persisted config is created with:
+
+```bash
+npm run setup:memory-palace -- --vault <path>
 ```
 
-(referred to below as `$VAULT`).
+For WSL, prefer a WSL-accessible path (`/mnt/c/...`). The setup script converts Windows drive paths like `C:\Users\...` to `/mnt/c/Users/...` when running under WSL, validates the converted path, and saves the WSL path.
+
+Treat the resolved path as `$VAULT` below. If no candidate resolves, stop and ask the user to run setup or provide an explicit vault path.
 
 It follows the Karpathy LLM-wiki pattern: raw sources are dropped into `raw/`, the *compiled* knowledge lives under `wiki/` as plain markdown with wikilinks, daily notes live in `journal/`, and ongoing responsibilities live in `areas/`. Plain markdown only -- works in any markdown editor.
 
@@ -115,9 +124,3 @@ Output one report. End with: "Which fixes should I apply?" Wait for the user's c
 - **Don't invent citations.** Every `[[wikilink]]` you produce must point to a page that exists.
 - **Don't write placeholder content.** Empty folders use `.gitkeep`.
 - **When in doubt, ask.** If a source could plausibly belong to two pages, or you're unsure whether to extend an existing entity vs. create a new one -- ask the user before writing.
-
-## Coordination with other memory tools
-
-- `/mem-search` (claude-mem) is **episodic** memory: cross-session work transcripts. Different layer from the vault. If the user asks "did we work on this before", `/mem-search` is the right tool -- not this skill.
-- This skill is **semantic** memory: curated, deduplicated, cross-linked facts the user has decided to keep. Plain markdown the user owns.
-- The two layers complement each other. Don't conflate them.

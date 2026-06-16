@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
+const copy = args.has("--copy");
 const curatedPath = new URL("../curated-skills.json", import.meta.url);
 const curated = JSON.parse(await readFile(curatedPath, "utf8"));
 const agents = curated.agents ?? [];
@@ -50,6 +51,10 @@ for (const source of installable) {
     ...source.skills.flatMap((skill) => ["--skill", skill]),
     "--yes",
   ];
+
+  if (copy) {
+    command.push("--copy");
+  }
 
   console.log(`\n${source.name}`);
   console.log(command.map(shellQuote).join(" "));

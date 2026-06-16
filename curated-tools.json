@@ -1,5 +1,4 @@
 {
-  "$schema": "./schemas/curated-tools.schema.json",
   "version": 1,
   "tools": [
     {
@@ -45,11 +44,6 @@
           "name": "init-codex",
           "command": "rtk init -g --codex",
           "purpose": "Install Codex AGENTS.md and RTK.md guidance."
-        },
-        {
-          "name": "init-cursor",
-          "command": "rtk init -g --agent cursor",
-          "purpose": "Install Cursor preToolUse hook configuration."
         },
         {
           "name": "usage-stats",
