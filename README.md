@@ -15,7 +15,9 @@ This repo supports:
 
 ```text
 .
-|-- AGENTS.md                # Global reusable agent instructions
+|-- AGENTS.md                # Repo-scoped instructions for working in this repo
+|-- AGENTS.global.md         # Global agent instructions, distributed to ~/.codex, ~/.claude, etc.
+|-- CLAUDE.md -> AGENTS.md   # Symlink so Claude loads repo-scoped rules in this repo
 |-- skills/                  # Personal skills authored here
 |-- curated-skills.json      # Third-party skills I use; also drives curated install
 |-- curated-tools.json       # Non-skill tools, CLIs, packages, and docs I use
@@ -48,7 +50,7 @@ What `npm run setup` does:
 
 - Installs personal skills from `skills/` for `claude-code`, `codex`, `github-copilot`, and `opencode` using `npx skills`.
 - Installs curated third-party skills from `curated-skills.json` where `preferredInstall` is `skills-cli`.
-- Installs global `AGENTS.md` guidance for Claude, Codex, Copilot, and OpenCode.
+- Installs global `AGENTS.global.md` guidance for Claude, Codex, Copilot, and OpenCode.
 
 ## Commands
 
@@ -57,7 +59,7 @@ npm run skills:list              # list personal skills in this repo
 npm run install:skills           # install only personal skills
 npm run install:curated          # install only curated skills-cli sources
 npm run install:curated:dry-run  # preview curated skill install commands
-npm run install:agents           # install only global AGENTS.md guidance
+npm run install:agents           # install only global AGENTS.global.md guidance
 npm run setup                    # full symlink setup
 npm run setup:copy               # full copy setup
 npm run setup:memory-palace      # persist the default memory-palace vault path
@@ -127,9 +129,7 @@ Plugin-style entries can remain in `curated-skills.json` as references, but the 
 
 ## Global Instructions
 
-`AGENTS.md` is the source of truth for global agent behavior.
-
-`npm run install:agents` installs it to:
+`AGENTS.global.md` is the source of truth for global agent behavior. `npm run install:agents` distributes it to:
 
 - Codex: `~/.codex/AGENTS.md`
 - Claude: `~/.claude/AGENTS.md` plus `~/.claude/CLAUDE.md` importing `@AGENTS.md`
@@ -137,6 +137,8 @@ Plugin-style entries can remain in `curated-skills.json` as references, but the 
 - OpenCode: `~/.config/opencode/AGENTS.md` plus a global config `instructions` entry
 
 Default mode symlinks those targets back to this repo. `npm run setup:copy` copies file contents instead.
+
+`AGENTS.md` is repo-scoped and only applies when working inside this repository. opencode and Codex pick it up natively via the project `AGENTS.md`; Claude picks it up via the repo-root `CLAUDE.md` symlink -> `AGENTS.md`.
 
 After changing OpenCode config, restart OpenCode. Running sessions keep using already-loaded config.
 
