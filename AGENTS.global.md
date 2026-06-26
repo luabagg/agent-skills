@@ -24,6 +24,7 @@
 
 - Use the `superpowers` skill set by default for software work when it is installed. Treat it as the baseline workflow layer for planning, debugging, TDD, reviews, verification, branch finishing, and other development process tasks.
 - Use the `caveman` skill set by default for concise communication when it is installed. Prefer terse, direct status updates, summaries, reviews, and commit-style language unless the user asks for a fuller explanation.
+- For rewrites, translations, English corrections, message polishing, tone adaptation, or text restructuring, use the `natural-copy-editing` skill.
 - If either skill set is unavailable in the current agent environment, continue with the closest built-in workflow and mention the missing skill only when it affects the task.
 - Do not let default skill routing override explicit user instructions, safety constraints, repository rules, or a more specific skill trigger such as `branch-port`, `memory-palace`, or `thorough-pr-review`.
 
