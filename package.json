@@ -11,6 +11,8 @@
     "install:curated:dry-run": "node scripts/install-curated-skills.mjs --dry-run",
     "install:agents": "node scripts/install-agents.mjs",
     "setup:memory-palace": "node scripts/configure-memory-palace.mjs",
+    "setup:opencode": "node scripts/setup-opencode.mjs",
+    "setup:opencode:dry-run": "node scripts/setup-opencode.mjs --dry-run",
     "setup": "node scripts/install-personal-skills.mjs && node scripts/install-curated-skills.mjs && node scripts/install-agents.mjs",
     "setup:copy": "node scripts/install-personal-skills.mjs --copy && node scripts/install-curated-skills.mjs --copy && node scripts/install-agents.mjs --copy",
     "update:skills": "npx --yes skills update --global --yes",

@@ -1,39 +1,13 @@
 #!/usr/bin/env node
 
 import { readdir } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
+import { npx, runCommand, shellQuote } from "./lib/command.mjs";
 
-const npx = process.platform === "win32" ? "npx.cmd" : "npx";
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const copy = args.has("--copy");
 const skillsDir = new URL("../skills/", import.meta.url);
 const agents = ["claude-code", "codex", "github-copilot", "opencode"];
-
-function shellQuote(value) {
-  if (/^[A-Za-z0-9_./:@=-]+$/.test(value)) {
-    return value;
-  }
-
-  return `'${value.replaceAll("'", "'\\''")}'`;
-}
-
-function windowsQuote(value) {
-  if (/^[A-Za-z0-9_./:@=*-]+$/.test(value)) {
-    return value;
-  }
-
-  return `"${value.replaceAll('"', '\\"')}"`;
-}
-
-function runCommand(command, options = {}) {
-  if (process.platform !== "win32") {
-    return spawnSync(command[0], command.slice(1), options);
-  }
-
-  const commandLine = command.map(windowsQuote).join(" ");
-  return spawnSync(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", commandLine], options);
-}
 
 async function hasPersonalSkills() {
   const entries = await readdir(skillsDir, { withFileTypes: true });

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "harness": "opencode",
+  "setupPolicy": {
+    "defaultMode": "dry-run-first",
+    "defaultSetupCommand": "npm run setup:opencode",
+    "dryRunCommand": "npm run setup:opencode:dry-run",
+    "includedInDefaultSetup": false
+  },
+  "plugins": [
+    {
+      "name": "oh-my-openagent",
+      "description": "OMO / oh-my-openagent: opinionated OpenCode workflow layer with agents, hooks, MCPs, planning, and autonomous loops.",
+      "kind": "manual-installer",
+      "recommended": true,
+      "defaultEnabled": false,
+      "installCommands": ["bunx oh-my-openagent install"],
+      "notes": "Broad installer that may configure models, providers, hooks, MCPs, and workflow defaults. The setup script prints this command but does not run it. Review telemetry and config behavior before installing."
+    },
+    {
+      "name": "opencode-mission-control",
+      "description": "OpenCode plugin for multi-agent orchestration, tmux/session monitoring, worktree flows, and review/integration helpers.",
+      "kind": "opencode-plugin",
+      "recommended": true,
+      "defaultEnabled": false,
+      "pluginEntry": "opencode-mission-control",
+      "notes": "Useful when native OpenCode worktrees are not enough and extra orchestration is desired. Keep opt-in because it changes workflow shape."
+    },
+    {
+      "name": "opencode-gpt-imagegen",
+      "description": "OpenCode plugin that exposes GPT image generation from OpenCode.",
+      "kind": "opencode-plugin",
+      "recommended": true,
+      "defaultEnabled": false,
+      "pluginEntry": "opencode-gpt-imagegen",
+      "notes": "Useful for image-generation workflows. Keep opt-in because it requires plugin-specific credentials/configuration."
+    }
+  ]
+}

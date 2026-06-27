@@ -71,6 +71,26 @@
       "skills": ["gnhf"]
     },
     {
+      "name": "taste-skill",
+      "description": "Anti-slop frontend design skills: stronger layout, typography, motion, and spacing for AI-built interfaces. Includes image-generation skills for reference boards.",
+      "source": "Leonxlnx/taste-skill",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "skills": [
+        "design-taste-frontend",
+        "gpt-taste",
+        "image-to-code",
+        "redesign-existing-projects",
+        "minimalist-ui",
+        "stitch-design-taste",
+        "imagegen-frontend-web",
+        "imagegen-frontend-mobile",
+        "brandkit"
+      ]
+    }
+  ],
+  "pluginReferences": [
+    {
       "name": "sentry",
       "description": "Read-only Sentry issue, event, and production error investigation skill.",
       "source": "cursor-public/sentry",
@@ -132,36 +152,6 @@
       "preferredInstall": "plugin",
       "notes": "Tracked as browser-use:browser in the broader skill inventory.",
       "skills": ["browser"]
-    },
-    {
-      "name": "github-codex-commands",
-      "description": "Codex-only GitHub workflow commands such as yeet.",
-      "source": "github-plugin-skills",
-      "sourceType": "plugin",
-      "preferredInstall": "plugin",
-      "notes": "Codex-only routing; not a local SKILL.md in this repo.",
-      "skills": ["yeet"]
-    },
-    {
-      "name": "taste-skill",
-      "description": "Anti-slop frontend design skills: stronger layout, typography, motion, and spacing for AI-built interfaces. Includes image-generation skills for reference boards.",
-      "source": "Leonxlnx/taste-skill",
-      "sourceType": "github",
-      "preferredInstall": "skills-cli",
-      "skills": [
-        "design-taste-frontend",
-        "gpt-taste",
-        "image-to-code",
-        "redesign-existing-projects",
-        "high-end-visual-design",
-        "full-output-enforcement",
-        "minimalist-ui",
-        "industrial-brutalist-ui",
-        "stitch-design-taste",
-        "imagegen-frontend-web",
-        "imagegen-frontend-mobile",
-        "brandkit"
-      ]
     }
   ]
 }

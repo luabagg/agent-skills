@@ -19,8 +19,9 @@ This repo supports:
 |-- AGENTS.global.md         # Global agent instructions, distributed to ~/.codex, ~/.claude, etc.
 |-- CLAUDE.md -> AGENTS.md   # Symlink so Claude loads repo-scoped rules in this repo
 |-- skills/                  # Personal skills authored here
-|-- curated-skills.json      # Third-party skills I use; also drives curated install
+|-- curated-skills.json      # Installable skill sources plus reference-only plugin inventory
 |-- curated-tools.json       # Non-skill tools, CLIs, packages, and docs I use
+|-- harnesses/               # Opt-in harness-specific setup manifests
 |-- scripts/                 # Install helpers
 |-- package.json             # Small npm command surface
 `-- README.md
@@ -49,7 +50,7 @@ npm run setup:copy
 What `npm run setup` does:
 
 - Installs personal skills from `skills/` for `claude-code`, `codex`, `github-copilot`, and `opencode` using `npx skills`.
-- Installs curated third-party skills from `curated-skills.json` where `preferredInstall` is `skills-cli`.
+- Installs curated third-party skills from `curated-skills.json` `sources`.
 - Installs global `AGENTS.global.md` guidance for Claude, Codex, Copilot, and OpenCode.
 
 ## Commands
@@ -63,6 +64,8 @@ npm run install:agents           # install only global AGENTS.global.md guidance
 npm run setup                    # full symlink setup
 npm run setup:copy               # full copy setup
 npm run setup:memory-palace      # persist the default memory-palace vault path
+npm run setup:opencode           # opt-in OpenCode harness setup
+npm run setup:opencode:dry-run   # preview OpenCode harness setup
 npm run verify                   # non-destructive verification pass
 ```
 
@@ -121,11 +124,34 @@ On WSL, Windows paths like `C:\Users\...` are expected and are converted to `/mn
 
 ## Curated References
 
-`curated-skills.json` tracks third-party skills I use. It remains machine-readable and drives `npm run install:curated` for entries where `preferredInstall` is `skills-cli`.
+`curated-skills.json` tracks two different inventories:
 
-Plugin-style entries can remain in `curated-skills.json` as references, but the installer skips them and reports them as skipped. Install those through their agent/plugin marketplace flow.
+- `sources` are third-party skill sources installable by `npx skills`. `npm run install:curated` only uses this list.
+- `pluginReferences` are plugin-style or harness-specific skill references. They are tracked for awareness only and are not installed by `npm run setup` or `npm run install:curated`.
+
+Harness-specific setup stays separate from the default setup flow unless explicitly added later.
 
 `curated-tools.json` tracks non-skill tools, CLIs, packages, and docs I use. It is a reference catalog only; it does not drive installation.
+
+## Harness-Specific Setup
+
+Harness-specific setup is opt-in and separate from `npm run setup`.
+
+OpenCode setup is tracked in `harnesses/opencode.json` and exposed through:
+
+```bash
+npm run setup:opencode:dry-run
+npm run setup:opencode
+```
+
+The OpenCode setup script validates the manifest, prints manual installer commands for broad tools such as OMO / oh-my-openagent, and only mutates OpenCode config for explicitly selected plugin entries. It does not run third-party plugin installers automatically.
+
+Use `-- --enable-recommended` when you want recommended `opencode-plugin` entries added to OpenCode config:
+
+```bash
+npm run setup:opencode:dry-run -- --enable-recommended
+npm run setup:opencode -- --enable-recommended
+```
 
 ## Global Instructions
 
