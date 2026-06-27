@@ -116,40 +116,40 @@
       "agentUse": "Use GNHF when the user asks for a long-running, agent-managed coding loop, overnight work, or supervised iterative work. Keep stop conditions concrete and independently verify results before acceptance."
     },
     {
-      "name": "code-review-graph",
+      "name": "codegraph",
       "kind": "cli",
-      "description": "Local knowledge graph for AI coding tools. Builds a structural map of your codebase with Tree-sitter for precise context and 6-8x token reduction on reviews.",
-      "source": "https://github.com/tirth8205/code-review-graph",
-      "package": "code-review-graph",
-      "install": "pip install code-review-graph",
+      "description": "Pre-indexed local code knowledge graph for AI agents. Tree-sitter extraction, SQLite + FTS5, auto-sync on file changes. MCP tool codegraph_explore returns surgical context, call paths, and blast radius in one call.",
+      "source": "https://github.com/colbymchenry/codegraph",
+      "package": "@colbymchenry/codegraph",
+      "install": "npm install -g @colbymchenry/codegraph",
       "commands": [
         {
           "name": "install",
-          "command": "code-review-graph install",
-          "purpose": "Auto-detect and configure all supported AI platforms (Codex, Cursor, Claude Code, etc.)"
+          "command": "codegraph install",
+          "purpose": "Wire CodeGraph MCP into detected agents (Claude Code, Cursor, Codex, OpenCode, etc.)"
         },
         {
-          "name": "build",
-          "command": "code-review-graph build",
-          "purpose": "Parse entire codebase into the graph database"
+          "name": "init",
+          "command": "codegraph init",
+          "purpose": "Create .codegraph/ and build the project knowledge graph"
         },
         {
-          "name": "review-delta",
-          "command": "/code-review-graph:review-delta",
-          "purpose": "Review changes since last commit with blast-radius analysis"
+          "name": "explore",
+          "command": "codegraph explore \"<question>\"",
+          "purpose": "CLI equivalent of codegraph_explore — source, call paths, blast radius"
         },
         {
-          "name": "visualize",
-          "command": "code-review-graph visualize",
-          "purpose": "Generate interactive HTML graph or export to GraphML/SVG/Obsidian"
+          "name": "status",
+          "command": "codegraph status",
+          "purpose": "Graph stats and pending sync after edits"
         },
         {
-          "name": "daemon-start",
-          "command": "code-review-graph daemon start",
-          "purpose": "Start multi-repo watch daemon for automatic graph updates"
+          "name": "affected",
+          "command": "git diff --name-only | codegraph affected --stdin",
+          "purpose": "Find test files affected by changed sources"
         }
       ],
-      "agentUse": "Use code-review-graph when working with large codebases where token efficiency matters. The graph provides blast-radius analysis, semantic search, and minimal-context queries via MCP. Particularly useful for code reviews and navigating monorepos."
+      "agentUse": "Use codegraph on large or unfamiliar repos when grep/read loops waste tokens. Prefer codegraph_explore (or codegraph explore) for how-it-works and impact questions; trust graph output instead of re-verifying every symbol with grep. Run codegraph init per project after a global codegraph install."
     },
     {
       "name": "autoskills",
