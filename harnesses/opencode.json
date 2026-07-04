@@ -7,6 +7,35 @@
     "dryRunCommand": "npm run setup:opencode:dry-run",
     "includedInDefaultSetup": false
   },
+  "agents": [
+    {
+      "name": "brainstorming",
+      "description": "Primary agent for design-first work: higher temperature, brainstorming skill, no implementation until design approval.",
+      "kind": "agent",
+      "recommended": true,
+      "defaultEnabled": true,
+      "sourceFile": "agents/brainstorming.md",
+      "notes": "Installs ~/.config/opencode/agent/brainstorming.md. Requires the brainstorming skill under ~/.agents/skills/ (personal skills setup)."
+    },
+    {
+      "name": "writing",
+      "description": "Primary agent for natural copy editing and translation: higher temperature, natural-copy-editing skill, no repo edits.",
+      "kind": "agent",
+      "recommended": true,
+      "defaultEnabled": true,
+      "sourceFile": "agents/writing.md",
+      "notes": "Installs ~/.config/opencode/agent/writing.md. Requires natural-copy-editing under ~/.agents/skills/."
+    },
+    {
+      "name": "coder",
+      "description": "Subagent for Build-delegated implementation work using xAI Composer 2.5 Fast.",
+      "kind": "agent",
+      "recommended": true,
+      "defaultEnabled": true,
+      "sourceFile": "agents/coder.md",
+      "notes": "Installs ~/.config/opencode/agent/coder.md. Uses xai/grok-composer-2.5-fast for coding tasks delegated from Build mode."
+    }
+  ],
   "plugins": [
     {
       "name": "oh-my-openagent",
@@ -34,6 +63,15 @@
       "defaultEnabled": false,
       "pluginEntry": "opencode-gpt-imagegen",
       "notes": "Useful for image-generation workflows. Keep opt-in because it requires plugin-specific credentials/configuration."
+    },
+    {
+      "name": "opencode-handoff",
+      "description": "OpenCode plugin that creates focused handoff prompts and opens continuation sessions with editable draft context.",
+      "kind": "opencode-plugin",
+      "recommended": true,
+      "defaultEnabled": false,
+      "pluginEntry": "opencode-handoff",
+      "notes": "Adds /handoff and read_session for continuing work in fresh sessions. Requires OpenCode v1.2.15 or later."
     }
   ]
 }

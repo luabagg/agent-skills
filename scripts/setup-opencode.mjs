@@ -4,14 +4,17 @@ import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const enableRecommended = args.has("--enable-recommended");
 const manifestPath = new URL("../harnesses/opencode.json", import.meta.url);
+const harnessRoot = resolve(fileURLToPath(new URL("../harnesses/opencode/", import.meta.url)));
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 
 const configDir = resolve(join(homedir(), ".config", "opencode"));
+const agentDir = resolve(join(configDir, "agent"));
 const jsoncPath = resolve(join(configDir, "opencode.jsonc"));
 const jsonPath = resolve(join(configDir, "opencode.json"));
 const configPath = existsSync(jsoncPath) ? jsoncPath : existsSync(jsonPath) ? jsonPath : jsoncPath;
@@ -25,11 +28,24 @@ function validateManifest(value) {
     throw new Error('harnesses/opencode.json must have harness "opencode".');
   }
 
-  if (!Array.isArray(value.plugins) || value.plugins.length === 0) {
-    throw new Error("harnesses/opencode.json must define at least one plugin.");
+  const plugins = value.plugins ?? [];
+  const agents = value.agents ?? [];
+
+  if (plugins.length === 0 && agents.length === 0) {
+    throw new Error("harnesses/opencode.json must define at least one plugin or agent.");
   }
 
-  for (const plugin of value.plugins) {
+  for (const agent of agents) {
+    if (!agent.name || agent.kind !== "agent" || typeof agent.defaultEnabled !== "boolean") {
+      throw new Error("Each OpenCode agent entry needs name, kind \"agent\", and defaultEnabled.");
+    }
+
+    if (!agent.sourceFile) {
+      throw new Error(`${agent.name} is missing sourceFile.`);
+    }
+  }
+
+  for (const plugin of plugins) {
     if (!plugin.name || !plugin.kind || typeof plugin.defaultEnabled !== "boolean") {
       throw new Error("Each OpenCode plugin entry needs name, kind, and defaultEnabled.");
     }
@@ -170,9 +186,40 @@ function parseConfig(input, filePath) {
 }
 
 function pluginsToEnable() {
-  return manifest.plugins.filter(
+  const plugins = manifest.plugins ?? [];
+  return plugins.filter(
     (plugin) => plugin.kind === "opencode-plugin" && (plugin.defaultEnabled || enableRecommended),
   );
+}
+
+function agentsToInstall() {
+  const agents = manifest.agents ?? [];
+  return agents.filter((agent) => agent.kind === "agent" && (agent.defaultEnabled || enableRecommended));
+}
+
+async function installAgentFile(agent) {
+  const source = resolve(harnessRoot, agent.sourceFile);
+  const target = resolve(join(agentDir, `${agent.name}.md`));
+
+  if (!existsSync(source)) {
+    throw new Error(`Missing agent template: ${source}`);
+  }
+
+  const sourceContent = await readFile(source, "utf8");
+  const currentContent = await readUtf8IfExists(target);
+
+  if (currentContent === sourceContent) {
+    console.log(`ok ${target}`);
+    return false;
+  }
+
+  console.log(`${dryRun ? "would write" : "write"} ${target} <- ${source}`);
+  if (!dryRun) {
+    await mkdir(agentDir, { recursive: true });
+    await writeFile(target, sourceContent, "utf8");
+  }
+
+  return true;
 }
 
 function nextConfig(currentConfig, selectedPlugins) {
@@ -197,7 +244,7 @@ function nextConfig(currentConfig, selectedPlugins) {
 }
 
 function printManualInstallers() {
-  const installers = manifest.plugins.filter((plugin) => plugin.kind === "manual-installer");
+  const installers = (manifest.plugins ?? []).filter((plugin) => plugin.kind === "manual-installer");
   if (installers.length === 0) {
     return;
   }
@@ -217,14 +264,29 @@ function printManualInstallers() {
 validateManifest(manifest);
 
 const selectedPlugins = pluginsToEnable();
+const selectedAgents = agentsToInstall();
 const currentContent = await readUtf8IfExists(configPath);
 const currentConfig = parseConfig(currentContent, configPath);
 const updatedConfig = nextConfig(currentConfig, selectedPlugins);
-const changed = JSON.stringify(currentConfig) !== JSON.stringify(updatedConfig);
+const configChanged = JSON.stringify(currentConfig) !== JSON.stringify(updatedConfig);
 
-console.log(`OpenCode harness manifest: ${manifest.plugins.length} plugins tracked.`);
+const pluginCount = (manifest.plugins ?? []).length;
+const agentCount = (manifest.agents ?? []).length;
+
+console.log(`OpenCode harness manifest: ${pluginCount} plugins, ${agentCount} agents tracked.`);
 console.log(`Config path: ${configPath}`);
+console.log(`Agent dir: ${agentDir}`);
 console.log(`Mode: ${dryRun ? "dry-run" : "write"}`);
+
+if (selectedAgents.length === 0) {
+  console.log("No OpenCode agents selected for install.");
+  console.log("Pass --enable-recommended to install recommended agent files.");
+} else {
+  console.log("Selected OpenCode agents:");
+  for (const agent of selectedAgents) {
+    console.log(`- ${agent.name}`);
+  }
+}
 
 if (selectedPlugins.length === 0) {
   console.log("No OpenCode plugins selected for config mutation.");
@@ -238,7 +300,19 @@ if (selectedPlugins.length === 0) {
 
 printManualInstallers();
 
-if (!changed) {
+let agentsChanged = false;
+for (const agent of selectedAgents) {
+  if (await installAgentFile(agent)) {
+    agentsChanged = true;
+  }
+}
+
+if (!configChanged && !agentsChanged) {
+  console.log("\nOpenCode harness already matches selected entries.");
+  process.exit(0);
+}
+
+if (!configChanged) {
   console.log("\nOpenCode config already matches selected plugin entries.");
   process.exit(0);
 }

@@ -51,21 +51,6 @@ rtk pnpm list
 
 Do not force RTK when the user explicitly asks for raw command output.
 
-## CodeBurn
-
-CodeBurn is a local AI token/cost observability tool from `getagentseal/codeburn`.
-
-Useful commands:
-
-```bash
-codeburn status
-codeburn report --format json
-codeburn optimize
-codeburn models --format markdown
-```
-
-Use it when the user asks about token usage, cost, model comparisons, expensive sessions, or token waste.
-
 ## CodeGraph
 
 CodeGraph is a local pre-indexed code knowledge graph (`colbymchenry/codegraph`). It is optional per project: only rely on it when the workspace has a `.codegraph/` directory (after `codegraph init`).

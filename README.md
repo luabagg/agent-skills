@@ -144,7 +144,7 @@ npm run setup:opencode:dry-run
 npm run setup:opencode
 ```
 
-The OpenCode setup script validates the manifest, prints manual installer commands for broad tools such as OMO / oh-my-openagent, and only mutates OpenCode config for explicitly selected plugin entries. It does not run third-party plugin installers automatically.
+The OpenCode setup script validates the manifest, installs tracked agent files into `~/.config/opencode/agent/` (for example `brainstorming`, `writing`, and `coder`), prints manual installer commands for broad tools such as OMO / oh-my-openagent, and only mutates OpenCode config for explicitly selected plugin entries. It does not run third-party plugin installers automatically.
 
 Use `-- --enable-recommended` when you want recommended `opencode-plugin` entries added to OpenCode config:
 
