@@ -34,6 +34,15 @@
       "defaultEnabled": true,
       "sourceFile": "agents/coder.md",
       "notes": "Installs ~/.config/opencode/agent/coder.md. Uses xai/grok-composer-2.5-fast for coding tasks delegated from Build mode."
+    },
+    {
+      "name": "advisor",
+      "description": "Read-only deep technical advisor for architecture, tradeoffs, plans, risks, and code review using GPT-5.5 xhigh.",
+      "kind": "agent",
+      "recommended": true,
+      "defaultEnabled": true,
+      "sourceFile": "agents/advisor.md",
+      "notes": "Installs ~/.config/opencode/agent/advisor.md. Uses openai/gpt-5.5 with variant xhigh; edit is denied and bash requires approval."
     }
   ],
   "plugins": [
