@@ -37,12 +37,12 @@
     },
     {
       "name": "advisor",
-      "description": "Read-only deep technical advisor for architecture, tradeoffs, plans, risks, and code review using GPT-5.5 xhigh.",
+      "description": "Read-only deep technical advisor for architecture, tradeoffs, plans, risks, and code review using xAI Grok 4.5.",
       "kind": "agent",
       "recommended": true,
       "defaultEnabled": true,
       "sourceFile": "agents/advisor.md",
-      "notes": "Installs ~/.config/opencode/agent/advisor.md. Uses openai/gpt-5.5 with variant xhigh; edit is denied and bash requires approval."
+      "notes": "Installs ~/.config/opencode/agent/advisor.md. Uses xai/grok-4.5; edit is denied and bash requires approval."
     }
   ],
   "plugins": [

@@ -20,6 +20,14 @@
 - Optimize for feedback loops: run the smallest meaningful verification, inspect the result, then iterate.
 - Avoid clever hidden state. Make assumptions, decisions, and uncertainty visible.
 
+## Default Communication
+
+- No slop grenades: do not paste AI-generated walls of text where a human would answer in one sentence or a few bullets.
+- Answer the exact question first. Put the decision, finding, or recommendation before context.
+- Default to terse, structured, easy-to-scan bullets. Keep status updates, summaries, reviews, and explanations compact unless the user asks for depth.
+- Include only decisive evidence. Do not dump long logs, raw diffs, tool narration, generic caveats, or full audits when a short answer satisfies the request.
+- If more detail may help, offer a short "want deeper?" follow-up instead of expanding by default.
+
 ## Default Skill Use
 
 - Use the `superpowers` skill set by default for software work when it is installed. Treat it as the baseline workflow layer for planning, debugging, TDD, reviews, verification, branch finishing, and other development process tasks.
