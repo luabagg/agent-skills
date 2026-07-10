@@ -90,32 +90,6 @@
       "agentUse": "Use CodeBurn when the user asks about AI token usage, cost, model comparisons, expensive sessions, or token waste. It is an observability/reporting tool, not a skill."
     },
     {
-      "name": "gnhf",
-      "kind": "cli",
-      "description": "Good Night, Have Fun: an agent orchestrator for bounded, long-running coding loops while the user is away.",
-      "source": "https://github.com/kunchenguid/gnhf",
-      "package": "gnhf",
-      "install": "npm install -g gnhf",
-      "commands": [
-        {
-          "name": "verify",
-          "command": "gnhf --version && gnhf --help",
-          "purpose": "Confirm the installed CLI and inspect supported flags before launching a run."
-        },
-        {
-          "name": "hands-off-run",
-          "command": "gnhf --max-iterations 10 --stop-when \"relevant checks pass and no unrelated files changed\" \"<objective>\"",
-          "purpose": "Start a bounded overnight-style coding run with a concrete stop condition."
-        },
-        {
-          "name": "worktree-run",
-          "command": "gnhf --worktree --max-iterations 5 \"<objective>\"",
-          "purpose": "Run a GNHF worker in an isolated git worktree so the main checkout stays clean."
-        }
-      ],
-      "agentUse": "Use GNHF when the user asks for a long-running, agent-managed coding loop, overnight work, or supervised iterative work. Keep stop conditions concrete and independently verify results before acceptance."
-    },
-    {
       "name": "codegraph",
       "kind": "cli",
       "description": "Pre-indexed local code knowledge graph for AI agents. Tree-sitter extraction, SQLite + FTS5, auto-sync on file changes. MCP tool codegraph_explore returns surgical context, call paths, and blast radius in one call.",

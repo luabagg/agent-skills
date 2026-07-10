@@ -1,6 +1,12 @@
 {
   "version": 1,
-  "agents": ["claude-code", "codex", "github-copilot", "opencode"],
+  "agents": [
+    "claude-code",
+    "codex",
+    "github-copilot",
+    "opencode",
+    "pi"
+  ],
   "installPolicy": {
     "defaultMethod": "symlink",
     "copyFallback": "npm run setup:copy",
@@ -9,12 +15,23 @@
   "sources": [
     {
       "name": "superpowers",
-      "description": "Core software development workflow skills: brainstorming, planning, TDD, debugging, review, and branch finishing.",
+      "description": "Core software development workflow skills: planning, TDD, debugging, review, and branch finishing.",
       "source": "obra/superpowers",
       "sourceType": "github",
       "preferredInstall": "skills-cli",
-      "notes": "Official plugin installs are also available for Cursor, Claude Code, and Codex. Use this entry when you want this repo's curated install script to manage it.",
-      "skills": ["*"]
+      "notes": "Official plugin installs are also available for Cursor, Claude Code, and Codex. Use this entry when you want this repo's curated install script to manage it. Explicit skill list (not *) so brainstorming and requesting-code-review stay excluded.",
+      "skills": [
+        "dispatching-parallel-agents",
+        "executing-plans",
+        "finishing-a-development-branch",
+        "receiving-code-review",
+        "subagent-driven-development",
+        "systematic-debugging",
+        "using-git-worktrees",
+        "using-superpowers",
+        "writing-plans",
+        "writing-skills"
+      ]
     },
     {
       "name": "caveman",
@@ -24,11 +41,7 @@
       "preferredInstall": "skills-cli",
       "skills": [
         "caveman",
-        "caveman-commit",
-        "caveman-compress",
-        "caveman-help",
-        "caveman-review",
-        "compress"
+        "caveman-commit"
       ]
     },
     {
@@ -41,7 +54,6 @@
         "defuddle",
         "json-canvas",
         "obsidian-bases",
-        "obsidian-cli",
         "obsidian-markdown"
       ]
     },
@@ -51,24 +63,9 @@
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "preferredInstall": "skills-cli",
-      "skills": ["find-skills"]
-    },
-    {
-      "name": "emil-design-eng",
-      "description": "Emil Kowalski-inspired guidance for UI polish, component design, animation decisions, and invisible interaction details.",
-      "source": "emilkowalski/skill",
-      "sourceType": "github",
-      "preferredInstall": "skills-cli",
-      "skills": ["emil-design-eng"]
-    },
-    {
-      "name": "gnhf",
-      "description": "Good Night, Have Fun: guidance for launching, supervising, and reviewing long-running agent-managed coding runs.",
-      "source": "kunchenguid/gnhf",
-      "sourceType": "github",
-      "preferredInstall": "skills-cli",
-      "notes": "The npm package also ships this skill under skills/gnhf/SKILL.md. Track it as an upstream curated skill rather than vendoring the installed package copy.",
-      "skills": ["gnhf"]
+      "skills": [
+        "find-skills"
+      ]
     },
     {
       "name": "taste-skill",
@@ -87,6 +84,18 @@
         "imagegen-frontend-mobile",
         "brandkit"
       ]
+    },
+    {
+      "name": "hermes-design-md",
+      "description": "Google DESIGN.md token-spec authoring/validation skill from Hermes Agent.",
+      "source": "NousResearch/hermes-agent",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "notes": "Discoverable via skills CLI from the Hermes monorepo (skills/creative/design-md). May require --full-depth if auto-discovery misses nested creative skills.",
+      "skills": [
+        "design-md"
+      ],
+      "fullDepth": true
     }
   ],
   "pluginReferences": [
@@ -97,7 +106,9 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Installed as a plugin skill in local Claude/Cursor environments. Keep as a reference here rather than vendoring plugin files.",
-      "skills": ["sentry"]
+      "skills": [
+        "sentry"
+      ]
     },
     {
       "name": "github-review-workflows",
@@ -106,7 +117,10 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Local skills are gh-address-comments and gh-fix-ci. They come from plugin-style installs, not the Vercel skills CLI lockfile.",
-      "skills": ["gh-address-comments", "gh-fix-ci"]
+      "skills": [
+        "gh-address-comments",
+        "gh-fix-ci"
+      ]
     },
     {
       "name": "notion-research-documentation",
@@ -115,7 +129,9 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Installed as a plugin skill in local Claude/Cursor environments.",
-      "skills": ["notion-research-documentation"]
+      "skills": [
+        "notion-research-documentation"
+      ]
     },
     {
       "name": "figma",
@@ -124,7 +140,10 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Installed as plugin skills in local Claude/Cursor environments.",
-      "skills": ["figma", "figma-implement-design"]
+      "skills": [
+        "figma",
+        "figma-implement-design"
+      ]
     },
     {
       "name": "linear",
@@ -133,7 +152,9 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Installed as a plugin skill in local Claude/Cursor environments.",
-      "skills": ["linear"]
+      "skills": [
+        "linear"
+      ]
     },
     {
       "name": "frontend-design",
@@ -142,7 +163,9 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Installed through the frontend-design plugin, not vendored in this repo.",
-      "skills": ["frontend-design"]
+      "skills": [
+        "frontend-design"
+      ]
     },
     {
       "name": "browser-use",
@@ -151,7 +174,9 @@
       "sourceType": "plugin",
       "preferredInstall": "plugin",
       "notes": "Tracked as browser-use:browser in the broader skill inventory.",
-      "skills": ["browser"]
+      "skills": [
+        "browser"
+      ]
     }
   ]
 }

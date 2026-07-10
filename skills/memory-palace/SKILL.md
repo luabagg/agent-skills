@@ -1,10 +1,6 @@
 ---
 name: memory-palace
-description: >
-  Ingest a source into, query, or lint the user's personal Obsidian knowledge vault
-  (memory palace). Trigger only on explicit intent: "file/ingest this",
-  "what does my vault say", "audit my vault". Not on casual mentions during
-  unrelated work.
+description: Use when the user asks to search, ingest, or audit their Obsidian knowledge vault.
 ---
 
 # Memory palace

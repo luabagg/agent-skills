@@ -1,12 +1,6 @@
 ---
 name: branch-port
-description: >
-  Use when a user wants to move a feature from one branch to another but a direct
-  rebase or merge is impractical — branches have diverged significantly, conflicts
-  are extensive, or the target branch has refactored the areas the feature touches.
-  Triggers include phrases like "port the feature from X to Y", "branches diverged
-  too much to rebase", "too many merge conflicts", "re-implement on the new branch",
-  or "bring this work over without merging".
+description: Port a feature across heavily diverged branches when rebase/merge is impractical.
 ---
 
 # Branch Port

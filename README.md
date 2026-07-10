@@ -56,17 +56,20 @@ What `npm run setup` does:
 ## Commands
 
 ```bash
-npm run skills:list              # list personal skills in this repo
-npm run install:skills           # install only personal skills
-npm run install:curated          # install only curated skills-cli sources
-npm run install:curated:dry-run  # preview curated skill install commands
-npm run install:agents           # install only global AGENTS.global.md guidance
-npm run setup                    # full symlink setup
-npm run setup:copy               # full copy setup
-npm run setup:memory-palace      # persist the default memory-palace vault path
-npm run setup:opencode           # opt-in OpenCode harness setup
-npm run setup:opencode:dry-run   # preview OpenCode harness setup
-npm run verify                   # non-destructive verification pass
+npm run skills:list                 # list personal skills authored in this repo
+npm run skills:list:installed       # list all globally installed skills
+npm run skills:list:installed:json  # same, machine-readable JSON
+npm run install:skills              # install only personal skills
+npm run install:curated             # install only curated skills-cli sources
+npm run install:curated:dry-run     # print curated install commands; do not run them
+npm run install:agents              # install global AGENTS.global.md for Claude/Codex/Copilot/OpenCode
+npm run setup                       # full symlink setup (personal + curated + agents)
+npm run setup:copy                  # full copy setup
+npm run setup:memory-palace         # persist the default memory-palace vault path
+npm run setup:opencode              # opt-in OpenCode harness setup (agents/plugins config)
+npm run setup:opencode:dry-run      # preview OpenCode harness setup
+npm run update:skills               # update already-installed skills only
+npm run verify                      # non-destructive verification pass
 ```
 
 ## Personal Skills
@@ -79,13 +82,19 @@ Current personal skills:
 | --- | --- |
 | `branch-port` | Port a feature across heavily diverged branches without unsafe merges |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
+| `natural-copy-editing` | Rewrite, polish, translate, and correct text in a natural voice |
 | `thorough-pr-review` | Review PRs and branches for correctness, reliability, and merge-readiness |
 
-List local personal skills:
+List skills:
 
 ```bash
-npm run skills:list
+npm run skills:list                 # personal skills in this repo only
+npm run skills:list:installed       # everything currently installed globally
+npm run skills:list:installed:json  # JSON form of the global install inventory
 ```
+
+`skills:list` uses `npx skills add . --list` (package contents).
+`skills:list:installed` uses `npx skills list -g` (global install state across agents).
 
 ### Memory Palace Vault Path
 
@@ -155,7 +164,9 @@ npm run setup:opencode -- --enable-recommended
 
 ## Global Instructions
 
-`AGENTS.global.md` is the source of truth for global agent behavior. `npm run install:agents` distributes it to:
+`AGENTS.global.md` is the source of truth for global agent behavior. `npm run install:agents` is **not** OpenCode-only: it distributes the same file to every supported harness. OpenCode-specific agents/plugins live in `setup:opencode` instead.
+
+`npm run install:agents` targets:
 
 - Codex: `~/.codex/AGENTS.md`
 - Claude: `~/.claude/AGENTS.md` plus `~/.claude/CLAUDE.md` importing `@AGENTS.md`

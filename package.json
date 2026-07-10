@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "skills:list": "npx --yes skills add . --list",
+    "skills:list:installed": "npx --yes skills list -g",
+    "skills:list:installed:json": "npx --yes skills list -g --json",
     "install:skills": "node scripts/install-personal-skills.mjs",
     "install:curated": "node scripts/install-curated-skills.mjs",
     "install:curated:dry-run": "node scripts/install-curated-skills.mjs --dry-run",
@@ -16,7 +18,7 @@
     "setup": "node scripts/install-personal-skills.mjs && node scripts/install-curated-skills.mjs && node scripts/install-agents.mjs",
     "setup:copy": "node scripts/install-personal-skills.mjs --copy && node scripts/install-curated-skills.mjs --copy && node scripts/install-agents.mjs --copy",
     "update:skills": "npx --yes skills update --global --yes",
-    "verify": "npm run skills:list && npm run install:curated:dry-run && node scripts/install-agents.mjs --dry-run"
+    "verify": "npm run skills:list && npm run skills:list:installed && npm run install:curated:dry-run && node scripts/install-agents.mjs --dry-run"
   },
   "keywords": [
     "agent-skills",

@@ -45,6 +45,10 @@ for (const source of installable) {
     "--yes",
   ];
 
+  if (source.fullDepth) {
+    command.push("--full-depth");
+  }
+
   if (copy) {
     command.push("--copy");
   }
