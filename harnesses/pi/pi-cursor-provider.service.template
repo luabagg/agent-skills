@@ -1,0 +1,16 @@
+[Unit]
+Description=Cursor ACP provider bridge for pi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=XDG_CONFIG_HOME={{CURSOR_CONFIG_HOME}}
+Environment="PATH={{PATH}}"
+ExecStart={{OPENCODE_BIN}} serve --hostname 127.0.0.1 --port 32125 --log-level INFO
+ExecStartPost={{CURL_BIN}} --retry 20 --retry-delay 1 --retry-connrefused --fail --silent --show-error --output /dev/null "http://127.0.0.1:32125/config?directory={{WORKSPACE_URL}}"
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+npx -y @rama_nigg/open-cursor@2.5.2 sync-models \
+  --variants \
+  --compact \
+  --no-backup \
+  --config "$HOME/.config/opencode-pi-cursor/opencode/opencode.json" \
+  --plugin-dir "$HOME/.config/opencode-pi-cursor/opencode/plugin"
+
+systemctl --user restart pi-cursor-provider.service
+curl --retry 20 --retry-delay 1 --retry-connrefused --fail --silent --show-error \
+  http://127.0.0.1:32124/health
+printf '\n'

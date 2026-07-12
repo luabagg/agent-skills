@@ -14,7 +14,10 @@
       "kind": "pi-package",
       "source": "npm:pi-web-access",
       "extensionEntry": "./index.ts",
-      "resources": ["extensions", "skills"],
+      "resources": [
+        "extensions",
+        "skills"
+      ],
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:pi-web-access",
@@ -26,7 +29,10 @@
       "kind": "pi-package",
       "source": "npm:context-mode",
       "extensionEntry": "./build/adapters/pi/extension.js",
-      "resources": ["extensions", "skills"],
+      "resources": [
+        "extensions",
+        "skills"
+      ],
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:context-mode",
@@ -38,7 +44,11 @@
       "kind": "pi-package",
       "source": "npm:pi-subagents",
       "extensionEntry": "./src/extension/index.ts",
-      "resources": ["extensions", "skills", "prompts"],
+      "resources": [
+        "extensions",
+        "skills",
+        "prompts"
+      ],
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:pi-subagents",
@@ -50,7 +60,9 @@
       "kind": "pi-package",
       "source": "npm:@plannotator/pi-extension",
       "extensionEntry": "./index.ts",
-      "resources": ["extensions"],
+      "resources": [
+        "extensions"
+      ],
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:@plannotator/pi-extension",
@@ -62,7 +74,9 @@
       "kind": "pi-package",
       "source": "npm:@ff-labs/pi-fff",
       "extensionEntry": "./src/index.ts",
-      "resources": ["extensions"],
+      "resources": [
+        "extensions"
+      ],
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:@ff-labs/pi-fff",
@@ -83,14 +97,49 @@
     },
     {
       "name": "xai-subscription.ts",
-      "description": "xAI Subscription OAuth (device-code) provider for pi, exposing grok-4.5 and grok-composer-2.5-fast via auth.x.ai.",
+      "description": "xAI Subscription OAuth provider with live chat-model discovery plus fixed Composer 2.5 Fast fallback.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "xai-subscription.ts",
       "path": "~/.pi/agent/extensions/xai-subscription.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installed by npm run setup:pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Credentials persist in ~/.pi/agent/auth.json under `xai-subscription` and auto-refresh. Selected model `xai-subscription/grok-4.5` is wired in settings.json enabledModels and defaultProvider."
+      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installs globally through setup:pi; credentials stay in ~/.pi/agent/auth.json. The provider registers all live subscription chat models for the All tab while settings.enabledModels limits the Scope tab."
     }
-  ]
+  ],
+  "settings": {
+    "managedEnabledModelPrefixes": [
+      "xai-subscription/",
+      "cursor/"
+    ],
+    "enabledModels": [
+      "xai-subscription/grok-4.5",
+      "xai-subscription/grok-composer-2.5-fast",
+      "cursor/auto",
+      "cursor/composer-2.5-fast"
+    ],
+    "notes": "These entries define the /model Scope tab. The All tab still shows every model registered by the xAI extension and Cursor provider."
+  },
+  "modelProviders": [
+    {
+      "name": "cursor",
+      "description": "Cursor subscription models exposed to pi through an isolated OpenCursor ACP-to-OpenAI-compatible bridge.",
+      "sourceFile": "cursor-provider.json",
+      "path": "~/.pi/agent/models.json#/providers/cursor",
+      "defaultEnabled": true
+    }
+  ],
+  "cursorBridge": {
+    "enabled": true,
+    "package": "@rama_nigg/open-cursor@2.5.2",
+    "configHome": "~/.config/opencode-pi-cursor",
+    "controlUrl": "http://127.0.0.1:32125",
+    "providerUrl": "http://127.0.0.1:32124/v1",
+    "systemdUnit": "~/.config/systemd/user/pi-cursor-provider.service",
+    "serviceTemplate": "pi-cursor-provider.service.template",
+    "refreshScript": "pi-cursor-provider-refresh.template",
+    "refreshPath": "~/.local/bin/pi-cursor-provider-refresh",
+    "workspaceEnv": "PI_CURSOR_WORKSPACE",
+    "notes": "Requires cursor-agent and opencode on PATH plus cursor-agent login. PI_CURSOR_WORKSPACE selects the bridge workspace during setup; defaults to the user home directory. Ports bind to 127.0.0.1 without client authentication, so this assumes a trusted single-user machine. No Cursor credentials are copied into the repo."
+  }
 }

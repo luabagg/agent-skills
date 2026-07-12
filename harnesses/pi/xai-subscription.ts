@@ -5,19 +5,22 @@
  * device-code flow against https://auth.x.ai (the same flow opencode uses),
  * then uses the resulting access token as a Bearer against https://api.x.ai/v1.
  *
- * Allowed models (hard cap):
- *   - grok-4.5
- *   - grok-composer-2.5-fast ("Composer 2.5 Fast")
+ * Models:
+ *   - Live chat models from https://api.x.ai/v1/models (subscription-accessible)
+ *   - Fixed extras not returned by /v1/models: grok-composer-2.5-fast
  *
  * Usage:
- *   1. Install via `npm run setup:pi` from this repo (copies harnesses/pi/xai-subscription.ts
- *      to ~/.pi/agent/extensions/xai-subscription.ts), or copy the file manually
+ *   1. Run `npm run setup:pi` from this repo (or copy this file to
+ *      ~/.pi/agent/extensions/xai-subscription.ts)
  *   2. Start pi, run `/login`, pick "xAI (Subscription)"
  *   3. Visit the verification URL, enter the code, approve
  *   4. Select a model with `/model`, e.g. xai-subscription/grok-4.5
  *
  * Credentials are persisted by pi in ~/.pi/agent/auth.json under
  * `xai-subscription` and auto-refreshed when expired.
+ *
+ * Thinking cycle (Shift+Tab) only works on reasoning models (reasoning: true).
+ * Composer is intentionally non-reasoning because xAI rejects reasoning_effort.
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -56,7 +59,16 @@ const XAI_MODELS_URL = `${XAI_UPSTREAM_BASE_URL}/models`;
 const AUTH_FILE = path.join(os.homedir(), ".pi", "agent", "auth.json");
 
 // Hard cap: only these xAI model IDs are registered for this provider.
-const ALLOWED_XAI_MODEL_IDS = new Set(["grok-4.5", "grok-composer-2.5-fast"]);
+// Preferred display order when present.
+const PREFERRED_XAI_MODEL_ORDER = [
+  "grok-4.5",
+  "grok-4.3",
+  "grok-4.20-0309-reasoning",
+  "grok-4.20-0309-non-reasoning",
+  "grok-4.20-multi-agent-0309",
+  "grok-build-0.1",
+  "grok-composer-2.5-fast",
+] as const;
 
 const POLL_INTERVAL_MS = 5000;
 const POLL_TIMEOUT_MS = 300_000; // 5 min
@@ -221,9 +233,15 @@ interface XaiModel {
 const baseCompat = {
   supportsStore: false,
   supportsDeveloperRole: false,
-  // xAI OpenAI-compatible chat accepts reasoning_effort for reasoning models.
-  // Without this, thinking levels change in the UI but are never sent.
+  // xAI OpenAI-compatible chat accepts reasoning_effort for some reasoning
+  // models (e.g. grok-4.5). Composer rejects the parameter with 400.
   supportsReasoningEffort: true,
+};
+
+const composerCompat = {
+  supportsStore: false,
+  supportsDeveloperRole: false,
+  supportsReasoningEffort: false,
 };
 
 // Map pi thinking levels → xAI reasoning_effort values.
@@ -244,15 +262,20 @@ function priceToCostPerMillion(price: number | undefined | null): number {
   return Number((price / 10_000).toFixed(4));
 }
 
+function isComposerModel(id: string): boolean {
+  return id.includes("grok-composer");
+}
+
 function isReasoningModel(id: string): boolean {
   if (id.includes("non-reasoning")) return false;
+  // Composer is a coding agent model; xAI rejects reasoning_effort for it.
+  if (isComposerModel(id)) return false;
   if (id.includes("reasoning")) return true;
-  // grok-build, grok-4.5, grok-4.3, multi-agent, and Composer default to reasoning on.
+  // grok-build, grok-4.5, grok-4.3, multi-agent default to reasoning on.
   return (
     id.includes("grok-build") ||
     id.includes("grok-4.5") ||
     id.includes("grok-4.3") ||
-    id.includes("grok-composer") ||
     id.includes("multi-agent")
   );
 }
@@ -266,7 +289,7 @@ function buildModelFromApi(m: XaiModel): ProviderModelConfig {
   const id = m.id;
   const context = m.context_length ?? 128_000;
   const reasoning = isReasoningModel(id);
-  const isBuildOrComposer = id.includes("grok-build") || id.includes("grok-composer");
+  const isBuildOrComposer = id.includes("grok-build") || isComposerModel(id);
   // Output cap. xAI's /v1/models doesn't expose max output tokens; grok-build
   // and composer models are high-output (256k), chat models default 30k.
   const maxTokens = isBuildOrComposer ? Math.min(context, 256_000) : 30_000;
@@ -286,7 +309,7 @@ function buildModelFromApi(m: XaiModel): ProviderModelConfig {
     contextWindow: context,
     maxTokens,
     thinkingLevelMap: reasoning ? { ...xaiThinkingLevelMap } : undefined,
-    compat: { ...baseCompat },
+    compat: isComposerModel(id) ? { ...composerCompat } : { ...baseCompat },
   };
 }
 
@@ -340,13 +363,14 @@ const fixedModels: ProviderModelConfig[] = [
   {
     id: "grok-composer-2.5-fast",
     name: "Composer 2.5 Fast",
-    reasoning: true,
+    // Composer rejects reasoning_effort with 400; keep it as a non-reasoning
+    // coding model so pi never sends that parameter.
+    reasoning: false,
     input: ["text", "image"],
     cost: { input: 2, output: 6, cacheRead: 0.5, cacheWrite: 0 },
     contextWindow: 500_000,
     maxTokens: 256_000,
-    thinkingLevelMap: { ...xaiThinkingLevelMap },
-    compat: { ...baseCompat },
+    compat: { ...composerCompat },
   },
 ];
 
@@ -355,18 +379,22 @@ const fixedModels: ProviderModelConfig[] = [
 // ---------------------------------------------------------------------------
 
 export default async function (pi: ExtensionAPI) {
-  // Start from the hard-capped fixed list, then overlay live metadata
-  // (context/cost) for allowed IDs when /v1/models is reachable.
+  // Prefer live subscription model list; keep fixed extras as fallback/overlay.
   const byId = new Map(fixedModels.map((m) => [m.id, m]));
   const live = await fetchXaiModels();
   if (live) {
     for (const m of live) {
-      if (!ALLOWED_XAI_MODEL_IDS.has(m.id)) continue;
       byId.set(m.id, m);
     }
   }
-  // Preserve fixed order: grok-4.5, then composer.
-  const models = [...ALLOWED_XAI_MODEL_IDS]
+
+  const preferred = new Set<string>(PREFERRED_XAI_MODEL_ORDER);
+  const orderedIds = [
+    ...PREFERRED_XAI_MODEL_ORDER.filter((id) => byId.has(id)),
+    ...[...byId.keys()].filter((id) => !preferred.has(id)).sort(),
+  ];
+
+  const models = orderedIds
     .map((id) => byId.get(id))
     .filter((m): m is ProviderModelConfig => !!m);
 

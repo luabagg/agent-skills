@@ -172,13 +172,23 @@ npm run setup:pi:dry-run
 npm run setup:pi
 ```
 
-The Pi setup script validates the manifest, reconciles enabled packages into `~/.pi/agent/settings.json` `packages`, runs `pi install` for missing entries, and installs local extensions from `harnesses/pi/*.ts` into `~/.pi/agent/extensions/`. Local extensions are auto-discovered by pi and are not added to `settings.json` packages. Context-mode is **not** built into pi; it is a standalone package installed via `pi install`. RTK and headroom are preferred for output compression; pi-hypa is intentionally not tracked.
+Pi setup validates the manifest, reconciles packages and the `/model` Scope list in `~/.pi/agent/settings.json`, installs local extensions from `harnesses/pi/`, and merges tracked providers into `~/.pi/agent/models.json`. xAI and Cursor can register broader model catalogs for the All tab while Scope intentionally keeps only the preferred models.
+
+The tracked Cursor setup installs `@rama_nigg/open-cursor`, creates an isolated OpenCode config under `~/.config/opencode-pi-cursor`, registers a local OpenAI-compatible `cursor` provider, and enables `pi-cursor-provider.service`. Cursor credentials stay outside this repo and are reused from `cursor-agent login`. Both bridge ports bind only to `127.0.0.1`; any trusted local process can reach them, so this setup assumes a trusted single-user machine. Set `PI_CURSOR_WORKSPACE=/path/to/project` during setup to choose the ACP workspace; it defaults to `$HOME`.
+
+Context-mode is **not** built into pi; it is installed separately through `pi install`. RTK and headroom remain the preferred output-compression tools.
 
 Use `-- --enable-recommended` to include recommended-but-not-default-enabled entries:
 
 ```bash
 npm run setup:pi:dry-run -- --enable-recommended
 npm run setup:pi -- --enable-recommended
+
+# Optional: pin Cursor ACP context to the current project
+PI_CURSOR_WORKSPACE="$PWD" npm run setup:pi
+
+# Refresh Cursor models after Cursor CLI updates
+pi-cursor-provider-refresh
 ```
 
 ## Global Instructions
