@@ -23,35 +23,40 @@
       "agentUse": "Reference when creating or reviewing UI that should follow a persistent visual identity. This is tooling/documentation, not an agent skill."
     },
     {
-      "name": "rtk",
+      "name": "headroom",
       "kind": "cli",
-      "description": "Rust Token Killer: CLI proxy that compresses verbose shell command output before it reaches an LLM context.",
-      "source": "https://github.com/rtk-ai/rtk",
-      "package": null,
-      "install": "brew install rtk",
+      "description": "Context-optimization proxy for LLM clients. It compresses context, tracks savings, and can provide RTK-based shell-output guidance to supported agents.",
+      "source": "https://headroom-docs.vercel.app",
+      "package": "headroom-ai",
+      "install": "pip install -U headroom-ai",
       "commands": [
         {
-          "name": "verify",
-          "command": "rtk --version && rtk gain",
-          "purpose": "Confirm this is Rust Token Killer, not the unrelated Rust Type Kit package."
+          "name": "doctor",
+          "command": "headroom doctor",
+          "purpose": "Verify that the local proxy is running and that configured clients are routed through it."
         },
         {
-          "name": "init-claude",
-          "command": "rtk init -g",
-          "purpose": "Install global Claude Code hook and RTK.md guidance."
+          "name": "proxy",
+          "command": "headroom proxy",
+          "purpose": "Start the local optimization proxy on port 8787."
         },
         {
-          "name": "init-codex",
-          "command": "rtk init -g --codex",
-          "purpose": "Install Codex AGENTS.md and RTK.md guidance."
+          "name": "wrap-opencode",
+          "command": "headroom wrap opencode --no-proxy",
+          "purpose": "Launch OpenCode through an already-running Headroom proxy."
         },
         {
-          "name": "usage-stats",
-          "command": "rtk gain --graph",
-          "purpose": "Show token savings and recent RTK usage history."
+          "name": "savings",
+          "command": "headroom savings",
+          "purpose": "Show durable token and cost savings recorded by Headroom."
+        },
+        {
+          "name": "perf",
+          "command": "headroom perf",
+          "purpose": "Analyze proxy compression, cache, routing, and context-tool performance from Headroom logs."
         }
       ],
-      "agentUse": "Use RTK as a shell-output proxy for verbose commands like git status, git diff, test runners, package managers, Docker, and Kubernetes. Do not use it for commands where raw output is explicitly required."
+      "agentUse": "Route supported Anthropic, OpenAI, Codex, and explicitly configured compatible providers through Headroom. Treat Headroom-managed AGENTS.md instructions as the source of truth for RTK use; use raw commands when unfiltered output is required."
     },
     {
       "name": "codeburn",

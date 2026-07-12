@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "harness": "pi",
+  "setupPolicy": {
+    "defaultMode": "dry-run-first",
+    "defaultSetupCommand": "npm run setup:pi",
+    "dryRunCommand": "npm run setup:pi:dry-run",
+    "includedInDefaultSetup": false
+  },
+  "packages": [
+    {
+      "name": "pi-web-access",
+      "description": "Web search, fetch/scrape (Defuddle), YouTube transcripts, and librarian skill for pi.",
+      "kind": "pi-package",
+      "source": "npm:pi-web-access",
+      "extensionEntry": "./index.ts",
+      "resources": ["extensions", "skills"],
+      "recommended": true,
+      "defaultEnabled": true,
+      "install": "pi install npm:pi-web-access",
+      "notes": "Installs to ~/.pi/agent/npm/node_modules/pi-web-access. Manifest declares ./index.ts as the extension entry and bundles a skills/ directory (librarian, web-access)."
+    },
+    {
+      "name": "context-mode",
+      "description": "Context-mode: ctx_* tools (sandbox code execution, FTS5 knowledge base, session memory) and the context-mode skill set.",
+      "kind": "pi-package",
+      "source": "npm:context-mode",
+      "extensionEntry": "./build/adapters/pi/extension.js",
+      "resources": ["extensions", "skills"],
+      "recommended": true,
+      "defaultEnabled": true,
+      "install": "pi install npm:context-mode",
+      "notes": "NOT built into pi. Standalone npm package installed via `pi install`. The build/adapters/pi/extension.js adapter is the pi entry; OpenCode/Claude use different adapters. Bundles the context-mode skills."
+    },
+    {
+      "name": "pi-subagents",
+      "description": "Subagent delegation for pi: single, chain, parallel, async, and forked-context workflows with intercom coordination.",
+      "kind": "pi-package",
+      "source": "npm:pi-subagents",
+      "extensionEntry": "./src/extension/index.ts",
+      "resources": ["extensions", "skills", "prompts"],
+      "recommended": true,
+      "defaultEnabled": true,
+      "install": "pi install npm:pi-subagents",
+      "notes": "User shorthand `src/extension` maps to ./src/extension/index.ts. Bundles the pi-subagents skill and prompt templates."
+    },
+    {
+      "name": "@plannotator/pi-extension",
+      "description": "Plannotator: interactive plan review/editor with a browser UI and event handling for pi.",
+      "kind": "pi-package",
+      "source": "npm:@plannotator/pi-extension",
+      "extensionEntry": "./index.ts",
+      "resources": ["extensions"],
+      "recommended": true,
+      "defaultEnabled": true,
+      "install": "pi install npm:@plannotator/pi-extension",
+      "notes": "Package uses `pi.extensions: [\"./\"]`, so the extension entry is the root index.ts (user shorthand `pi-extension` references the package, not a subpath). Large HTML assets (plannotator.html, review-editor.html) ship in the tarball."
+    },
+    {
+      "name": "@ff-labs/pi-fff",
+      "description": "pi-fff: fuzzy search / grep tools for pi (ff-find, ff-grep).",
+      "kind": "pi-package",
+      "source": "npm:@ff-labs/pi-fff",
+      "extensionEntry": "./src/index.ts",
+      "resources": ["extensions"],
+      "recommended": true,
+      "defaultEnabled": true,
+      "install": "pi install npm:@ff-labs/pi-fff",
+      "notes": "User shorthand `src` maps to the manifest entry ./src/index.ts. RTK and headroom are preferred for output compression; pi-fff covers fuzzy path/grep search."
+    }
+  ],
+  "localExtensions": [
+    {
+      "name": "variants.ts",
+      "description": "OpenCode-style /variants and /variant commands that map pi thinking levels (off/minimal/low/medium/high/xhigh/max) to effort variants.",
+      "kind": "local-extension",
+      "scope": "global",
+      "sourceFile": "variants.ts",
+      "path": "~/.pi/agent/extensions/variants.ts",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Repo source: harnesses/pi/variants.ts. Installed by npm run setup:pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds a `variant:<level>` status chip. Restart pi after install so the command is registered."
+    },
+    {
+      "name": "xai-subscription.ts",
+      "description": "xAI Subscription OAuth (device-code) provider for pi, exposing grok-4.5 and grok-composer-2.5-fast via auth.x.ai.",
+      "kind": "local-extension",
+      "scope": "global",
+      "sourceFile": "xai-subscription.ts",
+      "path": "~/.pi/agent/extensions/xai-subscription.ts",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installed by npm run setup:pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Credentials persist in ~/.pi/agent/auth.json under `xai-subscription` and auto-refresh. Selected model `xai-subscription/grok-4.5` is wired in settings.json enabledModels and defaultProvider."
+    }
+  ]
+}

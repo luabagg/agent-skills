@@ -10,6 +10,7 @@ This repo supports:
 - Codex
 - Copilot
 - OpenCode
+- Pi
 
 ## Layout
 
@@ -49,9 +50,9 @@ npm run setup:copy
 
 What `npm run setup` does:
 
-- Installs personal skills from `skills/` for `claude-code`, `codex`, `github-copilot`, and `opencode` using `npx skills`.
+- Installs personal skills from `skills/` for `claude-code`, `codex`, `github-copilot`, `opencode`, and `pi` using `npx skills`.
 - Installs curated third-party skills from `curated-skills.json` `sources`.
-- Installs global `AGENTS.global.md` guidance for Claude, Codex, Copilot, and OpenCode.
+- Installs global `AGENTS.global.md` guidance for Claude, Codex, Copilot, OpenCode, and Pi.
 
 ## Commands
 
@@ -68,6 +69,8 @@ npm run setup:copy                  # full copy setup
 npm run setup:memory-palace         # persist the default memory-palace vault path
 npm run setup:opencode              # opt-in OpenCode harness setup (agents/plugins config)
 npm run setup:opencode:dry-run      # preview OpenCode harness setup
+npm run setup:pi                    # opt-in Pi harness setup (packages/extensions config)
+npm run setup:pi:dry-run            # preview Pi harness setup
 npm run update:skills               # update already-installed skills only
 npm run verify                      # non-destructive verification pass
 ```
@@ -162,9 +165,25 @@ npm run setup:opencode:dry-run -- --enable-recommended
 npm run setup:opencode -- --enable-recommended
 ```
 
+The Pi harness is tracked in `harnesses/pi.json` with local extension sources under `harnesses/pi/`, and exposed through:
+
+```bash
+npm run setup:pi:dry-run
+npm run setup:pi
+```
+
+The Pi setup script validates the manifest, reconciles enabled packages into `~/.pi/agent/settings.json` `packages`, runs `pi install` for missing entries, and installs local extensions from `harnesses/pi/*.ts` into `~/.pi/agent/extensions/`. Local extensions are auto-discovered by pi and are not added to `settings.json` packages. Context-mode is **not** built into pi; it is a standalone package installed via `pi install`. RTK and headroom are preferred for output compression; pi-hypa is intentionally not tracked.
+
+Use `-- --enable-recommended` to include recommended-but-not-default-enabled entries:
+
+```bash
+npm run setup:pi:dry-run -- --enable-recommended
+npm run setup:pi -- --enable-recommended
+```
+
 ## Global Instructions
 
-`AGENTS.global.md` is the source of truth for global agent behavior. `npm run install:agents` is **not** OpenCode-only: it distributes the same file to every supported harness. OpenCode-specific agents/plugins live in `setup:opencode` instead.
+`AGENTS.global.md` is the source of truth for global agent behavior. `npm run install:agents` distributes the same file to every supported harness.
 
 `npm run install:agents` targets:
 
@@ -172,10 +191,13 @@ npm run setup:opencode -- --enable-recommended
 - Claude: `~/.claude/AGENTS.md` plus `~/.claude/CLAUDE.md` importing `@AGENTS.md`
 - Copilot: `~/.copilot/AGENTS.md` plus `~/.copilot/instructions/global-agent.instructions.md`
 - OpenCode: `~/.config/opencode/AGENTS.md` plus a global config `instructions` entry
+- Pi: `~/.pi/agent/AGENTS.md`
+
+Pi loads `AGENTS.md` (or `CLAUDE.md`) natively from `~/.pi/agent/` and from parent directories of the current working directory, so no wrapper or config entry is needed. Personal and curated skills install to the shared `~/.agents/skills/` location via `npx skills --agent pi`.
 
 Default mode symlinks those targets back to this repo. `npm run setup:copy` copies file contents instead.
 
-`AGENTS.md` is repo-scoped and only applies when working inside this repository. opencode and Codex pick it up natively via the project `AGENTS.md`; Claude picks it up via the repo-root `CLAUDE.md` symlink -> `AGENTS.md`.
+`AGENTS.md` is repo-scoped and only applies when working inside this repository. opencode, Codex, and Pi pick it up natively via the project `AGENTS.md`; Claude picks it up via the repo-root `CLAUDE.md` symlink -> `AGENTS.md`.
 
 After changing OpenCode config, restart OpenCode. Running sessions keep using already-loaded config.
 

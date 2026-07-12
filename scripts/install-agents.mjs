@@ -31,6 +31,7 @@ const targets = {
   opencodeAgents: resolve(join(homedir(), ".config", "opencode", "AGENTS.md")),
   opencodeJsonc: resolve(join(homedir(), ".config", "opencode", "opencode.jsonc")),
   opencodeJson: resolve(join(homedir(), ".config", "opencode", "opencode.json")),
+  piAgents: resolve(join(homedir(), ".pi", "agent", "AGENTS.md")),
 };
 
 async function ensureParent(filePath) {
@@ -194,6 +195,7 @@ await installManagedFile(sourceFile, targets.codexAgents);
 await installManagedFile(sourceFile, targets.claudeAgents);
 await installManagedFile(sourceFile, targets.copilotAgents);
 await installManagedFile(sourceFile, targets.opencodeAgents);
+await installManagedFile(sourceFile, targets.piAgents);
 await ensureClaudeWrapper();
 await ensureCopilotWrapper();
 await ensureOpenCodeConfig();

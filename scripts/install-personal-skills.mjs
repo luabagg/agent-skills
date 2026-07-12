@@ -7,7 +7,7 @@ const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const copy = args.has("--copy");
 const skillsDir = new URL("../skills/", import.meta.url);
-const agents = ["claude-code", "codex", "github-copilot", "opencode"];
+const agents = ["claude-code", "codex", "github-copilot", "opencode", "pi"];
 
 async function hasPersonalSkills() {
   const entries = await readdir(skillsDir, { withFileTypes: true });
