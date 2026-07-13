@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "harness": "cursor",
+  "setupPolicy": {
+    "defaultMode": "dry-run-first",
+    "defaultSetupCommand": "npm run setup:cursor",
+    "dryRunCommand": "npm run setup:cursor:dry-run",
+    "includedInDefaultSetup": false
+  },
+  "agents": [
+    {
+      "name": "coder",
+      "description": "Execute implementation instructions delegated by agent mode. Use for coding tasks that need file edits, shell commands, and verification.",
+      "kind": "agent",
+      "sourceFile": "agents/coder.md",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Installs ~/.cursor/agents/coder.md. Uses Cursor Composer 2.5 Fast. Background subagent with full write access."
+    },
+    {
+      "name": "advisor",
+      "description": "Deep technical advisor for architecture, tradeoffs, plans, risks, and code review. Use before major changes or when implementation choices are unclear.",
+      "kind": "agent",
+      "sourceFile": "agents/advisor.md",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Installs ~/.cursor/agents/advisor.md. Uses GPT-5.6 Sol with xhigh reasoning. Background readonly subagent."
+    }
+  ],
+  "notes": "Cursor does not support global AGENTS.md or ~/.cursor/rules/*.mdc for global rules. User Rules must be set via Customize > Rules in the Cursor UI. Subagents are installed to ~/.cursor/agents/ (user scope, all projects)."
+}

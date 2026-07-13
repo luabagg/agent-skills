@@ -15,6 +15,9 @@
     "setup:memory-palace": "node scripts/configure-memory-palace.mjs",
     "setup:opencode": "node scripts/setup-opencode.mjs",
     "setup:opencode:dry-run": "node scripts/setup-opencode.mjs --dry-run",
+    "setup:cursor": "node scripts/setup-cursor.mjs",
+    "setup:cursor:dry-run": "node scripts/setup-cursor.mjs --dry-run",
+    "setup:cursor:copy": "node scripts/setup-cursor.mjs --copy",
     "setup:pi": "node scripts/setup-pi.mjs",
     "setup:pi:dry-run": "node scripts/setup-pi.mjs --dry-run",
     "setup": "node scripts/install-personal-skills.mjs && node scripts/install-curated-skills.mjs && node scripts/install-agents.mjs",
@@ -29,7 +32,8 @@
     "codex",
     "copilot",
     "opencode",
-    "pi"
+    "pi",
+    "cursor"
   ],
   "license": "MIT",
   "dependencies": {}

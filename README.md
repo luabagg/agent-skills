@@ -11,6 +11,7 @@ This repo supports:
 - Copilot
 - OpenCode
 - Pi
+- Cursor
 
 ## Layout
 
@@ -71,6 +72,9 @@ npm run setup:opencode              # opt-in OpenCode harness setup (agents/plug
 npm run setup:opencode:dry-run      # preview OpenCode harness setup
 npm run setup:pi                    # opt-in Pi harness setup (packages/extensions config)
 npm run setup:pi:dry-run            # preview Pi harness setup
+npm run setup:cursor                # opt-in Cursor subagent setup (~/.cursor/agents/)
+npm run setup:cursor:dry-run        # preview Cursor harness setup
+npm run setup:cursor:copy           # opt-in Cursor subagent setup (copy mode)
 npm run update:skills               # update already-installed skills only
 npm run verify                      # non-destructive verification pass
 ```
@@ -190,6 +194,17 @@ PI_CURSOR_WORKSPACE="$PWD" npm run setup:pi
 # Refresh Cursor models after Cursor CLI updates
 pi-cursor-provider-refresh
 ```
+
+The Cursor harness is tracked in `harnesses/cursor.json`, with subagent source files under `harnesses/cursor/agents/`.
+
+```bash
+npm run setup:cursor:dry-run
+npm run setup:cursor
+npm run setup:cursor:copy
+```
+
+Cursor does not support global `AGENTS.md` or `~/.cursor/rules/*.mdc` — User Rules must be set via the Customize > Rules UI. The Cursor harness only installs user-scope subagents to `~/.cursor/agents/`. Default mode symlinks them back to this repo; use `setup:cursor:copy` for file copies.
+
 
 ## Global Instructions
 
