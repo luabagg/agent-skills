@@ -87,6 +87,7 @@ npm run catalog:diff                # live catalog preview
 npm run catalog:refresh             # refresh lock + generated targets
 npm run update:skills               # update installed skills
 npm run verify                      # non-destructive verification
+npm test                            # CLI routing / dry-run / exit-code tests
 ```
 
 ## Personal Skills

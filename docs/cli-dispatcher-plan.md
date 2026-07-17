@@ -94,6 +94,8 @@ Delegation should use `execFileSync` or `spawnSync` with argument arrays rather 
 
 Implemented in `scripts/cli.mjs` with thin `package.json` aliases. Domain scripts remain the owners of install/setup/catalog logic. Pi gained `--catalog-only` and `--skip-cursor-bridge` so model apply is not tied to full harness install. See [`docs/model-catalog.md`](model-catalog.md).
 
+CLI coverage lives in `tests/cli.test.mjs` (`npm run test:cli` / `npm test`). Dispatcher verification (`--help`, dry-run setup/install, `catalog check`, `verify`, `npm exec -- agent-skills`) was run successfully through the unified entrypoint.
+
 ## Implementation steps
 
 - [x] Inventory supported flags and exit behavior in every existing script.
@@ -106,8 +108,8 @@ Implemented in `scripts/cli.mjs` with thin `package.json` aliases. Domain script
 - [x] Add the `agent-skills` executable under `package.json#bin`.
 - [x] Reduce `package.json#scripts` to `agent-skills`, `setup`, and `verify`.
 - [x] Update README examples to use the dispatcher.
-- [ ] Add CLI tests for routing, help, invalid commands, flag forwarding, dry-run safety, and child exit-code propagation.
-- [ ] Run all existing setup/catalog verification through the dispatcher and confirm behavior remains idempotent.
+- [x] Add CLI tests for routing, help, invalid commands, flag forwarding, dry-run safety, and child exit-code propagation.
+- [x] Run all existing setup/catalog verification through the dispatcher and confirm behavior remains idempotent.
 
 ## Command rules
 

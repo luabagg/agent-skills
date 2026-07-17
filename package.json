@@ -30,7 +30,9 @@
     "setup": "node scripts/cli.mjs install all",
     "setup:copy": "node scripts/cli.mjs install all --copy",
     "update:skills": "node scripts/cli.mjs update",
-    "verify": "node scripts/cli.mjs verify"
+    "verify": "node scripts/cli.mjs verify",
+    "test": "node --test tests/**/*.test.mjs",
+    "test:cli": "node --test tests/cli.test.mjs"
   },
   "keywords": [
     "agent-skills",
