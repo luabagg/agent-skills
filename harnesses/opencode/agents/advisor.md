@@ -1,7 +1,7 @@
 ---
 description: Deep technical advisor for architecture, tradeoffs, plans, risks, and code review. Use before major changes or when implementation choices are unclear.
 mode: subagent
-model: xai/grok-4.5
+model: {{catalogRole:advisor}}
 temperature: 0.2
 permission:
   edit: deny

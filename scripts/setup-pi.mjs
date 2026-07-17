@@ -17,18 +17,41 @@ import {
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseYaml } from "yaml";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const enableRecommended = args.has("--enable-recommended");
+const catalogOnly = args.has("--catalog-only");
+const skipCursorBridge = args.has("--skip-cursor-bridge") || catalogOnly;
+const unknownArgs = [...args].filter(
+  (arg) =>
+    ![
+      "--dry-run",
+      "--enable-recommended",
+      "--catalog-only",
+      "--skip-cursor-bridge",
+    ].includes(arg),
+);
+if (unknownArgs.length > 0) {
+  console.error(
+    `Unknown setup-pi flag(s): ${unknownArgs.join(", ")}. Supported: --dry-run, --enable-recommended, --catalog-only, --skip-cursor-bridge.`,
+  );
+  process.exit(1);
+}
 const manifestPath = new URL("../harnesses/pi.json", import.meta.url);
 const harnessRoot = resolve(fileURLToPath(new URL("../harnesses/pi/", import.meta.url)));
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+const catalogPath = new URL("../harnesses/catalog.yaml", import.meta.url);
+const catalogLockPath = new URL("../harnesses/catalog.lock.json", import.meta.url);
+const catalog = parseYaml(await readFile(catalogPath, "utf8"));
+const catalogLock = JSON.parse(await readFile(catalogLockPath, "utf8"));
 
 const piDir = resolve(join(homedir(), ".pi", "agent"));
 const extensionsDir = resolve(join(piDir, "extensions"));
 const settingsPath = resolve(join(piDir, "settings.json"));
 const modelsPath = resolve(join(piDir, "models.json"));
+const installedCatalogLockPath = resolve(join(piDir, "catalog.lock.json"));
 
 function validateManifest(value) {
   if (value.version !== 1) throw new Error("harnesses/pi.json must have version 1.");
@@ -57,13 +80,8 @@ function validateManifest(value) {
   }
 
   const settings = value.settings;
-  if (settings) {
-    if (!Array.isArray(settings.enabledModels)) {
-      throw new Error("pi settings.enabledModels must be an array.");
-    }
-    if (!Array.isArray(settings.managedEnabledModelPrefixes)) {
-      throw new Error("pi settings.managedEnabledModelPrefixes must be an array.");
-    }
+  if (settings && (!settings.catalogScope || !catalog.piScopes?.[settings.catalogScope])) {
+    throw new Error("pi settings.catalogScope must reference a catalog piScope.");
   }
 
   for (const provider of value.modelProviders ?? []) {
@@ -117,6 +135,21 @@ function currentPackageSet(settings) {
   );
 }
 
+function resolvedScope(scopeId) {
+  const selectors = catalog.piScopes[scopeId];
+  const enabledModels = [];
+  const managedPrefixes = new Set();
+  for (const selectorId of selectors) {
+    const resolved = catalogLock.resolvedSelectors?.[selectorId];
+    if (!resolved) throw new Error(`Catalog lock is missing selector ${selectorId}.`);
+    const prefix = catalog.providers?.[resolved.provider]?.harnessIds?.pi;
+    if (!prefix) throw new Error(`Catalog provider ${resolved.provider} has no Pi harness ID.`);
+    managedPrefixes.add(`${prefix}/`);
+    enabledModels.push(`${prefix}/${resolved.modelId}`);
+  }
+  return { enabledModels, managedPrefixes: [...managedPrefixes] };
+}
+
 function nextSettings(currentSettings, sources) {
   const next = { ...currentSettings };
   const existing = Array.isArray(next.packages) ? [...next.packages] : [];
@@ -133,14 +166,15 @@ function nextSettings(currentSettings, sources) {
 
   const managed = manifest.settings;
   if (managed) {
-    const prefixes = managed.managedEnabledModelPrefixes;
+    const resolved = resolvedScope(managed.catalogScope);
     const enabled = Array.isArray(next.enabledModels) ? next.enabledModels : [];
     next.enabledModels = [
       ...enabled.filter(
         (entry) =>
-          typeof entry === "string" && !prefixes.some((prefix) => entry.startsWith(prefix)),
+          typeof entry === "string" &&
+          !resolved.managedPrefixes.some((prefix) => entry.startsWith(prefix)),
       ),
-      ...managed.enabledModels,
+      ...resolved.enabledModels,
     ];
   }
 
@@ -165,6 +199,18 @@ async function writeJsonWithBackup(filePath, nextValue, label) {
   }
   await writeFile(filePath, nextContent, "utf8");
   console.log(`  wrote: ${filePath}`);
+  return true;
+}
+
+async function installCatalogLock() {
+  const sourceContent = await readFile(catalogLockPath, "utf8");
+  const currentContent = await readUtf8IfExists(installedCatalogLockPath);
+  const status = currentContent === null ? "missing" : currentContent === sourceContent ? "ok" : "stale";
+  console.log(`Catalog lock -> ${installedCatalogLockPath} [${status}]`);
+  if (status === "ok") return false;
+  if (dryRun) return true;
+  await mkdir(dirname(installedCatalogLockPath), { recursive: true });
+  await writeFile(installedCatalogLockPath, sourceContent, "utf8");
   return true;
 }
 
@@ -394,10 +440,13 @@ async function setupCursorBridge() {
   return bridgeChanged;
 }
 
+execFileSync(process.execPath, [fileURLToPath(new URL("./catalog.mjs", import.meta.url)), "check"], {
+  stdio: "inherit",
+});
 validateManifest(manifest);
 
-const selectedPackages = packagesToInstall();
-const selectedLocalExtensions = localExtensionsToInstall();
+const selectedPackages = catalogOnly ? [] : packagesToInstall();
+const selectedLocalExtensions = catalogOnly ? [] : localExtensionsToInstall();
 const selectedProviders = modelProvidersToInstall();
 const currentSettingsContent = await readUtf8IfExists(settingsPath);
 const currentSettings = currentSettingsContent ? JSON.parse(currentSettingsContent) : {};
@@ -405,28 +454,46 @@ const currentPackages = currentPackageSet(currentSettings);
 const sourcesToAdd = selectedPackages
   .filter((pkg) => !currentPackages.has(pkg.source))
   .map((pkg) => pkg.source);
-const updatedSettings = nextSettings(currentSettings, sourcesToAdd);
+// Catalog-only still reconciles Scope models from the lock; package sources stay untouched.
+const updatedSettings = nextSettings(
+  currentSettings,
+  catalogOnly ? [] : sourcesToAdd,
+);
 
 const currentModelsContent = await readUtf8IfExists(modelsPath);
 const currentModels = currentModelsContent ? JSON.parse(currentModelsContent) : {};
 const updatedModels = await nextModels(currentModels, selectedProviders);
+
+const phases = ["catalog"];
+if (!catalogOnly) phases.push("packages", "extensions");
+if (!skipCursorBridge) phases.push("cursor-bridge");
 
 console.log(
   `Pi harness: ${(manifest.packages ?? []).length} packages, ${(manifest.localExtensions ?? []).length} local extensions, ${(manifest.modelProviders ?? []).length} model providers.`,
 );
 console.log(`Harness root: ${harnessRoot}`);
 console.log(`Mode: ${dryRun ? "dry-run" : "write"}`);
+console.log(`Phases: ${phases.join(", ")}`);
+if (catalogOnly) {
+  console.log("Catalog-only: applying lock, Scope models, and model providers; skipping packages/extensions/bridge.");
+}
 
-console.log("\nSelected pi packages:");
-for (const pkg of selectedPackages) {
-  console.log(`- ${pkg.name} (${pkg.source}) [${currentPackages.has(pkg.source) ? "ok" : "missing"}]`);
+if (!catalogOnly) {
+  console.log("\nSelected pi packages:");
+  for (const pkg of selectedPackages) {
+    console.log(`- ${pkg.name} (${pkg.source}) [${currentPackages.has(pkg.source) ? "ok" : "missing"}]`);
+  }
 }
 
 let changed = false;
+
+// Phase: catalog — Scope models + committed lock + generated providers
 changed = (await writeJsonWithBackup(settingsPath, updatedSettings, `Pi settings: ${settingsPath}`)) || changed;
 changed = (await writeJsonWithBackup(modelsPath, updatedModels, `Pi models: ${modelsPath}`)) || changed;
+changed = (await installCatalogLock()) || changed;
 
-if (!dryRun && sourcesToAdd.length > 0) {
+// Phase: packages
+if (!catalogOnly && !dryRun && sourcesToAdd.length > 0) {
   for (const pkg of selectedPackages) {
     if (!sourcesToAdd.includes(pkg.source)) continue;
     console.log(`Running: ${pkg.install} (${pkg.name})`);
@@ -437,19 +504,35 @@ if (!dryRun && sourcesToAdd.length > 0) {
     }
   }
   changed = true;
+} else if (!catalogOnly && dryRun && sourcesToAdd.length > 0) {
+  for (const pkg of selectedPackages) {
+    if (!sourcesToAdd.includes(pkg.source)) continue;
+    console.log(` would run: ${pkg.install} (${pkg.name})`);
+  }
+  changed = true;
 }
 
-console.log("\nLocal extensions:");
-for (const ext of selectedLocalExtensions) {
-  changed = (await installLocalExtension(ext)) || changed;
+// Phase: extensions
+if (!catalogOnly) {
+  console.log("\nLocal extensions:");
+  for (const ext of selectedLocalExtensions) {
+    changed = (await installLocalExtension(ext)) || changed;
+  }
 }
 
-changed = (await setupCursorBridge()) || changed;
+// Phase: cursor bridge
+if (!skipCursorBridge) {
+  changed = (await setupCursorBridge()) || changed;
+} else {
+  console.log("\nCursor ACP provider bridge: skipped");
+}
 
 if (dryRun) {
   console.log("\nDry-run complete. Re-run without --dry-run to apply.");
 } else if (!changed) {
   console.log("\nPi harness already matches selected entries.");
+} else if (catalogOnly) {
+  console.log("\nPi catalog apply complete. Restart pi to load updated Scope models.");
 } else {
   console.log("\nPi harness setup complete. Restart pi to load updated models/extensions.");
 }

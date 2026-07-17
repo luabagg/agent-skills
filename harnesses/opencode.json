@@ -33,7 +33,8 @@
       "recommended": true,
       "defaultEnabled": true,
       "sourceFile": "agents/coder.md",
-      "notes": "Installs ~/.config/opencode/agent/coder.md. Uses xai/grok-composer-2.5-fast for coding tasks delegated from Build mode."
+      "modelRole": "coder",
+      "notes": "Installs ~/.config/opencode/agent/coder.md. Its concrete model is rendered from the central catalog role during setup."
     },
     {
       "name": "advisor",
@@ -42,7 +43,8 @@
       "recommended": true,
       "defaultEnabled": true,
       "sourceFile": "agents/advisor.md",
-      "notes": "Installs ~/.config/opencode/agent/advisor.md. Uses xai/grok-4.5; edit is denied and bash requires approval."
+      "modelRole": "advisor",
+      "notes": "Installs ~/.config/opencode/agent/advisor.md. Its concrete model is rendered from the central catalog role during setup; edit is denied and bash requires approval."
     }
   ],
   "plugins": [

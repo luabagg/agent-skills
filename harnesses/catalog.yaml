@@ -1,0 +1,92 @@
+schemaVersion: 1
+
+providers:
+  xai:
+    harnessIds:
+      pi: xai-subscription
+      opencode: xai
+    discovery:
+      kind: pi-list-models
+      provider: xai-subscription
+    modelDefaults:
+      reasoning: false
+      input: [text, image]
+      contextWindow: 128000
+      maxTokens: 30000
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+    fallbackMetadata:
+      grok-4.5:
+        includeWhenUndiscovered: true
+        reason: Keeps the preferred subscription model available when live discovery is unavailable.
+        model:
+          name: Grok 4.5
+          reasoning: true
+          input: [text, image]
+          contextWindow: 500000
+          maxTokens: 30000
+          cost: { input: 2, output: 6, cacheRead: 0.5, cacheWrite: 0 }
+      grok-composer-2.5-fast:
+        includeWhenUndiscovered: true
+        reason: The subscription model is known to be omitted from xAI's /v1/models response.
+        model:
+          name: Composer 2.5 Fast
+          reasoning: false
+          input: [text, image]
+          contextWindow: 500000
+          maxTokens: 256000
+          cost: { input: 2, output: 6, cacheRead: 0.5, cacheWrite: 0 }
+
+  cursor:
+    harnessIds:
+      pi: cursor
+    discovery:
+      kind: openai-models
+      url: http://127.0.0.1:32124/v1/models
+    piTransport:
+      name: Cursor Subscription
+      baseUrl: http://127.0.0.1:32124/v1
+      api: openai-completions
+      apiKey: local-bridge
+      authHeader: true
+      compat:
+        supportsDeveloperRole: false
+        supportsReasoningEffort: false
+        supportsStore: false
+    modelDefaults:
+      reasoning: false
+      input: [text, image]
+      contextWindow: 1000000
+      maxTokens: 256000
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+    modelRules:
+      - match: -xhigh$
+        overrides:
+          reasoning: true
+          maxTokens: 128000
+
+selectors:
+  xai-chat:
+    provider: xai
+    exact: grok-4.5
+  xai-coder:
+    provider: xai
+    exact: grok-composer-2.5-fast
+  cursor-auto:
+    provider: cursor
+    exact: auto
+  cursor-coder:
+    provider: cursor
+    familyLatest:
+      family: composer
+      suffix: -fast
+      versionScheme: numeric-dotted
+
+piScopes:
+  default: [xai-chat, xai-coder, cursor-auto, cursor-coder]
+
+opencodeRoles:
+  advisor: xai-chat
+  coder: xai-coder
+
+generatedTargets:
+  cursorProvider: harnesses/pi/cursor-provider.json

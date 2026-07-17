@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseYaml } from "yaml";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
@@ -12,6 +14,10 @@ const enableRecommended = args.has("--enable-recommended");
 const manifestPath = new URL("../harnesses/opencode.json", import.meta.url);
 const harnessRoot = resolve(fileURLToPath(new URL("../harnesses/opencode/", import.meta.url)));
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+const catalogPath = new URL("../harnesses/catalog.yaml", import.meta.url);
+const catalogLockPath = new URL("../harnesses/catalog.lock.json", import.meta.url);
+const catalog = parseYaml(await readFile(catalogPath, "utf8"));
+const catalogLock = JSON.parse(await readFile(catalogLockPath, "utf8"));
 
 const configDir = resolve(join(homedir(), ".config", "opencode"));
 const agentDir = resolve(join(configDir, "agent"));
@@ -42,6 +48,10 @@ function validateManifest(value) {
 
     if (!agent.sourceFile) {
       throw new Error(`${agent.name} is missing sourceFile.`);
+    }
+
+    if (agent.modelRole && !catalog.opencodeRoles?.[agent.modelRole]) {
+      throw new Error(`${agent.name} references unknown catalog modelRole ${agent.modelRole}.`);
     }
   }
 
@@ -197,6 +207,25 @@ function agentsToInstall() {
   return agents.filter((agent) => agent.kind === "agent" && (agent.defaultEnabled || enableRecommended));
 }
 
+function resolvedRoleModel(role) {
+  const selectorId = catalog.opencodeRoles?.[role];
+  const resolved = catalogLock.resolvedSelectors?.[selectorId];
+  if (!resolved) throw new Error(`Catalog lock has no resolved selector for OpenCode role ${role}.`);
+  const providerPrefix = catalog.providers?.[resolved.provider]?.harnessIds?.opencode;
+  if (!providerPrefix) throw new Error(`Catalog provider ${resolved.provider} has no OpenCode harness ID.`);
+  return `${providerPrefix}/${resolved.modelId}`;
+}
+
+function renderAgentTemplate(agent, sourceContent) {
+  if (!agent.modelRole) return sourceContent;
+  const placeholder = `{{catalogRole:${agent.modelRole}}}`;
+  const matches = sourceContent.match(new RegExp(`^model: \\{\\{catalogRole:${agent.modelRole}\\}\\}$`, "gm")) ?? [];
+  if (matches.length !== 1) {
+    throw new Error(`${agent.sourceFile} must contain exactly one model: ${placeholder} frontmatter entry.`);
+  }
+  return sourceContent.replace(`model: ${placeholder}`, `model: ${resolvedRoleModel(agent.modelRole)}`);
+}
+
 async function installAgentFile(agent) {
   const source = resolve(harnessRoot, agent.sourceFile);
   const target = resolve(join(agentDir, `${agent.name}.md`));
@@ -205,7 +234,7 @@ async function installAgentFile(agent) {
     throw new Error(`Missing agent template: ${source}`);
   }
 
-  const sourceContent = await readFile(source, "utf8");
+  const sourceContent = renderAgentTemplate(agent, await readFile(source, "utf8"));
   const currentContent = await readUtf8IfExists(target);
 
   if (currentContent === sourceContent) {
@@ -261,6 +290,9 @@ function printManualInstallers() {
   }
 }
 
+execFileSync(process.execPath, [fileURLToPath(new URL("./catalog.mjs", import.meta.url)), "check"], {
+  stdio: "inherit",
+});
 validateManifest(manifest);
 
 const selectedPlugins = pluginsToEnable();

@@ -36,7 +36,7 @@
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:context-mode",
-      "notes": "NOT built into pi. Standalone npm package installed via `pi install`. The build/adapters/pi/extension.js adapter is the pi entry; OpenCode/Claude use different adapters. Bundles the context-mode skills."
+      "notes": "Standalone npm package installed via `pi install`. The build/adapters/pi/extension.js adapter is the pi entry; OpenCode/Claude use different adapters. Bundles the context-mode skills."
     },
     {
       "name": "pi-subagents",
@@ -108,17 +108,8 @@
     }
   ],
   "settings": {
-    "managedEnabledModelPrefixes": [
-      "xai-subscription/",
-      "cursor/"
-    ],
-    "enabledModels": [
-      "xai-subscription/grok-4.5",
-      "xai-subscription/grok-composer-2.5-fast",
-      "cursor/auto",
-      "cursor/composer-2.5-fast"
-    ],
-    "notes": "These entries define the /model Scope tab. The All tab still shows every model registered by the xAI extension and Cursor provider."
+    "catalogScope": "default",
+    "notes": "The /model Scope tab is resolved from harnesses/catalog.yaml plus catalog.lock.json. The All tab still shows every model registered by the xAI extension and generated Cursor provider."
   },
   "modelProviders": [
     {

@@ -7,7 +7,7 @@
  *
  * Models:
  *   - Live chat models from https://api.x.ai/v1/models (subscription-accessible)
- *   - Fixed extras not returned by /v1/models: grok-composer-2.5-fast
+ *   - Offline and omitted-model fallback metadata from the installed catalog lock
  *
  * Usage:
  *   1. Run `npm run setup:pi` from this repo (or copy this file to
@@ -57,18 +57,7 @@ const HEADROOM_PROXY_BASE_URL = `${(process.env.HEADROOM_PROXY_URL?.trim() || "h
   .replace(/\/v1$/, "")}/v1`;
 const XAI_MODELS_URL = `${XAI_UPSTREAM_BASE_URL}/models`;
 const AUTH_FILE = path.join(os.homedir(), ".pi", "agent", "auth.json");
-
-// Hard cap: only these xAI model IDs are registered for this provider.
-// Preferred display order when present.
-const PREFERRED_XAI_MODEL_ORDER = [
-  "grok-4.5",
-  "grok-4.3",
-  "grok-4.20-0309-reasoning",
-  "grok-4.20-0309-non-reasoning",
-  "grok-4.20-multi-agent-0309",
-  "grok-build-0.1",
-  "grok-composer-2.5-fast",
-] as const;
+const CATALOG_LOCK_FILE = path.join(os.homedir(), ".pi", "agent", "catalog.lock.json");
 
 const POLL_INTERVAL_MS = 5000;
 const POLL_TIMEOUT_MS = 300_000; // 5 min
@@ -271,13 +260,9 @@ function isReasoningModel(id: string): boolean {
   // Composer is a coding agent model; xAI rejects reasoning_effort for it.
   if (isComposerModel(id)) return false;
   if (id.includes("reasoning")) return true;
-  // grok-build, grok-4.5, grok-4.3, multi-agent default to reasoning on.
-  return (
-    id.includes("grok-build") ||
-    id.includes("grok-4.5") ||
-    id.includes("grok-4.3") ||
-    id.includes("multi-agent")
-  );
+  // Build, Grok 4.x chat, and multi-agent models default to reasoning on.
+  // Explicit non-reasoning IDs are handled above.
+  return id.includes("grok-build") || /^grok-4\./.test(id) || id.includes("multi-agent");
 }
 
 function supportsImage(m: XaiModel): boolean {
@@ -344,59 +329,38 @@ async function fetchXaiModels(): Promise<ProviderModelConfig[] | undefined> {
 }
 
 // ---------------------------------------------------------------------------
-// Fixed extras: defined in opencode.jsonc but NOT returned by /v1/models.
+// Committed catalog fallback (installed by setup-pi)
 // ---------------------------------------------------------------------------
 
-// Fixed models always registered. Composer is not listed by /v1/models.
-const fixedModels: ProviderModelConfig[] = [
-  {
-    id: "grok-4.5",
-    name: "Grok 4.5",
-    reasoning: true,
-    input: ["text", "image"],
-    cost: { input: 2, output: 6, cacheRead: 0.5, cacheWrite: 0 },
-    contextWindow: 500_000,
-    maxTokens: 30_000,
-    thinkingLevelMap: { ...xaiThinkingLevelMap },
-    compat: { ...baseCompat },
-  },
-  {
-    id: "grok-composer-2.5-fast",
-    name: "Composer 2.5 Fast",
-    // Composer rejects reasoning_effort with 400; keep it as a non-reasoning
-    // coding model so pi never sends that parameter.
-    reasoning: false,
-    input: ["text", "image"],
-    cost: { input: 2, output: 6, cacheRead: 0.5, cacheWrite: 0 },
-    contextWindow: 500_000,
-    maxTokens: 256_000,
-    compat: { ...composerCompat },
-  },
-];
+function readLockedModels(): ProviderModelConfig[] {
+  try {
+    const lock = JSON.parse(fs.readFileSync(CATALOG_LOCK_FILE, "utf8")) as {
+      providers?: { xai?: { models?: Record<string, ProviderModelConfig> } };
+    };
+    return Object.entries(lock.providers?.xai?.models ?? {}).map(([id, model]) => ({
+      ...model,
+      id,
+      thinkingLevelMap: model.reasoning ? { ...xaiThinkingLevelMap } : undefined,
+      compat: isComposerModel(id) ? { ...composerCompat } : { ...baseCompat },
+    }));
+  } catch {
+    return [];
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Register (async factory: live model list before startup finishes)
 // ---------------------------------------------------------------------------
 
 export default async function (pi: ExtensionAPI) {
-  // Prefer live subscription model list; keep fixed extras as fallback/overlay.
-  const byId = new Map(fixedModels.map((m) => [m.id, m]));
+  // Prefer the live subscription model list; use the committed catalog lock
+  // for offline setup and same-ID fallback metadata.
+  const byId = new Map(readLockedModels().map((model) => [model.id, model]));
   const live = await fetchXaiModels();
   if (live) {
-    for (const m of live) {
-      byId.set(m.id, m);
-    }
+    for (const model of live) byId.set(model.id, model);
   }
-
-  const preferred = new Set<string>(PREFERRED_XAI_MODEL_ORDER);
-  const orderedIds = [
-    ...PREFERRED_XAI_MODEL_ORDER.filter((id) => byId.has(id)),
-    ...[...byId.keys()].filter((id) => !preferred.has(id)).sort(),
-  ];
-
-  const models = orderedIds
-    .map((id) => byId.get(id))
-    .filter((m): m is ProviderModelConfig => !!m);
+  const models = [...byId.values()].sort((left, right) => left.id.localeCompare(right.id));
 
   pi.registerProvider("xai-subscription", {
     name: "xAI (Subscription)",

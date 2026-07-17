@@ -48,6 +48,14 @@ async function readUtf8IfExists(filePath) {
   }
 }
 
+function normalizeText(content) {
+  return content.replace(/\r\n/g, "\n").replace(/\n+$/, "");
+}
+
+function sameTextContent(left, right) {
+  return normalizeText(left) === normalizeText(right);
+}
+
 async function installManagedFile(source, target) {
   await ensureParent(target);
 
@@ -87,7 +95,7 @@ async function installManagedFile(source, target) {
 
   const currentContent = await readUtf8IfExists(target);
   const sourceContent = await readFile(source, "utf8");
-  if (currentContent === sourceContent) {
+  if (sameTextContent(currentContent ?? "", sourceContent)) {
     console.log(`ok ${target}`);
     return;
   }

@@ -1,7 +1,7 @@
 ---
 description: Execute implementation instructions delegated by Build mode. Use for coding tasks that need file edits, shell commands, and verification.
 mode: subagent
-model: xai/grok-composer-2.5-fast
+model: {{catalogRole:coder}}
 color: accent
 ---
 

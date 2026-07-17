@@ -4,26 +4,33 @@
   "description": "Personal agent skills and a curated third-party skill install list.",
   "private": false,
   "type": "module",
+  "bin": {
+    "agent-skills": "./scripts/cli.mjs"
+  },
   "scripts": {
-    "skills:list": "npx --yes skills add . --list",
-    "skills:list:installed": "npx --yes skills list -g",
-    "skills:list:installed:json": "npx --yes skills list -g --json",
-    "install:skills": "node scripts/install-personal-skills.mjs",
-    "install:curated": "node scripts/install-curated-skills.mjs",
-    "install:curated:dry-run": "node scripts/install-curated-skills.mjs --dry-run",
-    "install:agents": "node scripts/install-agents.mjs",
-    "setup:memory-palace": "node scripts/configure-memory-palace.mjs",
-    "setup:opencode": "node scripts/setup-opencode.mjs",
-    "setup:opencode:dry-run": "node scripts/setup-opencode.mjs --dry-run",
-    "setup:cursor": "node scripts/setup-cursor.mjs",
-    "setup:cursor:dry-run": "node scripts/setup-cursor.mjs --dry-run",
-    "setup:cursor:copy": "node scripts/setup-cursor.mjs --copy",
-    "setup:pi": "node scripts/setup-pi.mjs",
-    "setup:pi:dry-run": "node scripts/setup-pi.mjs --dry-run",
-    "setup": "node scripts/install-personal-skills.mjs && node scripts/install-curated-skills.mjs && node scripts/install-agents.mjs",
-    "setup:copy": "node scripts/install-personal-skills.mjs --copy && node scripts/install-curated-skills.mjs --copy && node scripts/install-agents.mjs --copy",
-    "update:skills": "npx --yes skills update --global --yes",
-    "verify": "npm run skills:list && npm run skills:list:installed && npm run install:curated:dry-run && node scripts/install-agents.mjs --dry-run"
+    "agent-skills": "node scripts/cli.mjs",
+    "skills:list": "node scripts/cli.mjs skills list",
+    "skills:list:installed": "node scripts/cli.mjs skills list --installed",
+    "skills:list:installed:json": "node scripts/cli.mjs skills list --installed --json",
+    "install:skills": "node scripts/cli.mjs install skills",
+    "install:curated": "node scripts/cli.mjs install curated",
+    "install:curated:dry-run": "node scripts/cli.mjs install curated --dry-run",
+    "install:agents": "node scripts/cli.mjs install agents",
+    "setup:memory-palace": "node scripts/cli.mjs setup memory-palace",
+    "setup:opencode": "node scripts/cli.mjs setup opencode",
+    "setup:opencode:dry-run": "node scripts/cli.mjs setup opencode --dry-run",
+    "setup:cursor": "node scripts/cli.mjs setup cursor",
+    "setup:cursor:dry-run": "node scripts/cli.mjs setup cursor --dry-run",
+    "setup:cursor:copy": "node scripts/cli.mjs setup cursor --copy",
+    "setup:pi": "node scripts/cli.mjs setup pi",
+    "setup:pi:dry-run": "node scripts/cli.mjs setup pi --dry-run",
+    "catalog:check": "node scripts/cli.mjs catalog check",
+    "catalog:diff": "node scripts/cli.mjs catalog diff",
+    "catalog:refresh": "node scripts/cli.mjs catalog refresh",
+    "setup": "node scripts/cli.mjs install all",
+    "setup:copy": "node scripts/cli.mjs install all --copy",
+    "update:skills": "node scripts/cli.mjs update",
+    "verify": "node scripts/cli.mjs verify"
   },
   "keywords": [
     "agent-skills",
@@ -36,5 +43,7 @@
     "cursor"
   ],
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
 }
