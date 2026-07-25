@@ -9,7 +9,7 @@
   ],
   "installPolicy": {
     "defaultMethod": "symlink",
-    "copyFallback": "npm run setup:copy",
+    "copyFallback": "agent-skills install all --copy",
     "installer": "npx skills"
   },
   "sources": [

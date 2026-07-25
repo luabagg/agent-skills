@@ -11,22 +11,20 @@ Edit policy, preview, commit generated artifacts, then apply:
 $EDITOR harnesses/catalog.yaml
 
 # 2. Preview live discovery vs committed lock
-npm run agent-skills -- catalog diff
-# or: npm run catalog:diff
+agent-skills models diff
 
 # 3. Write lock + generated targets (commit both)
-npm run agent-skills -- catalog refresh
-# or: npm run catalog:refresh
+agent-skills models refresh
 
 # 4. Apply to the local machine
-npm run agent-skills -- setup pi --catalog-only
-npm run agent-skills -- setup opencode
+agent-skills setup pi --catalog-only
+agent-skills setup opencode
 ```
 
 Offline validation (CI / pre-setup):
 
 ```bash
-npm run agent-skills -- catalog check
+agent-skills models check
 ```
 
 ## What you edit vs what you never edit
@@ -34,8 +32,8 @@ npm run agent-skills -- catalog check
 | Path | Role | Edit? |
 | --- | --- | --- |
 | `harnesses/catalog.yaml` | Policy: providers, selectors, Pi scopes, OpenCode roles | **Yes** — only manual source |
-| `harnesses/catalog.lock.json` | Resolved snapshots + selector resolutions | **No** — `catalog refresh` |
-| `harnesses/pi/cursor-provider.json` | Generated Cursor provider for Pi | **No** — `catalog refresh` |
+| `harnesses/catalog.lock.json` | Resolved snapshots + selector resolutions | **No** — `models refresh` |
+| `harnesses/pi/cursor-provider.json` | Generated Cursor provider for Pi | **No** — `models refresh` |
 | `harnesses/pi/xai-subscription.ts` | xAI adapter / capability inference | Adapter code, not model lists |
 | `~/.pi/agent/catalog.lock.json` | Installed lock copy used offline by adapters | Installed by `setup pi` |
 | OpenCode agent frontmatter models | Rendered from roles at setup time | Installed by `setup opencode` |
@@ -64,22 +62,17 @@ setup-pi / setup-opencode
 
 | Command | Network | Writes | Purpose |
 | --- | --- | --- | --- |
-| `catalog check` | no | no | Policy + lock digests + selector resolution + agent templates + generated targets |
-| `catalog diff` | yes (best-effort) | no | Live discovery preview; falls back to lock per provider if discovery fails |
-| `catalog refresh` | yes (best-effort) | yes | Rewrite lock + generated targets; keep last snapshot if one provider is down |
+| `models check` | no | no | Policy + lock digests + selector resolution + agent templates + generated targets |
+| `models diff` | yes (best-effort) | no | Live discovery preview; falls back to lock per provider if discovery fails |
+| `models refresh` | yes (best-effort) | yes | Rewrite lock + generated targets; keep last snapshot if one provider is down |
 
 ```bash
-npm run agent-skills -- catalog check
-npm run agent-skills -- catalog diff
-npm run agent-skills -- catalog refresh
-
-# Thin aliases still work:
-npm run catalog:check
-npm run catalog:diff
-npm run catalog:refresh
+agent-skills models check
+agent-skills models diff
+agent-skills models refresh
 ```
 
-Normal `setup pi` / `setup opencode` always run `catalog check` first and refuse to apply a stale or invalid lock.
+Normal `setup pi` / `setup opencode` always run `models check` first and refuse to apply a stale or invalid lock.
 
 ## Pi setup phases
 
@@ -87,21 +80,21 @@ Full Pi setup does more than the catalog. Split when you only need models:
 
 | Phase | What it does | When |
 | --- | --- | --- |
-| **catalog** | `catalog check`, install lock, reconcile Scope `enabledModels`, merge model providers | Always |
+| **catalog** | `models check`, install lock, reconcile Scope `enabledModels`, merge model providers | Always |
 | **packages** | Install selected `pi` packages from `harnesses/pi.json` | Default full setup |
 | **extensions** | Install local extensions under `~/.pi/agent/` | Default full setup |
 | **cursor-bridge** | OpenCursor bridge + systemd user service | Default full setup |
 
 ```bash
-# Models only (fastest day-to-day after catalog refresh)
-npm run agent-skills -- setup pi --catalog-only
+# Models only (fastest day-to-day after models refresh)
+agent-skills setup pi --catalog-only
 
 # Everything except Cursor bridge
-npm run agent-skills -- setup pi --skip-cursor-bridge
+agent-skills setup pi --skip-cursor-bridge
 
 # Full harness (packages + extensions + bridge)
-npm run agent-skills -- setup pi
-npm run agent-skills -- setup pi --enable-recommended
+agent-skills setup pi
+agent-skills setup pi --enable-recommended
 ```
 
 ## Ownership
@@ -143,11 +136,11 @@ It deliberately omits timestamps, credentials, auth headers, machine paths, and 
 
 | Symptom | Meaning | Fix |
 | --- | --- | --- |
-| `catalog.lock.json is stale for catalog.yaml` | Policy edited without refresh | `catalog refresh`, commit lock + targets |
+| `catalog.lock.json is stale for catalog.yaml` | Policy edited without refresh | `models refresh`, commit lock + targets |
 | `selector … requires missing exact model` | Exact ID gone from discovery/fallbacks | Restore model, change selector, or add same-ID fallback |
-| `stale generated target: harnesses/pi/cursor-provider.json` | Lock/targets out of sync | `catalog refresh` |
+| `stale generated target: harnesses/pi/cursor-provider.json` | Lock/targets out of sync | `models refresh` |
 | Provider warning on `diff`/`refresh`, using lock | Live discovery unavailable | Expected offline; fix bridge/login when you need live data |
-| Setup fails on `catalog check` | Invalid/stale catalog | Fix policy/lock before setup mutates user config |
+| Setup fails on `models check` | Invalid/stale catalog | Fix policy/lock before setup mutates user config |
 
 ## OpenCode roles
 

@@ -250,7 +250,7 @@ function validateLockSnapshots(lock) {
 
 function validateLock(policy, lock) {
   validateLockSnapshots(lock);
-  assert(lock.policyDigest === digest(policy), "catalog.lock.json is stale for catalog.yaml; run npm run catalog:refresh");
+  assert(lock.policyDigest === digest(policy), "catalog.lock.json is stale for catalog.yaml; run agent-skills models refresh");
   for (const providerId of Object.keys(policy.providers)) {
     assert(lock.providers?.[providerId]?.models, `lock is missing provider ${providerId}`);
   }
@@ -290,7 +290,7 @@ async function loadPolicy() {
 }
 
 async function loadLock(policy) {
-  assert(existsSync(lockPath), "catalog.lock.json is missing; run npm run catalog:refresh");
+  assert(existsSync(lockPath), "catalog.lock.json is missing; run agent-skills models refresh");
   const lock = await readJson(lockPath);
   validateLock(policy, lock);
   return lock;

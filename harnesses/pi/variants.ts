@@ -10,7 +10,7 @@
  *
  * Status chip: variant:<level>
  *
- * Install via `npm run setup:pi` (copies harnesses/pi/variants.ts to
+ * Install via `agent-skills setup pi` (copies harnesses/pi/variants.ts to
  * ~/.pi/agent/extensions/variants.ts). Restart pi so the command is registered.
  */
 

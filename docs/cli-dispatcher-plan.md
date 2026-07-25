@@ -2,24 +2,28 @@
 
 ## Goal
 
-Replace the large public `package.json` script surface with one consistent `agent-skills` command while keeping the existing focused implementation scripts behind it.
+One consistent `agent-skills` command for browse, install, harness setup, config, and model catalog work. Domain scripts stay behind the dispatcher.
 
-## Proposed interface
+## Interface
 
 ```text
 agent-skills
-├── skills
-│   └── list [--installed] [--json]
+├── list
+│   ├── skills [--installed] [--json]
+│   ├── curated [--plugins] [--json]
+│   └── tools [--kind <kind>] [--json]
 ├── install
 │   ├── skills [--copy] [--dry-run]
 │   ├── curated [--copy] [--dry-run]
 │   ├── agents [--copy] [--dry-run]
 │   └── all [--copy] [--dry-run]
 ├── setup
-│   ├── memory-palace [--dry-run]
 │   ├── opencode [--dry-run] [--enable-recommended]
-│   └── pi [--dry-run] [--enable-recommended]
-├── catalog
+│   ├── pi [--dry-run] [--enable-recommended] [--catalog-only] [--skip-cursor-bridge]
+│   └── cursor [--dry-run] [--copy]
+├── config
+│   └── memory-palace [--dry-run] --vault <path>
+├── models
 │   ├── check
 │   ├── diff
 │   └── refresh
@@ -29,31 +33,30 @@ agent-skills
 
 ## Usage
 
-Through npm:
+From a linked/global install:
 
 ```bash
-npm run agent-skills -- setup pi --dry-run
-npm run agent-skills -- install curated --dry-run
-npm run agent-skills -- catalog check
-npm run agent-skills -- skills list --installed --json
-npm run agent-skills -- verify
-```
-
-Through the package executable:
-
-```bash
-npm exec -- agent-skills setup pi --dry-run
-```
-
-After a global installation:
-
-```bash
+agent-skills list tools
+agent-skills list curated
 agent-skills setup pi --dry-run
+agent-skills install curated --dry-run
+agent-skills models check
+agent-skills list skills --installed --json
+agent-skills config memory-palace --vault ~/vault --dry-run
+agent-skills verify
+```
+
+From a local checkout:
+
+```bash
+npx agent-skills setup pi --dry-run
+# or
+npm exec -- agent-skills setup pi --dry-run
 ```
 
 ## Package configuration
 
-Reduce the public npm scripts to conventional entry points:
+Public entry is the bin. Keep only what npm needs for tests and local invocation:
 
 ```json
 {
@@ -62,8 +65,8 @@ Reduce the public npm scripts to conventional entry points:
   },
   "scripts": {
     "agent-skills": "node scripts/cli.mjs",
-    "setup": "node scripts/cli.mjs install all",
-    "verify": "node scripts/cli.mjs verify"
+    "test": "node --test tests/**/*.test.mjs",
+    "test:cli": "node --test tests/cli.test.mjs"
   }
 }
 ```
@@ -72,29 +75,31 @@ Reduce the public npm scripts to conventional entry points:
 
 `scripts/cli.mjs` parses the command tree, validates flags, prints help, and delegates to existing scripts or external commands.
 
-Examples:
-
 | CLI command | Delegated operation |
 | --- | --- |
-| `skills list` | `npx --yes skills add . --list` |
-| `skills list --installed` | `npx --yes skills list --global` |
+| `list skills` | `npx --yes skills add . --list` |
+| `list skills --installed` | `npx --yes skills list --global` |
+| `list curated` | read `curated-skills.json` sources |
+| `list curated --plugins` | read `curated-skills.json` pluginReferences |
+| `list tools` | read `curated-tools.json` |
 | `install skills` | `scripts/install-personal-skills.mjs` |
 | `install curated` | `scripts/install-curated-skills.mjs` |
 | `install agents` | `scripts/install-agents.mjs` |
-| `setup memory-palace` | `scripts/configure-memory-palace.mjs` |
 | `setup opencode` | `scripts/setup-opencode.mjs` |
 | `setup pi` | `scripts/setup-pi.mjs` |
-| `catalog check/diff/refresh` | `scripts/catalog.mjs` |
+| `setup cursor` | `scripts/setup-cursor.mjs` |
+| `config memory-palace` | `scripts/configure-memory-palace.mjs` |
+| `models check/diff/refresh` | `scripts/catalog.mjs` |
 | `update` | `npx --yes skills update --global --yes` |
 | `verify` | Ordered internal verification workflow |
 
-Delegation should use `execFileSync` or `spawnSync` with argument arrays rather than shell command strings.
+Delegation uses `execFileSync` / `spawnSync` with argument arrays rather than shell command strings.
 
 ## Status
 
-Implemented in `scripts/cli.mjs` with thin `package.json` aliases. Domain scripts remain the owners of install/setup/catalog logic. Pi gained `--catalog-only` and `--skip-cursor-bridge` so model apply is not tied to full harness install. See [`docs/model-catalog.md`](model-catalog.md).
+Implemented in `scripts/cli.mjs`. Domain scripts remain the owners of install/setup/catalog logic. Browse commands (`list *`) are read-only. Pi gained `--catalog-only` and `--skip-cursor-bridge` so model apply is not tied to full harness install. See [`docs/model-catalog.md`](model-catalog.md).
 
-CLI coverage lives in `tests/cli.test.mjs` (`npm run test:cli` / `npm test`). Dispatcher verification (`--help`, dry-run setup/install, `catalog check`, `verify`, `npm exec -- agent-skills`) was run successfully through the unified entrypoint.
+CLI coverage lives in `tests/cli.test.mjs`.
 
 ## Implementation steps
 
@@ -106,17 +111,19 @@ CLI coverage lives in `tests/cli.test.mjs` (`npm run test:cli` / `npm test`). Di
 - [x] Implement `install all` as ordered orchestration with fail-fast behavior.
 - [x] Implement `verify` as ordered orchestration without duplicated shell command strings.
 - [x] Add the `agent-skills` executable under `package.json#bin`.
-- [x] Reduce `package.json#scripts` to `agent-skills`, `setup`, and `verify`.
-- [x] Update README examples to use the dispatcher.
+- [x] Noun-first browse surface: `list skills|curated|tools`.
+- [x] Rename model surface to `models`; move vault setup to `config`.
+- [x] Document CLI-first usage; drop public npm-script alias surface.
 - [x] Add CLI tests for routing, help, invalid commands, flag forwarding, dry-run safety, and child exit-code propagation.
-- [x] Run all existing setup/catalog verification through the dispatcher and confirm behavior remains idempotent.
 
 ## Command rules
 
 - `--dry-run` must never mutate files or install packages.
 - `--copy` is valid only for installers that support copy mode.
 - `--enable-recommended` is valid only for Pi and OpenCode setup.
-- `--json` requires `skills list --installed`.
+- `--json` on `list skills` requires `--installed`.
+- `--plugins` is valid only for `list curated`.
+- `--kind` is valid only for `list tools`.
 - Unknown commands, targets, and flags exit non-zero and print relevant help.
 - Child process failures propagate their original non-zero status.
 - `install all` stops on the first failure.
@@ -130,15 +137,14 @@ Keep the dispatcher small and declarative:
 scripts/
 ├── cli.mjs
 ├── lib/
-│   ├── cli-args.mjs
-│   ├── command-runner.mjs
-│   └── command-registry.mjs
+│   └── command.mjs
 ├── install-personal-skills.mjs
 ├── install-curated-skills.mjs
 ├── install-agents.mjs
 ├── configure-memory-palace.mjs
 ├── setup-opencode.mjs
 ├── setup-pi.mjs
+├── setup-cursor.mjs
 └── catalog.mjs
 ```
 
@@ -147,13 +153,15 @@ Do not merge all implementation logic into `cli.mjs`. The dispatcher owns routin
 ## Verification
 
 ```bash
-npm run agent-skills -- --help
-npm run agent-skills -- setup pi --dry-run
-npm run agent-skills -- setup opencode --dry-run
-npm run agent-skills -- install curated --dry-run
-npm run agent-skills -- catalog check
-npm run agent-skills -- verify
-npm exec -- agent-skills --help
+agent-skills --help
+agent-skills list tools
+agent-skills list curated --plugins
+agent-skills setup pi --dry-run
+agent-skills setup opencode --dry-run
+agent-skills install curated --dry-run
+agent-skills models check
+agent-skills verify
+npx agent-skills --help
 ```
 
 Also verify:

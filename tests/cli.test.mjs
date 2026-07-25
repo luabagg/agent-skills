@@ -31,9 +31,17 @@ test("root --help exits 0 and lists top-level commands", () => {
   assert.equal(result.status, 0);
   const out = combined(result);
   assert.match(out, /agent-skills/);
-  for (const command of ["skills", "install", "setup", "catalog", "update", "verify"]) {
-    assert.match(out, new RegExp(command));
+  for (const command of ["list", "install", "setup", "config", "models", "update", "verify"]) {
+    assert.match(out, new RegExp(`\\b${command}\\b`));
   }
+  assert.match(out, /list skills/);
+  assert.match(out, /list tools/);
+  assert.match(out, /config memory-palace/);
+  assert.match(out, /models check/);
+  // Old top-level surfaces should be gone.
+  assert.doesNotMatch(out, /^\s*catalog\b/m);
+  assert.doesNotMatch(out, /\bsetup memory-palace\b/);
+  assert.doesNotMatch(out, /^\s*skills\b/m);
 });
 
 test("empty argv prints root help and exits 0", () => {
@@ -75,10 +83,49 @@ test("unknown flag is rejected with allowed list", () => {
   assert.match(combined(result), /--dry-run/);
 });
 
-test("skills list --json without --installed is rejected", () => {
-  const result = runCli(["skills", "list", "--json"]);
+test("list skills --json without --installed is rejected", () => {
+  const result = runCli(["list", "skills", "--json"]);
   assert.equal(result.status, 1);
   assert.match(combined(result), /`--json` is only supported with `--installed`/);
+});
+
+test("list tools prints curated tools table", () => {
+  const result = runCli(["list", "tools"]);
+  assert.equal(result.status, 0);
+  const out = combined(result);
+  assert.match(out, /NAME\s+KIND\s+DESCRIPTION/);
+  assert.match(out, /headroom/);
+  assert.match(out, /codegraph/);
+});
+
+test("list tools --json returns array payload", () => {
+  const result = runCli(["list", "tools", "--json"]);
+  assert.equal(result.status, 0);
+  const payload = JSON.parse(result.stdout);
+  assert.ok(Array.isArray(payload));
+  assert.ok(payload.some((tool) => tool.name === "headroom"));
+});
+
+test("list tools --kind filters and rejects unknown kinds", () => {
+  const ok = runCli(["list", "tools", "--kind", "cli"]);
+  assert.equal(ok.status, 0);
+  const out = combined(ok);
+  assert.match(out, /headroom/);
+  assert.doesNotMatch(out, /@google\/design\.md/);
+
+  const bad = runCli(["list", "tools", "--kind", "nope"]);
+  assert.equal(bad.status, 1);
+  assert.match(combined(bad), /Unknown kind `nope`/);
+});
+
+test("list curated prints sources; --plugins switches inventory", () => {
+  const sources = runCli(["list", "curated"]);
+  assert.equal(sources.status, 0);
+  assert.match(combined(sources), /superpowers|caveman/);
+
+  const plugins = runCli(["list", "curated", "--plugins"]);
+  assert.equal(plugins.status, 0);
+  assert.match(combined(plugins), /sentry|github-review-workflows|NAME/);
 });
 
 test("setup pi rejects --catalog-only with --skip-cursor-bridge", () => {
@@ -88,13 +135,13 @@ test("setup pi rejects --catalog-only with --skip-cursor-bridge", () => {
 });
 
 test("value flag --vault requires a value", () => {
-  const result = runCli(["setup", "memory-palace", "--vault"]);
+  const result = runCli(["config", "memory-palace", "--vault"]);
   assert.equal(result.status, 1);
   assert.match(combined(result), /--vault requires a value/);
 });
 
 test("unexpected positional args are rejected", () => {
-  const result = runCli(["catalog", "check", "extra"]);
+  const result = runCli(["models", "check", "extra"]);
   assert.equal(result.status, 1);
   assert.match(combined(result), /Unexpected arguments: extra/);
 });
@@ -141,8 +188,8 @@ test("dry-run safety: setup pi --dry-run does not mutate repo files", () => {
   }
 });
 
-test("child exit-code propagation: catalog check failure is not zeroed", () => {
-  const result = runCli(["catalog", "check"], {
+test("child exit-code propagation: models check failure is not zeroed", () => {
+  const result = runCli(["models", "check"], {
     env: { CATALOG_POLICY_PATH: "/tmp/agent-skills-missing-catalog-policy.yaml" },
   });
   assert.notEqual(result.status, 0);
@@ -150,18 +197,17 @@ test("child exit-code propagation: catalog check failure is not zeroed", () => {
   assert.match(combined(result), /no such file or directory|ENOENT|missing-catalog-policy/i);
 });
 
-test("child success: catalog check via dispatcher exits 0", () => {
-  const result = runCli(["catalog", "check"]);
+test("child success: models check via dispatcher exits 0", () => {
+  const result = runCli(["models", "check"]);
   assert.equal(result.status, 0);
   assert.match(combined(result), /catalog check passed/);
 });
 
-test("setup memory-palace --dry-run forwards --vault value", () => {
+test("config memory-palace --dry-run forwards --vault value", () => {
   const vaultDir = mkdtempSync(join(tmpdir(), "agent-skills-vault-"));
   try {
-    // Marker so configure-memory-palace accepts the path as a vault.
     writeFileSync(join(vaultDir, ".obsidian"), "");
-    const result = runCli(["setup", "memory-palace", "--dry-run", "--vault", vaultDir]);
+    const result = runCli(["config", "memory-palace", "--dry-run", "--vault", vaultDir]);
     assert.equal(result.status, 0, combined(result));
     const out = combined(result);
     assert.match(out, new RegExp(vaultDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -172,8 +218,8 @@ test("setup memory-palace --dry-run forwards --vault value", () => {
   }
 });
 
-test("npm run agent-skills -- --help works", () => {
-  const result = spawnSync("npm", ["run", "agent-skills", "--", "--help"], {
+test("npx agent-skills --help works", () => {
+  const result = spawnSync("npx", ["agent-skills", "--help"], {
     cwd: repoRoot,
     encoding: "utf8",
     env: process.env,
@@ -198,7 +244,6 @@ test("sequence fail-fast: install all --dry-run runs ordered installers", () => 
   const result = runCli(["install", "all", "--dry-run"]);
   assert.equal(result.status, 0);
   const out = combined(result);
-  // personal skills dry-run prints the skills add command; curated prints source installs; agents prints install plan
   assert.match(out, /skills add/);
   assert.match(out, /AGENTS|agents|Global AGENTS|symlink|copy/i);
 });

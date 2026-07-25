@@ -15,7 +15,7 @@ Before touching the vault, resolve `$VAULT` using this precedence:
 The persisted config is created with:
 
 ```bash
-npm run setup:memory-palace -- --vault <path>
+agent-skills config memory-palace --vault <path>
 ```
 
 For WSL, prefer a WSL-accessible path (`/mnt/c/...`). The setup script converts Windows drive paths like `C:\Users\...` to `/mnt/c/Users/...` when running under WSL, validates the converted path, and saves the WSL path.

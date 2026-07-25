@@ -10,7 +10,7 @@
  *   - Offline and omitted-model fallback metadata from the installed catalog lock
  *
  * Usage:
- *   1. Run `npm run setup:pi` from this repo (or copy this file to
+ *   1. Run `agent-skills setup pi` from this repo (or copy this file to
  *      ~/.pi/agent/extensions/xai-subscription.ts)
  *   2. Start pi, run `/login`, pick "xAI (Subscription)"
  *   3. Visit the verification URL, enter the code, approve

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { npx, runCommand } from "./lib/command.mjs";
 
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(scriptsDir, "..");
 const node = process.execPath;
 
 const FLAG_SPECS = {
@@ -17,7 +19,7 @@ const FLAG_SPECS = {
   },
   catalogOnly: {
     name: "--catalog-only",
-    description: "Pi only: apply catalog lock, Scope models, and model providers",
+    description: "Pi only: apply model lock, Scope, and providers",
   },
   skipCursorBridge: {
     name: "--skip-cursor-bridge",
@@ -25,6 +27,15 @@ const FLAG_SPECS = {
   },
   installed: { name: "--installed", description: "List globally installed skills" },
   json: { name: "--json", description: "Machine-readable JSON output" },
+  plugins: {
+    name: "--plugins",
+    description: "List plugin references instead of installable sources",
+  },
+  kind: {
+    name: "--kind",
+    description: "Filter tools by kind (cli, npm-package, …)",
+    takesValue: true,
+  },
   vault: {
     name: "--vault",
     description: "Memory Palace vault path",
@@ -33,11 +44,11 @@ const FLAG_SPECS = {
 };
 
 const COMMANDS = {
-  skills: {
-    description: "List personal or installed skills",
+  list: {
+    description: "Browse skills, curated sources, and tools",
     subcommands: {
-      list: {
-        description: "List skills (repo personal skills by default)",
+      skills: {
+        description: "List personal repo skills, or globally installed skills",
         flags: ["installed", "json"],
         run(flags) {
           if (flags.installed) {
@@ -50,6 +61,16 @@ const COMMANDS = {
           }
           return external([npx, "--yes", "skills", "add", ".", "--list"]);
         },
+      },
+      curated: {
+        description: "List curated skill sources from curated-skills.json",
+        flags: ["plugins", "json"],
+        run: (flags) => listCurated(flags),
+      },
+      tools: {
+        description: "List tools from curated-tools.json (reference only)",
+        flags: ["kind", "json"],
+        run: (flags) => listTools(flags),
       },
     },
   },
@@ -86,21 +107,8 @@ const COMMANDS = {
     },
   },
   setup: {
-    description: "Opt-in harness and tool setup",
+    description: "Opt-in harness setup",
     subcommands: {
-      "memory-palace": {
-        description: "Persist the default memory-palace vault path",
-        flags: ["dryRun", "vault"],
-        run(flags, rest) {
-          const args = packFlags(flags, ["dryRun"]);
-          if (flags.vault) {
-            args.push("--vault", flags.vault);
-          }
-          // Forward any leftover args (legacy: --vault path as two tokens already handled).
-          args.push(...rest);
-          return script("configure-memory-palace.mjs", args);
-        },
-      },
       opencode: {
         description: "Install OpenCode agents/plugins from harnesses/opencode.json",
         flags: ["dryRun", "enableRecommended"],
@@ -108,7 +116,7 @@ const COMMANDS = {
           script("setup-opencode.mjs", packFlags(flags, ["dryRun", "enableRecommended"])),
       },
       pi: {
-        description: "Install Pi packages, catalog Scope, extensions, and optional Cursor bridge",
+        description: "Install Pi packages, model Scope, extensions, and optional Cursor bridge",
         flags: ["dryRun", "enableRecommended", "catalogOnly", "skipCursorBridge"],
         run(flags) {
           if (flags.catalogOnly && flags.skipCursorBridge) {
@@ -127,7 +135,19 @@ const COMMANDS = {
       },
     },
   },
-  catalog: {
+  config: {
+    description: "Local configuration",
+    subcommands: {
+      "memory-palace": {
+        description: "Persist the default memory-palace vault path",
+        flags: ["dryRun", "vault"],
+        run(flags) {
+          return script("configure-memory-palace.mjs", packFlags(flags, ["dryRun", "vault"]));
+        },
+      },
+    },
+  },
+  models: {
     description: "Validate or refresh the model/agent catalog",
     subcommands: {
       check: {
@@ -162,16 +182,96 @@ const COMMANDS = {
   },
 };
 
-function fail(message) {
-  console.error(message);
-  throw new CLIError(1);
-}
-
 class CLIError extends Error {
   constructor(code) {
     super(`CLI exited with ${code}`);
     this.code = code;
   }
+}
+
+function fail(message) {
+  console.error(message);
+  throw new CLIError(1);
+}
+
+function readJson(relativePath) {
+  return JSON.parse(readFileSync(resolve(repoRoot, relativePath), "utf8"));
+}
+
+function truncate(value, max) {
+  const text = String(value ?? "");
+  if (!max || text.length <= max) return text;
+  return `${text.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
+}
+
+function printRows(rows, columns) {
+  if (rows.length === 0) {
+    console.log("(none)");
+    return;
+  }
+
+  const cells = rows.map((row) =>
+    columns.map((column) => truncate(column.value(row), column.max)),
+  );
+  const widths = columns.map((column, index) =>
+    Math.max(column.header.length, ...cells.map((row) => row[index].length)),
+  );
+
+  const format = (values) => values.map((cell, index) => cell.padEnd(widths[index])).join("  ");
+  console.log(format(columns.map((column) => column.header)));
+  console.log(widths.map((width) => "-".repeat(width)).join("  "));
+  for (const row of cells) {
+    console.log(format(row));
+  }
+}
+
+function listTools(flags) {
+  const tools = readJson("curated-tools.json").tools ?? [];
+  const filtered = flags.kind ? tools.filter((tool) => tool.kind === flags.kind) : tools;
+
+  if (flags.kind && filtered.length === 0 && !tools.some((tool) => tool.kind === flags.kind)) {
+    const kinds = [...new Set(tools.map((tool) => tool.kind))].sort().join(", ");
+    fail(`Unknown kind \`${flags.kind}\`. Available: ${kinds || "(none)"}.`);
+  }
+
+  if (flags.json) {
+    console.log(JSON.stringify(filtered, null, 2));
+    return 0;
+  }
+
+  printRows(filtered, [
+    { header: "NAME", value: (tool) => tool.name, max: 28 },
+    { header: "KIND", value: (tool) => tool.kind ?? "", max: 16 },
+    { header: "DESCRIPTION", value: (tool) => tool.description ?? "", max: 72 },
+  ]);
+  return 0;
+}
+
+function listCurated(flags) {
+  const data = readJson("curated-skills.json");
+  const rows = flags.plugins ? (data.pluginReferences ?? []) : (data.sources ?? []);
+
+  if (flags.json) {
+    console.log(JSON.stringify(rows, null, 2));
+    return 0;
+  }
+
+  printRows(rows, [
+    { header: "NAME", value: (row) => row.name, max: 24 },
+    { header: "SOURCE", value: (row) => row.source ?? "", max: 40 },
+    {
+      header: "SKILLS",
+      value: (row) => {
+        if (Array.isArray(row.skills)) {
+          return row.skills.includes("*") ? "*" : String(row.skills.length);
+        }
+        return "";
+      },
+      max: 6,
+    },
+    { header: "DESCRIPTION", value: (row) => row.description ?? "", max: 56 },
+  ]);
+  return 0;
 }
 
 function packFlags(flags, names) {
@@ -214,25 +314,35 @@ function sequence(steps) {
   return 0;
 }
 
+function flagSyntax(flagName) {
+  const spec = FLAG_SPECS[flagName];
+  return spec.takesValue ? `${spec.name} <value>` : `[${spec.name}]`;
+}
+
 function printRootHelp() {
-  console.log(`agent-skills — personal skills, harness setup, and model catalog
+  console.log(`agent-skills — personal skills, harness setup, and models
 
 Usage:
   agent-skills <command> [subcommand] [flags]
-  npm run agent-skills -- <command> ...
+  npx agent-skills <command> ...
 
-Commands:
-  skills list [--installed] [--json]
+Browse:
+  list skills [--installed] [--json]
+  list curated [--plugins] [--json]
+  list tools [--kind <kind>] [--json]
+
+Apply:
   install skills|curated|agents|all [--copy] [--dry-run]
-  setup memory-palace|opencode|pi|cursor [flags]
-  catalog check|diff|refresh
+  setup opencode|pi|cursor [flags]
+  config memory-palace --vault <path> [--dry-run]
+  models check|diff|refresh
   update
   verify
 
-Day-to-day model catalog:
-  agent-skills catalog check
-  agent-skills catalog diff
-  agent-skills catalog refresh
+Common:
+  agent-skills list tools
+  agent-skills install all
+  agent-skills models check
   agent-skills setup pi --catalog-only
 
 Run \`agent-skills <command> --help\` for details.`);
@@ -246,13 +356,10 @@ ${command.description}
 
 Subcommands:`);
     for (const [subName, sub] of Object.entries(command.subcommands)) {
-      const flagText = (sub.flags ?? [])
-        .map((flag) => {
-          const spec = FLAG_SPECS[flag];
-          return spec.takesValue ? `${spec.name} <value>` : `[${spec.name}]`;
-        })
-        .join(" ");
-      console.log(`  ${subName.padEnd(14)} ${sub.description}${flagText ? `\n${"".padEnd(16)}${flagText}` : ""}`);
+      const flagText = (sub.flags ?? []).map(flagSyntax).join(" ");
+      console.log(
+        `  ${subName.padEnd(14)} ${sub.description}${flagText ? `\n${"".padEnd(16)}${flagText}` : ""}`,
+      );
     }
     return;
   }
@@ -260,9 +367,11 @@ Subcommands:`);
   const flagText = (command.flags ?? [])
     .map((flag) => {
       const spec = FLAG_SPECS[flag];
-      return `  ${spec.takesValue ? `${spec.name} <value>` : spec.name.padEnd(22)} ${spec.description}`;
+      const label = spec.takesValue ? `${spec.name} <value>` : spec.name;
+      return `  ${label.padEnd(22)} ${spec.description}`;
     })
     .join("\n");
+
   console.log(`agent-skills ${name}
 
 ${command.description}
@@ -271,7 +380,9 @@ ${flagText ? `\nFlags:\n${flagText}` : ""}`);
 
 function parseFlags(tokens, allowedNames) {
   const allowed = new Set(allowedNames ?? []);
-  const flags = Object.fromEntries([...allowed].map((name) => [name, FLAG_SPECS[name]?.takesValue ? null : false]));
+  const flags = Object.fromEntries(
+    [...allowed].map((name) => [name, FLAG_SPECS[name]?.takesValue ? null : false]),
+  );
   const rest = [];
 
   for (let index = 0; index < tokens.length; index += 1) {
@@ -286,8 +397,13 @@ function parseFlags(tokens, allowedNames) {
 
     const matched = [...allowed].find((name) => FLAG_SPECS[name].name === token);
     if (!matched) {
-      fail(`Unknown flag ${token}. Allowed: ${[...allowed].map((name) => FLAG_SPECS[name].name).join(", ") || "(none)"}.`);
+      fail(
+        `Unknown flag ${token}. Allowed: ${
+          [...allowed].map((name) => FLAG_SPECS[name].name).join(", ") || "(none)"
+        }.`,
+      );
     }
+
     const spec = FLAG_SPECS[matched];
     if (spec.takesValue) {
       const value = tokens[index + 1];
@@ -321,17 +437,19 @@ function main(argv) {
       printCommandHelp(name, command);
       return rest.length === 0 ? 1 : 0;
     }
+
     const [subName, ...subRest] = rest;
     const sub = command.subcommands[subName];
     if (!sub) {
       fail(`Unknown \`${name}\` subcommand \`${subName}\`.\nRun \`agent-skills ${name} --help\`.`);
     }
+
     const parsed = parseFlags(subRest, sub.flags ?? []);
     if (parsed.help) {
       printCommandHelp(`${name} ${subName}`, sub);
       return 0;
     }
-    if (parsed.rest.length > 0 && name !== "setup" && subName !== "memory-palace") {
+    if (parsed.rest.length > 0) {
       fail(`Unexpected arguments: ${parsed.rest.join(" ")}`);
     }
     return sub.run(parsed.flags, parsed.rest);

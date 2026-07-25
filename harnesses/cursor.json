@@ -3,8 +3,8 @@
   "harness": "cursor",
   "setupPolicy": {
     "defaultMode": "dry-run-first",
-    "defaultSetupCommand": "npm run setup:cursor",
-    "dryRunCommand": "npm run setup:cursor:dry-run",
+    "defaultSetupCommand": "agent-skills setup cursor",
+    "dryRunCommand": "agent-skills setup cursor --dry-run",
     "includedInDefaultSetup": false
   },
   "agents": [

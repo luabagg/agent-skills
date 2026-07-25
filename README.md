@@ -26,31 +26,31 @@ This repo supports:
 |-- harnesses/               # Opt-in harness manifests + catalog.yaml / catalog.lock.json
 |-- docs/                    # Model catalog contract + CLI notes
 |-- scripts/                 # agent-skills CLI + install/setup helpers
-|-- package.json             # agent-skills bin + thin npm aliases
+|-- package.json             # agent-skills bin entry
 `-- README.md
 ```
 
 ## Install
 
-Install package dependencies from a local checkout:
+From a local checkout:
 
 ```bash
 npm install
 ```
 
-Install global skills and instructions:
+Then use the `agent-skills` CLI (via PATH after link/install, or `npx agent-skills` / `npm exec -- agent-skills` from the repo):
 
 ```bash
-npm run setup
+agent-skills install all
 ```
 
 Default mode uses symlinks where the target tool supports normal files. Use copy mode when symlinks are not desirable:
 
 ```bash
-npm run setup:copy
+agent-skills install all --copy
 ```
 
-What `npm run setup` does:
+What `install all` does:
 
 - Installs personal skills from `skills/` for `claude-code`, `codex`, `github-copilot`, `opencode`, and `pi` using `npx skills`.
 - Installs curated third-party skills from `curated-skills.json` `sources`.
@@ -58,36 +58,32 @@ What `npm run setup` does:
 
 ## Commands
 
-Primary interface:
-
-```bash
-npm run agent-skills -- --help
-npm run agent-skills -- install all
-npm run agent-skills -- setup pi --catalog-only
-npm run agent-skills -- catalog check
-npm run agent-skills -- verify
+```text
+agent-skills
+├── list skills|curated|tools [...]
+├── install skills|curated|agents|all [--copy] [--dry-run]
+├── setup opencode|pi|cursor [flags]
+├── config memory-palace --vault <path> [--dry-run]
+├── models check|diff|refresh
+├── update
+└── verify
 ```
 
-Useful aliases (same dispatcher underneath):
+```bash
+agent-skills --help
+agent-skills list tools
+agent-skills install all
+agent-skills setup pi --catalog-only
+agent-skills models check
+agent-skills verify
+```
+
+From a checkout without a global link:
 
 ```bash
-npm run setup                       # install all (personal + curated + agents)
-npm run setup:copy                  # install all with --copy
-npm run skills:list                 # personal skills in this repo
-npm run skills:list:installed       # globally installed skills
-npm run install:skills              # personal skills only
-npm run install:curated             # curated sources only
-npm run install:agents              # AGENTS.global.md distribution
-npm run setup:memory-palace         # memory-palace vault path
-npm run setup:opencode              # OpenCode harness
-npm run setup:pi                    # Pi harness (add --catalog-only for models only)
-npm run setup:cursor                # Cursor subagents
-npm run catalog:check               # offline catalog validation
-npm run catalog:diff                # live catalog preview
-npm run catalog:refresh             # refresh lock + generated targets
-npm run update:skills               # update installed skills
-npm run verify                      # non-destructive verification
-npm test                            # CLI routing / dry-run / exit-code tests
+npx agent-skills --help
+# or
+npm exec -- agent-skills --help
 ```
 
 ## Personal Skills
@@ -106,26 +102,26 @@ Current personal skills:
 List skills:
 
 ```bash
-npm run skills:list                 # personal skills in this repo only
-npm run skills:list:installed       # everything currently installed globally
-npm run skills:list:installed:json  # JSON form of the global install inventory
+agent-skills list skills                 # personal skills in this repo only
+agent-skills list skills --installed     # everything currently installed globally
+agent-skills list skills --installed --json
 ```
 
-`skills:list` uses `npx skills add . --list` (package contents).
-`skills:list:installed` uses `npx skills list -g` (global install state across agents).
+`list skills` uses `npx skills add . --list` (package contents).
+`list skills --installed` uses `npx skills list -g` (global install state across agents).
 
 ### Memory Palace Vault Path
 
 Configure the default vault path once so the `memory-palace` skill works from any current directory:
 
 ```bash
-npm run setup:memory-palace -- --vault /mnt/c/Users/<you>/Documents/<vault>
+agent-skills config memory-palace --vault /mnt/c/Users/<you>/Documents/<vault>
 ```
 
 If you are running from WSL and your vault lives on Windows, paste the Windows path from Explorer:
 
 ```bash
-npm run setup:memory-palace -- --vault "C:\Users\user-name\Documents\Obsidian Vaults\obsidian-vault"
+agent-skills config memory-palace --vault "C:\Users\user-name\Documents\Obsidian Vaults\obsidian-vault"
 ```
 
 The setup script converts it to a WSL-accessible path before saving it.
@@ -153,38 +149,48 @@ On WSL, Windows paths like `C:\Users\...` are expected and are converted to `/mn
 
 `curated-skills.json` tracks two different inventories:
 
-- `sources` are third-party skill sources installable by `npx skills`. `npm run install:curated` only uses this list.
-- `pluginReferences` are plugin-style or harness-specific skill references. They are tracked for awareness only and are not installed by `npm run setup` or `npm run install:curated`.
+- `sources` are third-party skill sources installable by `npx skills`. `agent-skills install curated` only uses this list.
+- `pluginReferences` are plugin-style or harness-specific skill references. They are tracked for awareness only and are not installed by `agent-skills install all` or `agent-skills install curated`.
+
+Browse them:
+
+```bash
+agent-skills list curated                 # installable sources
+agent-skills list curated --plugins       # plugin references only
+agent-skills list curated --json
+```
 
 Harness-specific setup stays separate from the default setup flow unless explicitly added later.
 
 `curated-tools.json` tracks non-skill tools, CLIs, packages, and docs I use. It is a reference catalog only; it does not drive installation.
 
-## Harness-Specific Setup
-
-Harness setup is opt-in and separate from `npm run setup` (skills + global agents only).
-
-Preferred entry point:
-
 ```bash
-npm run agent-skills -- --help
-npm run agent-skills -- setup opencode --dry-run
-npm run agent-skills -- setup pi --catalog-only
-npm run agent-skills -- setup cursor --dry-run
-npm run agent-skills -- catalog check
+agent-skills list tools
+agent-skills list tools --kind cli
+agent-skills list tools --json
 ```
 
-Legacy `npm run setup:*` / `catalog:*` scripts still work; they route through the same CLI.
+## Harness-Specific Setup
+
+Harness setup is opt-in and separate from `agent-skills install all` (skills + global agents only).
+
+```bash
+agent-skills --help
+agent-skills setup opencode --dry-run
+agent-skills setup pi --catalog-only
+agent-skills setup cursor --dry-run
+agent-skills models check
+```
 
 ### Model catalog
 
-Policy lives in `harnesses/catalog.yaml`. The lock and generated Cursor provider are produced by catalog commands — do not edit them by hand.
+Policy lives in `harnesses/catalog.yaml`. The lock and generated Cursor provider are produced by model commands — do not edit them by hand.
 
 ```bash
-npm run agent-skills -- catalog check     # offline validate
-npm run agent-skills -- catalog diff      # live preview
-npm run agent-skills -- catalog refresh   # write lock + generated targets
-npm run agent-skills -- setup pi --catalog-only   # apply models/Scope only
+agent-skills models check     # offline validate
+agent-skills models diff      # live preview
+agent-skills models refresh   # write lock + generated targets
+agent-skills setup pi --catalog-only   # apply models/Scope only
 ```
 
 Contract, failure modes, and Pi phase flags: [`docs/model-catalog.md`](docs/model-catalog.md).
@@ -194,9 +200,9 @@ Contract, failure modes, and Pi phase flags: [`docs/model-catalog.md`](docs/mode
 Tracked in `harnesses/opencode.json`. Setup installs agent files, prints manual plugin installer hints, and only mutates config for selected plugins.
 
 ```bash
-npm run agent-skills -- setup opencode --dry-run
-npm run agent-skills -- setup opencode
-npm run agent-skills -- setup opencode --enable-recommended
+agent-skills setup opencode --dry-run
+agent-skills setup opencode
+agent-skills setup opencode --enable-recommended
 ```
 
 Agent templates use `{{catalogRole:<role>}}`; setup renders concrete models from the catalog lock.
@@ -206,37 +212,37 @@ Agent templates use `{{catalogRole:<role>}}`; setup renders concrete models from
 Tracked in `harnesses/pi.json` with extensions under `harnesses/pi/`.
 
 ```bash
-# Models / Scope / providers only (usual after catalog refresh)
-npm run agent-skills -- setup pi --catalog-only
+# Models / Scope / providers only (usual after models refresh)
+agent-skills setup pi --catalog-only
 
 # Full harness without Cursor bridge
-npm run agent-skills -- setup pi --skip-cursor-bridge
+agent-skills setup pi --skip-cursor-bridge
 
 # Full harness + optional recommended entries
-npm run agent-skills -- setup pi --dry-run
-npm run agent-skills -- setup pi --enable-recommended
-PI_CURSOR_WORKSPACE="$PWD" npm run agent-skills -- setup pi
+agent-skills setup pi --dry-run
+agent-skills setup pi --enable-recommended
+PI_CURSOR_WORKSPACE="$PWD" agent-skills setup pi
 ```
 
 Phases: **catalog** (always) → packages → extensions → cursor-bridge (skippable). Setup consumes the committed lock only; it does not re-discover models.
 
-Cursor credentials stay local via `cursor-agent login`. Bridge ports bind to `127.0.0.1`. After bridge config changes, run `catalog diff` / `catalog refresh` if model IDs changed, then re-apply with `--catalog-only`.
+Cursor credentials stay local via `cursor-agent login`. Bridge ports bind to `127.0.0.1`. After bridge config changes, run `models diff` / `models refresh` if model IDs changed, then re-apply with `--catalog-only`.
 
 ### Cursor subagents
 
 Tracked in `harnesses/cursor.json` (`harnesses/cursor/agents/`).
 
 ```bash
-npm run agent-skills -- setup cursor --dry-run
-npm run agent-skills -- setup cursor
-npm run agent-skills -- setup cursor --copy
+agent-skills setup cursor --dry-run
+agent-skills setup cursor
+agent-skills setup cursor --copy
 ```
 
 Cursor has no global `AGENTS.md` / `~/.cursor/rules/*.mdc` install path — User Rules stay in the Customize UI. This harness only installs user-scope subagents under `~/.cursor/agents/`.
 
 ### Global instructions targets
 
-`AGENTS.global.md` is the source of truth. `npm run install:agents` (or `agent-skills install agents`) distributes it to:
+`AGENTS.global.md` is the source of truth. `agent-skills install agents` distributes it to:
 
 - Codex: `~/.codex/AGENTS.md`
 - Claude: `~/.claude/AGENTS.md` plus `~/.claude/CLAUDE.md` importing `@AGENTS.md`
@@ -244,7 +250,7 @@ Cursor has no global `AGENTS.md` / `~/.cursor/rules/*.mdc` install path — User
 - OpenCode: `~/.config/opencode/AGENTS.md` plus a global config `instructions` entry
 - Pi: `~/.pi/agent/AGENTS.md`
 
-Default mode symlinks; `setup:copy` / `--copy` copies. Repo-scoped `AGENTS.md` applies only inside this repository.
+Default mode symlinks; `--copy` copies. Repo-scoped `AGENTS.md` applies only inside this repository.
 
 After changing OpenCode config, restart OpenCode. Running sessions keep already-loaded config.
 
@@ -253,7 +259,7 @@ After changing OpenCode config, restart OpenCode. Running sessions keep already-
 Run the non-destructive repo checks:
 
 ```bash
-npm run verify
+agent-skills verify
 ```
 
 Optional runtime checks:

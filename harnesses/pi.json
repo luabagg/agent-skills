@@ -3,8 +3,8 @@
   "harness": "pi",
   "setupPolicy": {
     "defaultMode": "dry-run-first",
-    "defaultSetupCommand": "npm run setup:pi",
-    "dryRunCommand": "npm run setup:pi:dry-run",
+    "defaultSetupCommand": "agent-skills setup pi",
+    "dryRunCommand": "agent-skills setup pi --dry-run",
     "includedInDefaultSetup": false
   },
   "packages": [
@@ -93,7 +93,7 @@
       "path": "~/.pi/agent/extensions/variants.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/variants.ts. Installed by npm run setup:pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds a `variant:<level>` status chip. Restart pi after install so the command is registered."
+      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agent-skills setup pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds a `variant:<level>` status chip. Restart pi after install so the command is registered."
     },
     {
       "name": "xai-subscription.ts",
@@ -104,7 +104,7 @@
       "path": "~/.pi/agent/extensions/xai-subscription.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installs globally through setup:pi; credentials stay in ~/.pi/agent/auth.json. The provider registers all live subscription chat models for the All tab while settings.enabledModels limits the Scope tab."
+      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installs globally through agent-skills setup pi; credentials stay in ~/.pi/agent/auth.json. The provider registers all live subscription chat models for the All tab while settings.enabledModels limits the Scope tab."
     }
   ],
   "settings": {
