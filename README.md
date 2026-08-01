@@ -273,3 +273,19 @@ For OpenCode, inspect `~/.config/opencode/opencode.jsonc` and confirm the `instr
 ## Safety
 
 This repository is public. Do not add private dashboards, tokens, org IDs, internal URLs, API keys, or generated local memory context.
+
+## Agentfolio collection
+
+This repo is **collection #1** for [Agentfolio](https://github.com/luabagg/agentfolio).
+
+```bash
+# from a linked agentfolio install, or:
+node /path/to/agentfolio/bin/agentfolio.mjs plan --collection .
+node /path/to/agentfolio/bin/agentfolio.mjs doctor --collection .
+node /path/to/agentfolio/bin/agentfolio.mjs apply --dry-run --collection .
+```
+
+- `collection.yaml` — inventories + backends
+- `chezmoi/` — git-tracked source for AGENTS + Cursor/OpenCode agents (symlinks into this repo)
+- Legacy `agent-skills setup|install` remains supported until apply fully replaces those scripts
+

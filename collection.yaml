@@ -1,0 +1,40 @@
+name: personal-agent-skills
+version: 1
+
+# Collection #1 for Agentfolio (https://github.com/luabagg/agentfolio).
+# Legacy `agent-skills setup|install` CLIs still work; this file is the
+# git-tracked inventory Agentfolio plan/apply/doctor consume.
+
+skills:
+  backend: skills-cli
+  local: ./skills
+  imports: ./imports
+
+tools:
+  backend: reference
+  catalog: ./tools/catalog.json
+  apply: reference
+
+harnesses:
+  - id: pi
+    source: ./harnesses/pi
+    backend: chezmoi
+  - id: cursor
+    source: ./harnesses/cursor
+    backend: chezmoi
+  - id: opencode
+    source: ./harnesses/opencode
+    backend: chezmoi
+
+instructions:
+  global: ./AGENTS.global.md
+  backend: chezmoi
+
+plugins:
+  backend: none
+  # Curated plugin refs remain in curated-skills.json (list/hint only).
+
+chezmoi:
+  sourceDir: ./chezmoi
+  # destinationDir defaults to $HOME. For safe dry-runs use:
+  # destinationDir: ./apply-target

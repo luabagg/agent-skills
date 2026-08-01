@@ -1,0 +1,1 @@
+../../../../harnesses/opencode/agents/advisor.md
