@@ -20,6 +20,18 @@
 - Optimize for feedback loops: run the smallest meaningful verification, inspect the result, then iterate.
 - Avoid clever hidden state. Make assumptions, decisions, and uncertainty visible.
 
+## Technical Prose
+
+For docs, code comments, commit messages, PR descriptions, reports, and technical replies, use ASD-STE100 Simplified Technical English.
+
+- Use approved words. Give each word one meaning.
+- Use one word for one idea. Do not use two words for the same idea.
+- Write short sentences. Keep instructions to 20 words or fewer.
+- Use active voice. Write "Turn the switch," not "The switch must be turned."
+- Write short paragraphs. Cover one topic in each paragraph.
+
+Keep `caveman` for casual status updates and ordinary replies. Use correct technical English when the reply explains durable technical work.
+
 ## Default Communication
 
 - No slop grenades: do not paste AI-generated walls of text where a human would answer in one sentence or a few bullets.
