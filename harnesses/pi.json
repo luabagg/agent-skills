@@ -105,6 +105,17 @@
       "recommended": true,
       "defaultEnabled": true,
       "notes": "Repo source: harnesses/pi/xai.ts. Installs globally as ~/.pi/agent/extensions/xai.ts and registers provider id `xai`. Use XAI_API_KEY or /login xai."
+    },
+    {
+      "name": "claude.ts",
+      "description": "Claude provider for pi with Anthropic API-key auth and optional Claude Pro/Max OAuth login.",
+      "kind": "local-extension",
+      "scope": "global",
+      "sourceFile": "claude.ts",
+      "path": "~/.pi/agent/extensions/claude.ts",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Repo source: harnesses/pi/claude.ts. Registers provider id `claude`. Use ANTHROPIC_API_KEY or /login claude. OAuth mode uses Claude Code-compatible headers and streaming."
     }
   ],
   "settings": {
