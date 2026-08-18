@@ -96,15 +96,15 @@
       "notes": "Repo source: harnesses/pi/variants.ts. Installed by agent-skills setup pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds a `variant:<level>` status chip. Restart pi after install so the command is registered."
     },
     {
-      "name": "xai-subscription.ts",
-      "description": "xAI Subscription OAuth provider with live chat-model discovery plus fixed Composer 2.5 Fast fallback.",
+      "name": "xai.ts",
+      "description": "xAI provider for pi with Grok 4.6, Grok 4.6 Fast, API-key auth, optional xAI device-code OAuth, live model discovery, and pi thinking-level mappings.",
       "kind": "local-extension",
       "scope": "global",
-      "sourceFile": "xai-subscription.ts",
-      "path": "~/.pi/agent/extensions/xai-subscription.ts",
+      "sourceFile": "xai.ts",
+      "path": "~/.pi/agent/extensions/xai.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installs globally through agent-skills setup pi; credentials stay in ~/.pi/agent/auth.json. The provider registers all live subscription chat models for the All tab while settings.enabledModels limits the Scope tab."
+      "notes": "Repo source: harnesses/pi/xai.ts. Installs globally as ~/.pi/agent/extensions/xai.ts and registers provider id `xai`. Use XAI_API_KEY or /login xai."
     }
   ],
   "settings": {
@@ -117,7 +117,8 @@
       "description": "Cursor subscription models exposed to pi through an isolated OpenCursor ACP-to-OpenAI-compatible bridge.",
       "sourceFile": "cursor-provider.json",
       "path": "~/.pi/agent/models.json#/providers/cursor",
-      "defaultEnabled": true
+      "defaultEnabled": true,
+      "includeModelsFromPiScope": "default"
     }
   ],
   "cursorBridge": {

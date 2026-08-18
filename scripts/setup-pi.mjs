@@ -88,6 +88,14 @@ function validateManifest(value) {
     if (!provider.name || !provider.sourceFile || typeof provider.defaultEnabled !== "boolean") {
       throw new Error("Each modelProvider needs name, sourceFile, and defaultEnabled.");
     }
+    if (
+      provider.includeModelsFromPiScope &&
+      !catalog.piScopes?.[provider.includeModelsFromPiScope]
+    ) {
+      throw new Error(
+        `${provider.name}.includeModelsFromPiScope must reference a catalog piScope.`,
+      );
+    }
   }
 
   const bridge = value.cursorBridge;
@@ -232,12 +240,41 @@ async function installLocalExtension(ext) {
   return true;
 }
 
+function filterProviderModelsFromPiScope(providerName, providerConfig, scopeId) {
+  if (!scopeId) return providerConfig;
+
+  const resolved = resolvedScope(scopeId);
+  const prefix = `${providerName}/`;
+  const allowedIds = new Set(
+    resolved.enabledModels
+      .filter((id) => id.startsWith(prefix))
+      .map((id) => id.slice(prefix.length)),
+  );
+
+  if (allowedIds.size === 0) {
+    console.warn(`  ${providerName}: piScope ${scopeId} selects no models for this provider`);
+    return providerConfig;
+  }
+
+  const models = Array.isArray(providerConfig.models) ? providerConfig.models : [];
+  const filtered = models.filter((model) => allowedIds.has(model.id));
+  console.log(
+    `  ${providerName}: limiting models from ${models.length} to ${filtered.length} via piScope ${scopeId}`,
+  );
+  return { ...providerConfig, models: filtered };
+}
+
 async function nextModels(currentModels, providers) {
   const next = { ...currentModels, providers: { ...(currentModels.providers ?? {}) } };
   for (const provider of providers) {
     const source = resolve(harnessRoot, provider.sourceFile);
     if (!existsSync(source)) throw new Error(`Missing provider source: ${source}`);
-    next.providers[provider.name] = JSON.parse(await readFile(source, "utf8"));
+    const providerConfig = JSON.parse(await readFile(source, "utf8"));
+    next.providers[provider.name] = filterProviderModelsFromPiScope(
+      provider.name,
+      providerConfig,
+      provider.includeModelsFromPiScope,
+    );
   }
   return next;
 }

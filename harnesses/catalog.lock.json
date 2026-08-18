@@ -1,5 +1,5 @@
 {
-  "policyDigest": "sha256:9081eda0620ce7cb2cee2bc6ad42778a1e160c4661ea18c97aeec12f65abeb50",
+  "policyDigest": "sha256:134378f0aa5422acba28936eaf757a07c0dcb2aeea4f8ec89e4dc2bfc561ffdb",
   "providers": {
     "cursor": {
       "models": {
@@ -3993,6 +3993,38 @@
           "name": "Grok 4.5",
           "reasoning": true
         },
+        "grok-4.6": {
+          "contextWindow": 256000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 64000,
+          "name": "Grok 4.6",
+          "reasoning": true
+        },
+        "grok-4.6-fast": {
+          "contextWindow": 256000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 64000,
+          "name": "Grok 4.6 Fast",
+          "reasoning": true
+        },
         "grok-composer-2.5-fast": {
           "contextWindow": 500000,
           "cost": {
@@ -4010,7 +4042,7 @@
           "reasoning": false
         }
       },
-      "snapshotDigest": "sha256:540555a7d80af06b2c60a7b05a535f58275daf95a0a85f293927267e33fc4b40"
+      "snapshotDigest": "sha256:e1a616824645c8b9a3f9b7c669419f12c5ac1d0efa3cabc7218a71b20cd7b263"
     }
   },
   "resolvedSelectors": {
@@ -4026,12 +4058,12 @@
     },
     "xai-chat": {
       "mode": "exact",
-      "modelId": "grok-4.5",
+      "modelId": "grok-4.6",
       "provider": "xai"
     },
     "xai-coder": {
       "mode": "exact",
-      "modelId": "grok-composer-2.5-fast",
+      "modelId": "grok-4.6-fast",
       "provider": "xai"
     }
   },
