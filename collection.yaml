@@ -34,6 +34,15 @@ plugins:
   backend: none
   # Curated plugin refs remain in curated-skills.json (list/hint only).
 
+models:
+  policy: ./harnesses/catalog.yaml
+  lock: ./harnesses/catalog.lock.json
+
+integrations:
+  cursorBridge:
+    enabled: true
+    manifest: ./harnesses/pi.json
+
 chezmoi:
   sourceDir: ./chezmoi
   # destinationDir defaults to $HOME. For safe dry-runs use:

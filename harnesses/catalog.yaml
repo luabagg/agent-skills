@@ -7,7 +7,7 @@ providers:
       opencode: xai
     discovery:
       kind: pi-list-models
-      provider: xai-subscription
+      provider: xai
     modelDefaults:
       reasoning: false
       input: [text, image]
