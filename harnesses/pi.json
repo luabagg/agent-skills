@@ -108,14 +108,14 @@
     },
     {
       "name": "claude.ts",
-      "description": "Claude provider for pi with Anthropic API-key auth and optional Claude Pro/Max OAuth login.",
+      "description": "Claude Code CLI bridge for pi. Uses the official local `claude` command and its own auth; no Claude OAuth tokens are handled by pi.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "claude.ts",
       "path": "~/.pi/agent/extensions/claude.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/claude.ts. Registers provider id `claude`. Use ANTHROPIC_API_KEY or /login claude. OAuth mode uses Claude Code-compatible headers and streaming."
+      "notes": "Repo source: harnesses/pi/claude.ts. Registers provider id `claude-cli`. Run `claude login` separately. The bridge shells out to `claude --print` with safe `--permission-mode plan` defaults."
     }
   ],
   "settings": {
