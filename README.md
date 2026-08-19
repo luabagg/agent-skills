@@ -94,6 +94,7 @@ Current personal skills:
 
 | Skill | Purpose |
 | --- | --- |
+| `agentfolio-operator` | Choose Agentfolio profiles and commands. Do not edit live harness files by hand |
 | `branch-port` | Port a feature across heavily diverged branches without unsafe merges |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
 | `natural-copy-editing` | Rewrite, polish, translate, and correct text in a natural voice |
@@ -278,14 +279,17 @@ This repository is public. Do not add private dashboards, tokens, org IDs, inter
 
 This repo is **collection #1** for [Agentfolio](https://github.com/luabagg/agentfolio).
 
+Prefer Agentfolio for plan, models, and Pi apply. Use the `agentfolio-operator` skill to choose the profile.
+
 ```bash
-# from a linked agentfolio install, or:
-node /path/to/agentfolio/bin/agentfolio.mjs plan --collection .
-node /path/to/agentfolio/bin/agentfolio.mjs doctor --collection .
-node /path/to/agentfolio/bin/agentfolio.mjs apply --dry-run --collection .
+agentfolio plan --collection .
+agentfolio models check --collection .
+agentfolio apply --profile pi-catalog --dry-run --collection .
+agentfolio setup pi --dry-run --collection .
 ```
 
-- `collection.yaml` — inventories + backends
-- `chezmoi/` — git-tracked source for AGENTS + Cursor/OpenCode agents (symlinks into this repo)
-- Legacy `agent-skills setup|install` remains supported until apply fully replaces those scripts
+- `collection.yaml` — inventories and backends
+- `chezmoi/` — source for AGENTS and harness files
+- `harnesses/catalog.yaml` — model policy. Do not edit the lock by hand
+- Legacy `agent-skills setup|install` still works. Prefer Agentfolio for new Pi work
 

@@ -11,19 +11,21 @@ Edit policy, preview, commit generated artifacts, then apply:
 $EDITOR harnesses/catalog.yaml
 
 # 2. Preview live discovery vs committed lock
-agent-skills models diff
+agentfolio models diff --collection .
 
 # 3. Write lock + generated targets (commit both)
-agent-skills models refresh
+agentfolio models refresh --collection .
 
 # 4. Apply to the local machine
-agent-skills setup pi --catalog-only
+agentfolio apply --profile pi-catalog --collection .
 agent-skills setup opencode
 ```
 
 Offline validation (CI / pre-setup):
 
 ```bash
+agentfolio models check --collection .
+# legacy alias:
 agent-skills models check
 ```
 
@@ -34,8 +36,9 @@ agent-skills models check
 | `harnesses/catalog.yaml` | Policy: providers, selectors, Pi scopes, OpenCode roles | **Yes** — only manual source |
 | `harnesses/catalog.lock.json` | Resolved snapshots + selector resolutions | **No** — `models refresh` |
 | `harnesses/pi/cursor-provider.json` | Generated Cursor provider for Pi | **No** — `models refresh` |
-| `harnesses/pi/xai-subscription.ts` | xAI adapter / capability inference | Adapter code, not model lists |
-| `~/.pi/agent/catalog.lock.json` | Installed lock copy used offline by adapters | Installed by `setup pi` |
+| `harnesses/pi/xai.ts` | xAI adapter / capability inference | Adapter code, not model lists |
+| `harnesses/pi/claude.ts` | Claude Code CLI bridge | Adapter code, not model lists |
+| `~/.pi/agent/catalog.lock.json` | Installed lock copy used offline by adapters | Installed by `agentfolio setup pi` |
 | OpenCode agent frontmatter models | Rendered from roles at setup time | Installed by `setup opencode` |
 
 ## Mental model
@@ -44,13 +47,14 @@ agent-skills models check
 catalog.yaml          policy (human)
       │
       ▼
-catalog.mjs           check | diff | refresh
+agentfolio models     check | diff | refresh
       │
       ├─► catalog.lock.json
       └─► generated targets (cursor-provider.json)
               │
               ▼
-setup-pi / setup-opencode
+agentfolio apply --profile pi-catalog
+setup-opencode (legacy)
    consume lock only (never re-discover models)
 ```
 
@@ -67,12 +71,14 @@ setup-pi / setup-opencode
 | `models refresh` | yes (best-effort) | yes | Rewrite lock + generated targets; keep last snapshot if one provider is down |
 
 ```bash
-agent-skills models check
-agent-skills models diff
-agent-skills models refresh
+agentfolio models check --collection .
+agentfolio models diff --collection .
+agentfolio models refresh --collection .
 ```
 
-Normal `setup pi` / `setup opencode` always run `models check` first and refuse to apply a stale or invalid lock.
+`agent-skills models *` still works. Prefer Agentfolio.
+
+`setup opencode` still runs `models check` first and refuses a stale lock.
 
 ## Pi setup phases
 
@@ -87,14 +93,13 @@ Full Pi setup does more than the catalog. Split when you only need models:
 
 ```bash
 # Models only (fastest day-to-day after models refresh)
-agent-skills setup pi --catalog-only
+agentfolio apply --profile pi-catalog --collection .
 
 # Everything except Cursor bridge
-agent-skills setup pi --skip-cursor-bridge
+agentfolio setup pi --skip-cursor-bridge --collection .
 
 # Full harness (packages + extensions + bridge)
-agent-skills setup pi
-agent-skills setup pi --enable-recommended
+agentfolio setup pi --collection .
 ```
 
 ## Ownership
@@ -102,16 +107,16 @@ agent-skills setup pi --enable-recommended
 | Data | Classification | Owner |
 | --- | --- | --- |
 | Cursor `/v1/models` IDs | discovery | live local bridge → snapshotted in lock |
-| xAI subscription model IDs | discovery | `pi --list-models xai-subscription` → lock |
+| xAI subscription model IDs | discovery | `pi --list-models xai` → lock |
 | Pi Scope membership | policy | `catalog.yaml` `piScopes` + `selectors` |
 | OpenCode agent → model | policy | `catalog.yaml` `opencodeRoles` |
-| Provider aliases (`cursor`, `xai-subscription`, `xai`) | policy | provider `harnessIds` |
+| Provider aliases (`cursor`, `xai`, `claude-cli`) | policy | provider `harnessIds` |
 | Context / cost when upstream omits them | fallback metadata | provider defaults, rules, same-ID fallbacks in YAML |
 | Cursor Pi provider JSON | generated | `harnesses/pi/cursor-provider.json` |
 | Concrete resolved model IDs | generated | `harnesses/catalog.lock.json` |
-| Installed Pi Scope / provider files | install output | `scripts/setup-pi.mjs` |
+| Installed Pi Scope / provider files | install output | `agentfolio setup pi` |
 | Installed OpenCode agent model frontmatter | install output | `scripts/setup-opencode.mjs` |
-| xAI reasoning / Composer compatibility | adapter logic | `harnesses/pi/xai-subscription.ts` |
+| xAI reasoning / thinking map | adapter logic | `harnesses/pi/xai.ts` |
 
 ## Policy and lock contract
 
