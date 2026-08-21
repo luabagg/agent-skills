@@ -86,14 +86,14 @@
   "localExtensions": [
     {
       "name": "variants.ts",
-      "description": "OpenCode-style /variants and /variant commands that map pi thinking levels (off/minimal/low/medium/high/xhigh/max) to effort variants.",
+      "description": "Claude-style /models picker: model list, ←→ effort, and fast-mode toggle for sibling models (e.g. grok-4.6-fast). Also registers /effort, /fast, /variants.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "variants.ts",
       "path": "~/.pi/agent/extensions/variants.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agent-skills setup pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds a `variant:<level>` status chip. Restart pi after install so the command is registered."
+      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds effort:<level> and fast status chips. Restart pi after install so the commands are registered."
     },
     {
       "name": "xai.ts",
@@ -105,6 +105,17 @@
       "recommended": true,
       "defaultEnabled": true,
       "notes": "Repo source: harnesses/pi/xai.ts. Installs globally as ~/.pi/agent/extensions/xai.ts and registers provider id `xai`. Use XAI_API_KEY or /login xai."
+    },
+    {
+      "name": "env-permissions.ts",
+      "description": "Permission list that blocks read/write/edit/bash access to .env files.",
+      "kind": "local-extension",
+      "scope": "global",
+      "sourceFile": "env-permissions.ts",
+      "path": "~/.pi/agent/extensions/env-permissions.ts",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Repo source: harnesses/pi/env-permissions.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi. Deny list is PERMISSIONS in the file; optional overlay ~/.pi/agent/extensions/env-permissions.json. Restart pi or /reload after install."
     },
     {
       "name": "claude.ts",

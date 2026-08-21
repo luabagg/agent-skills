@@ -36,14 +36,14 @@ Keep `caveman` for casual status updates and ordinary replies. Use correct techn
 
 - No slop grenades: do not paste AI-generated walls of text where a human would answer in one sentence or a few bullets.
 - Answer the exact question first. Put the decision, finding, or recommendation before context.
-- Default to terse, structured, easy-to-scan bullets. Keep status updates, summaries, reviews, and explanations compact unless the user asks for depth.
+- Default to bullet point structured, easy-to-scan communication. Keep status updates, summaries, reviews, and explanations compact unless the user asks for depth.
 - Include only decisive evidence. Do not dump long logs, raw diffs, tool narration, generic caveats, or full audits when a short answer satisfies the request.
 - If more detail may help, offer a short "want deeper?" follow-up instead of expanding by default.
 
 ## Default Skill Use
 
 - Use the `superpowers` skill set by default for software work when it is installed. Treat it as the baseline workflow layer for planning, debugging, TDD, reviews, verification, branch finishing, and other development process tasks.
-- Use the `caveman` skill set by default for concise communication when it is installed. Prefer terse, direct status updates, summaries, reviews, and commit-style language unless the user asks for a fuller explanation.
+- Use the `caveman` skill set by default for concise communication when it is installed. Prefer BULLETED POINT direct status updates, summaries, reviews, and commit-style language unless the user asks for a fuller explanation.
 - For rewrites, translations, English corrections, message polishing, tone adaptation, or text restructuring, use the `natural-copy-editing` skill.
 - If either skill set is unavailable in the current agent environment, continue with the closest built-in workflow and mention the missing skill only when it affects the task.
 - Do not let default skill routing override explicit user instructions, safety constraints, repository rules, or a more specific skill trigger such as `branch-port`, `memory-palace`, or `thorough-pr-review`.
@@ -127,13 +127,3 @@ rtk pip list            rtk pnpm install        rtk npm run <script>
 - `rtk proxy <cmd>` runs command without filtering but tracks usage
 <!-- /headroom:rtk-instructions -->
 
-<!-- CODEGRAPH_START -->
-## CodeGraph
-
-In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
-
-- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
-- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
-
-If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
-<!-- CODEGRAPH_END -->

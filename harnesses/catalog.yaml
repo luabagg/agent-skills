@@ -36,6 +36,50 @@ providers:
           maxTokens: 64000
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
 
+  openai-codex:
+    harnessIds:
+      pi: openai-codex
+    discovery:
+      kind: pi-list-models
+      provider: openai-codex
+    modelDefaults:
+      reasoning: true
+      input: [text, image]
+      contextWindow: 272000
+      maxTokens: 128000
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+    fallbackMetadata:
+      gpt-5.6-luna:
+        includeWhenUndiscovered: true
+        reason: Keeps GPT 5.6 Luna available when Codex discovery is unavailable.
+        model:
+          name: GPT 5.6 Luna
+          reasoning: true
+          input: [text, image]
+          contextWindow: 272000
+          maxTokens: 128000
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+      gpt-5.6-sol:
+        includeWhenUndiscovered: true
+        reason: Keeps GPT 5.6 Sol available when Codex discovery is unavailable.
+        model:
+          name: GPT 5.6 Sol
+          reasoning: true
+          input: [text, image]
+          contextWindow: 272000
+          maxTokens: 128000
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+      gpt-5.6-terra:
+        includeWhenUndiscovered: true
+        reason: Keeps GPT 5.6 Terra available when Codex discovery is unavailable.
+        model:
+          name: GPT 5.6 Terra
+          reasoning: true
+          input: [text, image]
+          contextWindow: 272000
+          maxTokens: 128000
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+
   cursor:
     harnessIds:
       pi: cursor
@@ -71,6 +115,15 @@ selectors:
   xai-coder:
     provider: xai
     exact: grok-4.6-fast
+  openai-luna:
+    provider: openai-codex
+    exact: gpt-5.6-luna
+  openai-sol:
+    provider: openai-codex
+    exact: gpt-5.6-sol
+  openai-terra:
+    provider: openai-codex
+    exact: gpt-5.6-terra
   cursor-auto:
     provider: cursor
     exact: auto
@@ -82,7 +135,14 @@ selectors:
       versionScheme: numeric-dotted
 
 piScopes:
-  default: [xai-chat, xai-coder, cursor-auto, cursor-coder]
+  default:
+    - xai-chat
+    - xai-coder
+    - openai-luna
+    - openai-sol
+    - openai-terra
+    - cursor-auto
+    - cursor-coder
 
 opencodeRoles:
   advisor: xai-chat
