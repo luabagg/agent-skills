@@ -16,7 +16,7 @@ Implemented Tasks 1–9 and completed Task 10 validation on `refactor/full-polis
 - `60815e6` docs: document full-polish ownership and onboarding
 - `5663205` ci: gate full-polish safety checks
 - `54179a7` docs: record full-polish implementation evidence
-- Task 10 process runner API correction follows this report.
+- Task 10 process runner API correction is included in `cca3c45`.
 
 ## Changed files by task
 
