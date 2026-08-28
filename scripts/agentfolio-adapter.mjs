@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ACTIONS, resolveAction } from "./lib/actions.mjs";
+import { plan as createPlan } from "./lib/plan.mjs";
 
 const redact = (value) => String(value ?? "");
 
@@ -63,7 +64,10 @@ export function handleRequest(request, { run = spawnSync, root } = {}) {
   const action = resolveAction(resolved.id, extraArgs);
   const displayCommand = ["agent-skills", ...resolved.action.cliArgs, ...extraArgs];
   const summary = request.action?.config?.summary ?? resolved.action.summary;
-  if (request.operation === "plan") return { ok: true, summary, changed: false, command: displayCommand, processes: [{ executable: action.executable, args: action.args }] };
+  if (request.operation === "plan") {
+    const result = createPlan({ actionId: resolved.id, extraArgs, summary }, { processes: [{ executable: action.executable, args: action.args }] });
+    return { ...result, changed: false, command: displayCommand };
+  }
 
   const cliPath = resolve(collectionRoot, "scripts", "cli.mjs");
   const args = [cliPath, ...resolved.action.cliArgs, ...extraArgs];
