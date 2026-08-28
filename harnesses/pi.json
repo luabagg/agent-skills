@@ -3,8 +3,8 @@
   "harness": "pi",
   "setupPolicy": {
     "defaultMode": "dry-run-first",
-    "defaultSetupCommand": "agent-skills setup pi",
-    "dryRunCommand": "agent-skills setup pi --dry-run",
+    "defaultSetupCommand": "agentfolio apply --profile pi",
+    "dryRunCommand": "agentfolio apply --profile pi --dry-run",
     "includedInDefaultSetup": false
   },
   "packages": [
@@ -80,31 +80,53 @@
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:@ff-labs/pi-fff",
-      "notes": "User shorthand `src` maps to the manifest entry ./src/index.ts. RTK and headroom are preferred for output compression; pi-fff covers fuzzy path/grep search."
+      "notes": "User shorthand `src` maps to the manifest entry ./src/index.ts. pi-fff covers fuzzy path/grep search."
     }
   ],
   "localExtensions": [
     {
       "name": "variants.ts",
-      "description": "OpenCode-style /variants and /variant commands that map pi thinking levels (off/minimal/low/medium/high/xhigh/max) to effort variants.",
+      "description": "Claude-style /models picker: model list, ←→ effort, and fast-mode toggle for sibling models (e.g. grok-4.6-fast). Also registers /effort, /fast, /variants.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "variants.ts",
       "path": "~/.pi/agent/extensions/variants.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agent-skills setup pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds a `variant:<level>` status chip. Restart pi after install so the command is registered."
+      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds effort:<level> and fast status chips. Restart pi after install so the commands are registered."
     },
     {
-      "name": "xai-subscription.ts",
-      "description": "xAI Subscription OAuth provider with live chat-model discovery plus fixed Composer 2.5 Fast fallback.",
+      "name": "xai.ts",
+      "description": "xAI provider for pi with Grok 4.6, Grok 4.6 Fast, API-key auth, optional xAI device-code OAuth, live model discovery, and pi thinking-level mappings.",
       "kind": "local-extension",
       "scope": "global",
-      "sourceFile": "xai-subscription.ts",
-      "path": "~/.pi/agent/extensions/xai-subscription.ts",
+      "sourceFile": "xai.ts",
+      "path": "~/.pi/agent/extensions/xai.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/xai-subscription.ts. Installs globally through agent-skills setup pi; credentials stay in ~/.pi/agent/auth.json. The provider registers all live subscription chat models for the All tab while settings.enabledModels limits the Scope tab."
+      "notes": "Repo source: harnesses/pi/xai.ts. Installs globally as ~/.pi/agent/extensions/xai.ts and registers provider id `xai`. Use XAI_API_KEY or /login xai."
+    },
+    {
+      "name": "env-permissions.ts",
+      "description": "Permission list that blocks read/write/edit/bash access to .env files.",
+      "kind": "local-extension",
+      "scope": "global",
+      "sourceFile": "env-permissions.ts",
+      "path": "~/.pi/agent/extensions/env-permissions.ts",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Repo source: harnesses/pi/env-permissions.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi. Deny list is PERMISSIONS in the file; optional overlay ~/.pi/agent/extensions/env-permissions.json. Restart pi or /reload after install."
+    },
+    {
+      "name": "claude.ts",
+      "description": "Claude Code CLI bridge for pi. Uses the official local `claude` command and its own auth; no Claude OAuth tokens are handled by pi.",
+      "kind": "local-extension",
+      "scope": "global",
+      "sourceFile": "claude.ts",
+      "path": "~/.pi/agent/extensions/claude.ts",
+      "recommended": true,
+      "defaultEnabled": true,
+      "notes": "Repo source: harnesses/pi/claude.ts. Registers provider id `claude-cli`. Run `claude login` separately. The bridge shells out to `claude --print` with safe `--permission-mode plan` defaults."
     }
   ],
   "settings": {
@@ -117,7 +139,8 @@
       "description": "Cursor subscription models exposed to pi through an isolated OpenCursor ACP-to-OpenAI-compatible bridge.",
       "sourceFile": "cursor-provider.json",
       "path": "~/.pi/agent/models.json#/providers/cursor",
-      "defaultEnabled": true
+      "defaultEnabled": true,
+      "includeModelsFromPiScope": "default"
     }
   ],
   "cursorBridge": {

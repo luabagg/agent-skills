@@ -13,12 +13,14 @@ import {
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { insertJsoncObjectProperty, parseJsonc } from "./lib/jsonc.mjs";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const copy = args.has("--copy");
 const sourceFile = resolve(fileURLToPath(new URL("../AGENTS.global.md", import.meta.url)));
 const mode = copy ? "copy" : "symlink";
+const MANAGED_MARKER = "<!-- managed-by: agent-skills -->";
 
 const targets = {
   codexAgents: resolve(join(homedir(), ".codex", "AGENTS.md")),
@@ -71,30 +73,27 @@ async function installManagedFile(source, target) {
     return;
   }
 
+  let currentLink = null;
   try {
-    const current = await readlink(target);
-    const resolved = resolve(dirname(target), current);
-    if (mode === "symlink" && resolved === source) {
-      console.log(`ok ${target}`);
-      return;
-    }
-
-    console.log(`replace ${target}`);
-    if (!dryRun) {
-      await unlink(target);
-      if (mode === "copy") {
-        await copyFile(source, target);
-      } else {
-        await symlink(source, target);
-      }
-    }
-    return;
+    currentLink = await readlink(target);
   } catch {
     // Existing path is not a symlink. Treat identical content as already managed.
   }
 
   const currentContent = await readUtf8IfExists(target);
   const sourceContent = await readFile(source, "utf8");
+  if (currentLink !== null) {
+    const resolved = resolve(dirname(target), currentLink);
+    if (mode === "symlink" && resolved === source) {
+      console.log(`ok ${target}`);
+      return;
+    }
+    if (sameTextContent(currentContent ?? "", sourceContent)) {
+      console.log(`ok ${target} (content matches)`);
+      return;
+    }
+    throw new Error(`Refusing to overwrite unmanaged file: ${target}`);
+  }
   if (sameTextContent(currentContent ?? "", sourceContent)) {
     console.log(`ok ${target}`);
     return;
@@ -126,7 +125,11 @@ async function ensureClaudeWrapper() {
     return;
   }
 
-  const next = current?.trim().length ? `${importLine}\n\n${current}` : `${importLine}\n`;
+  if (current?.trim().length) {
+    throw new Error(`Refusing to overwrite unmanaged file: ${targets.claudeClaude}`);
+  }
+
+  const next = `${importLine}\n`;
   console.log(`write ${targets.claudeClaude}`);
   if (!dryRun) {
     await writeFile(targets.claudeClaude, next, "utf8");
@@ -136,12 +139,15 @@ async function ensureClaudeWrapper() {
 async function ensureCopilotWrapper() {
   await ensureParent(targets.copilotInstructions);
   const body = await readFile(sourceFile, "utf8");
-  const next = `---\napplyTo: "**"\n---\n\n${body}`;
+  const next = `---\napplyTo: "**"\n---\n\n${MANAGED_MARKER}\n${body}`;
   const current = await readUtf8IfExists(targets.copilotInstructions);
 
   if (current === next) {
     console.log(`ok ${targets.copilotInstructions}`);
     return;
+  }
+  if (current !== null && !current.includes(MANAGED_MARKER)) {
+    throw new Error(`Refusing to overwrite unmanaged file: ${targets.copilotInstructions}`);
   }
 
   console.log(`write ${targets.copilotInstructions}`);
@@ -168,27 +174,28 @@ async function ensureOpenCodeConfig() {
     return;
   }
 
-  if (current.includes(targets.opencodeAgents)) {
+  const config = parseJsonc(current, configPath);
+  if (Array.isArray(config.instructions) && config.instructions.includes(targets.opencodeAgents)) {
     console.log(`ok ${configPath}`);
     return;
   }
-
-  const trimmed = current.trim();
-  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
-    throw new Error(`Unsupported OpenCode config format: ${configPath}`);
-  }
-
-  if (/"instructions"\s*:/.test(current)) {
+  if (Object.hasOwn(config, "instructions")) {
     throw new Error(
       `OpenCode config already has instructions. Add ${targets.opencodeAgents} manually to ${configPath}`,
     );
   }
 
-  const body = trimmed.slice(0, -1).trimEnd();
-  const insertion = `,\n  "instructions": ${toJsonArray([targets.opencodeAgents])}`;
-  const next = `${body}${insertion}\n}\n`;
+  const next = insertJsoncObjectProperty(
+    current,
+    "instructions",
+    [targets.opencodeAgents],
+    configPath,
+  );
   console.log(`update ${configPath}`);
   if (!dryRun) {
+    const backupPath = `${configPath}.bak-${new Date().toISOString().replaceAll(":", "-")}`;
+    await copyFile(configPath, backupPath);
+    console.log(`backup ${backupPath}`);
     await writeFile(configPath, next, "utf8");
   }
 }
@@ -199,14 +206,22 @@ if (!existsSync(sourceFile)) {
 
 console.log(`Installing global AGENTS in ${mode} mode from ${sourceFile}`);
 
-await installManagedFile(sourceFile, targets.codexAgents);
-await installManagedFile(sourceFile, targets.claudeAgents);
-await installManagedFile(sourceFile, targets.copilotAgents);
-await installManagedFile(sourceFile, targets.opencodeAgents);
-await installManagedFile(sourceFile, targets.piAgents);
-await ensureClaudeWrapper();
-await ensureCopilotWrapper();
-await ensureOpenCodeConfig();
+try {
+  await installManagedFile(sourceFile, targets.codexAgents);
+  await installManagedFile(sourceFile, targets.claudeAgents);
+  await installManagedFile(sourceFile, targets.copilotAgents);
+  await installManagedFile(sourceFile, targets.opencodeAgents);
+  await installManagedFile(sourceFile, targets.piAgents);
+  await ensureClaudeWrapper();
+  await ensureCopilotWrapper();
+  await ensureOpenCodeConfig();
+} catch (error) {
+  if (dryRun && error instanceof Error && error.message.startsWith("Refusing to overwrite unmanaged file:")) {
+    console.error(error.message);
+    process.exit(1);
+  }
+  throw error;
+}
 
 console.log("Global AGENTS install complete.");
 console.log(`Relative source path: ${relative(process.cwd(), sourceFile)}`);

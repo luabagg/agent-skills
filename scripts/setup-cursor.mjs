@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync } from "node:fs";
-import { copyFile, lstat, mkdir, readFile, readlink, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readlink, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +14,7 @@ const harnessRoot = resolve(fileURLToPath(new URL("../harnesses/cursor/", import
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 
 const agentDir = resolve(join(homedir(), ".cursor", "agents"));
+const MANAGED_MARKER = "<!-- managed-by: agent-skills -->";
 
 function validateManifest(value) {
   if (value.version !== 1) throw new Error("harnesses/cursor.json must have version 1.");
@@ -56,6 +57,26 @@ async function symlinkMatches(target, source) {
   }
 }
 
+async function isSymlink(target) {
+  try {
+    return (await lstat(target)).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+function managedCopy(content) {
+  if (content.includes(MANAGED_MARKER)) return content;
+  if (content.startsWith("---\n")) {
+    const frontmatterEnd = content.indexOf("\n---\n", 4);
+    if (frontmatterEnd >= 0) {
+      const insertAt = frontmatterEnd + 5;
+      return `${content.slice(0, insertAt)}${MANAGED_MARKER}\n${content.slice(insertAt)}`;
+    }
+  }
+  return `${MANAGED_MARKER}\n${content}`;
+}
+
 async function installAgentFile(agent) {
   const source = resolve(harnessRoot, agent.sourceFile);
   const target = resolve(join(agentDir, `${agent.name}.md`));
@@ -63,13 +84,14 @@ async function installAgentFile(agent) {
   if (!existsSync(source)) throw new Error(`Missing agent template: ${source}`);
 
   const sourceContent = await readFile(source, "utf8");
+  const desiredContent = mode === "copy" ? managedCopy(sourceContent) : sourceContent;
 
   if (!existsSync(target)) {
     console.log(`${mode} ${target} <- ${source}`);
     if (!dryRun) {
       await mkdir(agentDir, { recursive: true });
       if (mode === "copy") {
-        await copyFile(source, target);
+        await writeFile(target, desiredContent, "utf8");
       } else {
         await symlink(source, target);
       }
@@ -81,21 +103,23 @@ async function installAgentFile(agent) {
     console.log(`ok ${target}`);
     return false;
   }
+  if (await isSymlink(target)) {
+    throw new Error(`Refusing to overwrite unmanaged symlink: ${target}`);
+  }
 
   const currentContent = await readUtf8IfExists(target);
-  if (sameTextContent(currentContent ?? "", sourceContent)) {
+  if (sameTextContent(currentContent ?? "", desiredContent)) {
     console.log(`ok ${target} (content matches)`);
     return false;
+  }
+  if (mode !== "copy" || !currentContent?.includes(MANAGED_MARKER)) {
+    throw new Error(`Refusing to overwrite unmanaged file: ${target}`);
   }
 
   console.log(`replace ${target}`);
   if (!dryRun) {
     await rm(target, { force: true });
-    if (mode === "copy") {
-      await copyFile(source, target);
-    } else {
-      await symlink(source, target);
-    }
+    await writeFile(target, desiredContent, "utf8");
   }
   return true;
 }

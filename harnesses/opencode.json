@@ -3,8 +3,8 @@
   "harness": "opencode",
   "setupPolicy": {
     "defaultMode": "dry-run-first",
-    "defaultSetupCommand": "agent-skills setup opencode",
-    "dryRunCommand": "agent-skills setup opencode --dry-run",
+    "defaultSetupCommand": "agentfolio apply --profile opencode",
+    "dryRunCommand": "agentfolio apply --profile opencode --dry-run",
     "includedInDefaultSetup": false
   },
   "agents": [

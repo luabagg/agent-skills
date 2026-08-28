@@ -95,6 +95,16 @@
         "design-md"
       ],
       "fullDepth": true
+    },
+    {
+      "name": "grill-with-docs",
+      "description": "Relentless interview that sharpens a plan or design and writes ADRs and a glossary as decisions land.",
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "skills": [
+        "grill-with-docs"
+      ]
     }
   ],
   "pluginReferences": [

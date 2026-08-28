@@ -1408,6 +1408,358 @@
         "input": 0,
         "output": 0
       },
+      "id": "claude-opus-5-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-high-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 High Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-low-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Low Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-medium",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Medium",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-medium-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Medium Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-high-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking High Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-low-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Low Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-max",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Max",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-max-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Max Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-medium",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Medium",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-medium-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Medium Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-xhigh",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 128000,
+      "name": "Cursor Claude Opus 5 Thinking Xhigh",
+      "reasoning": true
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "claude-opus-5-thinking-xhigh-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Claude Opus 5 Thinking Xhigh Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
       "id": "claude-sonnet-5-high",
       "input": [
         "image",
@@ -1672,6 +2024,314 @@
         "input": 0,
         "output": 0
       },
+      "id": "cursor-grok-4.5-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.5 High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.5-high-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.5 High Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.5-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.5 Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.5-low-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.5 Low Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.5-medium",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.5 Medium",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.5-medium-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.5 Medium Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-high-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 High Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-low-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 Low Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-medium",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 Medium",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-medium-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 Medium Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-xhigh",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 128000,
+      "name": "Cursor Cursor Grok 4.6 Xhigh",
+      "reasoning": true
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "cursor-grok-4.6-xhigh-fast",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Cursor Grok 4.6 Xhigh Fast",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
       "id": "gemini-3-flash",
       "input": [
         "image",
@@ -1723,6 +2383,160 @@
       ],
       "maxTokens": 256000,
       "name": "Cursor Gemini 3.5 Flash",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.6-flash-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.6 Flash High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.6-flash-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.6 Flash Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.6-flash-medium",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.6 Flash Medium",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.6-flash-minimal",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.6 Flash Minimal",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.7-flash-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.7 Flash High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.7-flash-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.7 Flash Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "gemini-3.7-flash-medium",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Gemini 3.7 Flash Medium",
       "reasoning": false
     },
     {
@@ -1826,248 +2640,6 @@
         "input": 0,
         "output": 0
       },
-      "id": "gpt-5.1-codex-max-high",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max High",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-high-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max High Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-low",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max Low",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-low-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max Low Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-medium",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max Medium",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-medium-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max Medium Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-xhigh",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 128000,
-      "name": "Cursor Gpt 5.1 Codex Max Xhigh",
-      "reasoning": true
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-max-xhigh-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Max Xhigh Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-mini",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Mini",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-mini-high",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Mini High",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.1-codex-mini-low",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.1 Codex Mini Low",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
       "id": "gpt-5.1-high",
       "input": [
         "image",
@@ -2119,182 +2691,6 @@
       ],
       "maxTokens": 256000,
       "name": "Cursor Gpt 5.2",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-high",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex High",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-high-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex High Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-low",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex Low",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-low-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex Low Fast",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-xhigh",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 128000,
-      "name": "Cursor Gpt 5.2 Codex Xhigh",
-      "reasoning": true
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "gpt-5.2-codex-xhigh-fast",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Gpt 5.2 Codex Xhigh Fast",
       "reasoning": false
     },
     {
@@ -4026,138 +4422,6 @@
         "input": 0,
         "output": 0
       },
-      "id": "grok-4.5-fast-high",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Grok 4.5 Fast High",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "grok-4.5-fast-medium",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Grok 4.5 Fast Medium",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "grok-4.5-fast-xhigh",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 128000,
-      "name": "Cursor Grok 4.5 Fast Xhigh",
-      "reasoning": true
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "grok-4.5-high",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Grok 4.5 High",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "grok-4.5-medium",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 256000,
-      "name": "Cursor Grok 4.5 Medium",
-      "reasoning": false
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
-      "id": "grok-4.5-xhigh",
-      "input": [
-        "image",
-        "text"
-      ],
-      "maxTokens": 128000,
-      "name": "Cursor Grok 4.5 Xhigh",
-      "reasoning": true
-    },
-    {
-      "compat": {
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": false,
-        "supportsStore": false
-      },
-      "contextWindow": 1000000,
-      "cost": {
-        "cacheRead": 0,
-        "cacheWrite": 0,
-        "input": 0,
-        "output": 0
-      },
       "id": "kimi-k2.7-code",
       "input": [
         "image",
@@ -4165,6 +4429,72 @@
       ],
       "maxTokens": 256000,
       "name": "Cursor Kimi K2.7 Code",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "kimi-k3-high",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Kimi K3 High",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "kimi-k3-low",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Kimi K3 Low",
+      "reasoning": false
+    },
+    {
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStore": false
+      },
+      "contextWindow": 1000000,
+      "cost": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 0,
+        "output": 0
+      },
+      "id": "kimi-k3-max",
+      "input": [
+        "image",
+        "text"
+      ],
+      "maxTokens": 256000,
+      "name": "Cursor Kimi K3 Max",
       "reasoning": false
     }
   ],

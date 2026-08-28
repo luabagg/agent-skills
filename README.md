@@ -20,12 +20,14 @@ This repo supports:
 |-- AGENTS.md                # Repo-scoped instructions for working in this repo
 |-- AGENTS.global.md         # Global agent instructions, distributed to ~/.codex, ~/.claude, etc.
 |-- CLAUDE.md -> AGENTS.md   # Symlink so Claude loads repo-scoped rules in this repo
+|-- collection.yaml          # Agentfolio profiles and ordered harness actions
 |-- skills/                  # Personal skills authored here
 |-- curated-skills.json      # Installable skill sources plus reference-only plugin inventory
 |-- curated-tools.json       # Non-skill tools, CLIs, packages, and docs I use
 |-- harnesses/               # Opt-in harness manifests + catalog.yaml / catalog.lock.json
 |-- docs/                    # Model catalog contract + CLI notes
-|-- scripts/                 # agent-skills CLI + install/setup helpers
+|-- scripts/                 # agent-skills CLI, adapter, and install/setup helpers
+|-- tests/                   # Node test runner for CLI and adapter protocol
 |-- package.json             # agent-skills bin entry
 `-- README.md
 ```
@@ -94,6 +96,7 @@ Current personal skills:
 
 | Skill | Purpose |
 | --- | --- |
+| `agentfolio-operator` | Choose Agentfolio profiles and commands. Do not edit live harness files by hand |
 | `branch-port` | Port a feature across heavily diverged branches without unsafe merges |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
 | `natural-copy-editing` | Rewrite, polish, translate, and correct text in a natural voice |
@@ -256,10 +259,12 @@ After changing OpenCode config, restart OpenCode. Running sessions keep already-
 
 ## Verify
 
-Run the non-destructive repo checks:
+Run the non-destructive repo checks. `verify` uses an isolated `$HOME`, so unmanaged live agent files do not fail the repository check:
 
 ```bash
 agent-skills verify
+agentfolio doctor --collection .
+agentfolio plan --collection .
 ```
 
 Optional runtime checks:
@@ -273,3 +278,36 @@ For OpenCode, inspect `~/.config/opencode/opencode.jsonc` and confirm the `instr
 ## Safety
 
 This repository is public. Do not add private dashboards, tokens, org IDs, internal URLs, API keys, or generated local memory context.
+
+## Agentfolio collection
+
+This repo is **collection #1** for [Agentfolio](https://github.com/luabagg/agentfolio). `collection.yaml` declares ordered harness actions; `scripts/agentfolio-adapter.mjs` implements them using this repository's existing setup commands.
+
+```bash
+agentfolio list harnesses --collection .
+agentfolio plan --profile pi --collection .
+agentfolio apply --profile pi --dry-run --collection .
+agentfolio apply --profile pi --collection .
+```
+
+Profiles:
+
+- `default` — personal skills, curated skills, and global instructions
+- `skills` — personal skills only
+- `pi`, `cursor`, `opencode` — personal skills plus the selected harness
+- `pi-catalog` — committed Pi model lock, Scope, and providers only
+- `all` — personal skills plus global, Pi, Cursor, and OpenCode harnesses
+
+Model catalog generation remains collection-owned:
+
+```bash
+agent-skills models check
+agent-skills models diff
+agent-skills models refresh
+```
+
+- `collection.yaml` — profiles and harness workflows
+- `scripts/agentfolio-adapter.mjs` — Agentfolio protocol implementation
+- `harnesses/catalog.yaml` — model policy; do not edit the generated lock by hand
+- `agent-skills setup|install|models` — implementation commands used behind the adapter
+
