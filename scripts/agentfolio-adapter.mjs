@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { ACTIONS, resolveAction } from "./lib/actions.mjs";
 import { plan as createPlan } from "./lib/plan.mjs";
 
-const redact = (value) => String(value ?? "");
+import { redact } from "./lib/secrets.mjs";
 
 const moduleRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 

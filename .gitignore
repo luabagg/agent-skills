@@ -1,4 +1,10 @@
 node_modules/
+.env
+.env.*
+!.env.example
+*.bak-*
+.cursor-auth/
+.pi-auth/
 .DS_Store
 npm-debug.log*
 .pi-subagents/
