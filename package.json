@@ -26,5 +26,16 @@
   "dependencies": {
     "jsonc-parser": "^3.3.1",
     "yaml": "^2.9.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luabagg/agent-skills.git"
+  },
+  "homepage": "https://github.com/luabagg/agent-skills",
+  "bugs": {
+    "url": "https://github.com/luabagg/agent-skills/issues"
   }
 }

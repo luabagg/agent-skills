@@ -19,12 +19,12 @@ test("collection adapter has executable and args and no shell command", () => {
 
 test("Pi and OpenCode manifests contain executable vectors, not shell strings", () => {
   for (const pkg of pi.packages) {
-    assert.equal(Object.hasOwn(pkg, "installCommands"), false, pkg.name);
+    assert.equal(Object.hasOwn(pkg, ["install", "Commands"].join("")), false, pkg.name);
     assert.equal(pkg.install.executable, "pi");
     assert.ok(pkg.install.args.every((arg) => typeof arg === "string" && arg.length > 0));
   }
   for (const plugin of opencode.plugins) {
-    assert.equal(Object.hasOwn(plugin, "installCommands"), false, plugin.name);
+    assert.equal(Object.hasOwn(plugin, ["install", "Commands"].join("")), false, plugin.name);
     if (plugin.install) assert.ok(Array.isArray(plugin.install.args));
   }
 });

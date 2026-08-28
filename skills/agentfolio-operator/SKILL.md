@@ -61,3 +61,7 @@ Edit `harnesses/catalog.yaml`; generated lock/provider targets are outputs. Run 
 - Dry-run first unless the user explicitly requests an immediate apply.
 - Stop on the first failed action and preserve unmanaged user configuration.
 - Restart a harness when its extensions or providers changed.
+
+## Canonical onboarding and safety
+
+Clone this collection and run `npm ci`; install or verify Agentfolio from its canonical repository. Then run `agentfolio doctor --collection .`, `agentfolio plan --profile pi --collection .`, and `agentfolio apply --profile pi --dry-run --collection .` before apply. The adapter is generic while this collection owns setup policy. Use native keychain/login authentication first, keep fallback environment keys ephemeral, and rely on dry-run and rollback safeguards. The Cursor bridge accepts only fixed `127.0.0.1` endpoints.

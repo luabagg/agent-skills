@@ -72,3 +72,7 @@ model: {{catalogRole:advisor}}
 - Never commit OAuth tokens, API keys, private org IDs, or machine-local caches.
 - Keep bridge services bound to localhost.
 - Commit `catalog.yaml`, its lock, and generated targets together after refresh.
+
+## Ownership and safe onboarding
+
+The collection owns policy, manifests, generated lock files, and setup behavior. Agentfolio only discovers the collection and invokes its adapter. Use the canonical two-repository flow: clone this collection, run `npm ci`, install or verify Agentfolio from its canonical repository, then run `agentfolio doctor --collection .`, `agentfolio plan --profile pi --collection .`, and the dry-run apply before applying. Authentication is native keychain/login first; fallback environment keys are never persisted. Planning and dry-run are non-mutating, and failed mutation rolls back managed files.

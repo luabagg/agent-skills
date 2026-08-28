@@ -311,3 +311,17 @@ agent-skills models refresh
 - `harnesses/catalog.yaml` — model policy; do not edit the generated lock by hand
 - `agent-skills setup|install|models` — implementation commands used behind the adapter
 
+
+## Canonical two-repository onboarding
+
+This collection is the source of truth for authored skills and harness policy; Agentfolio remains the generic caller. Clone this repository, install its dependencies, and install or verify Agentfolio from its canonical repository (not from this package):
+
+```bash
+npm ci
+agentfolio doctor --collection .
+agentfolio plan --profile pi --collection .
+agentfolio apply --profile pi --dry-run --collection .
+agentfolio apply --profile pi --collection .
+```
+
+Authentication is keychain/native-login first (`pi`, `claude login`, or `cursor-agent login`). Environment API keys are a fallback read by child processes and are never persisted. Plans and dry-runs do not mutate files or run installers; failed applies roll back managed changes. The optional Cursor bridge binds only to fixed localhost endpoints and never copies Cursor credentials.
