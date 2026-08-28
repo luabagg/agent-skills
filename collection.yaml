@@ -25,45 +25,51 @@ harnesses:
     actions:
       - action: add-curated-skills
         summary: Install curated third-party skills
-        catalog: ./curated-skills.json
+        config:
+          catalog: ./curated-skills.json
       - action: add-instructions
         summary: Install global agent instructions
-        source: ./AGENTS.global.md
+        config:
+          source: ./AGENTS.global.md
 
   pi:
     adapter: agent-skills
     actions:
       - action: configure
         summary: Configure Pi packages, extensions, models, and Cursor bridge
-        manifest: ./harnesses/pi.json
-        catalog: ./harnesses/catalog.yaml
-        lock: ./harnesses/catalog.lock.json
+        config:
+          manifest: ./harnesses/pi.json
+          catalog: ./harnesses/catalog.yaml
+          lock: ./harnesses/catalog.lock.json
 
   pi-catalog:
     adapter: agent-skills
     actions:
       - action: configure
         summary: Apply committed Pi model lock, Scope, and providers
-        manifest: ./harnesses/pi.json
-        catalog: ./harnesses/catalog.yaml
-        lock: ./harnesses/catalog.lock.json
+        config:
+          manifest: ./harnesses/pi.json
+          catalog: ./harnesses/catalog.yaml
+          lock: ./harnesses/catalog.lock.json
 
   cursor:
     adapter: agent-skills
     actions:
       - action: add-agents
         summary: Install Cursor agents
-        manifest: ./harnesses/cursor.json
-        source: ./harnesses/cursor/agents
+        config:
+          manifest: ./harnesses/cursor.json
+          source: ./harnesses/cursor/agents
 
   opencode:
     adapter: agent-skills
     actions:
       - action: configure-plugins-and-agents
         summary: Configure OpenCode plugins and agents
-        manifest: ./harnesses/opencode.json
-        source: ./harnesses/opencode/agents
-        catalog: ./harnesses/catalog.yaml
+        config:
+          manifest: ./harnesses/opencode.json
+          source: ./harnesses/opencode/agents
+          catalog: ./harnesses/catalog.yaml
 
 profiles:
   default:

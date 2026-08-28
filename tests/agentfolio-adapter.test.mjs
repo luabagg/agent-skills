@@ -105,7 +105,7 @@ test("doctor reports unknown declared actions", () => {
 
 test("doctor validates declared action assets", () => {
   const current = request("doctor", "global", null);
-  current.harness.actions = [{ action: "add-instructions", source: "./missing-instructions.md" }];
+  current.harness.actions = [{ action: "add-instructions", config: { source: "./missing-instructions.md" } }];
   const response = handleRequest(current);
   assert.equal(response.ok, true);
   assert.ok(response.checks.some((check) => check.id.includes("source") && !check.ok));

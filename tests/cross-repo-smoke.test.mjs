@@ -8,7 +8,7 @@ import test from "node:test";
 const root = path.resolve(import.meta.dirname, "..");
 const agentfolioBin = process.env.AGENTFOLIO_BIN;
 
-test("Agentfolio collection smoke is isolated and non-mutating", { skip: !agentfolioBin }, (t) => {
+test("Agentfolio collection smoke is isolated and non-mutating", { skip: !agentfolioBin }, () => {
   assert.ok(path.isAbsolute(agentfolioBin));
   assert.ok(existsSync(agentfolioBin));
   const tempHome = mkdtempSync(path.join(tmpdir(), "agent-skills-smoke-"));
@@ -19,12 +19,8 @@ test("Agentfolio collection smoke is isolated and non-mutating", { skip: !agentf
       ["plan", "--profile", "pi", "--collection", root],
       ["apply", "--profile", "pi", "--dry-run", "--collection", root],
     ];
-    for (const [index, args] of commands.entries()) {
+    for (const args of commands) {
       const result = spawnSync(process.execPath, [agentfolioBin, ...args], { cwd: root, env, encoding: "utf8" });
-      if (index === 0 && result.status !== 0 && /Invalid collection\.yaml|executable is not allowed/i.test(result.stderr)) {
-        t.skip("pinned Agentfolio predates the strict vector manifest contract");
-        return;
-      }
       assert.equal(result.status, 0, `${args.join(" ")}\n${result.stderr}`);
     }
     assert.equal(spawnSync("git", ["diff", "--exit-code"], { cwd: root }).status, 0);

@@ -46,10 +46,11 @@ export function handleRequest(request, { run = spawnSync, root } = {}) {
       }
       const scriptPath = resolve(collectionRoot, action.args.find((arg) => arg.startsWith("scripts/")) ?? "scripts/cli.mjs");
       checks.push({ id: (action.script ?? id).replace(/\.mjs$/, ""), ok: existsSync(scriptPath), required: true, detail: scriptPath });
+      const declaredConfig = config.config ?? {};
       for (const field of ["manifest", "catalog", "lock", "source"]) {
-        if (config[field] === undefined) continue;
-        const assetPath = typeof config[field] === "string" ? resolve(collectionRoot, config[field]) : String(config[field]);
-        checks.push({ id: `${config.action}.${field}`, ok: typeof config[field] === "string" && existsSync(assetPath), required: true, detail: assetPath });
+        if (declaredConfig[field] === undefined) continue;
+        const assetPath = typeof declaredConfig[field] === "string" ? resolve(collectionRoot, declaredConfig[field]) : String(declaredConfig[field]);
+        checks.push({ id: `${config.action}.${field}`, ok: typeof declaredConfig[field] === "string" && existsSync(assetPath), required: true, detail: assetPath });
       }
     }
     return { ok: true, checks };
@@ -66,7 +67,7 @@ export function handleRequest(request, { run = spawnSync, root } = {}) {
   const summary = request.action?.config?.summary ?? resolved.action.summary;
   if (request.operation === "plan") {
     const result = createPlan({ actionId: resolved.id, extraArgs, summary }, { processes: [{ executable: action.executable, args: action.args }] });
-    return { ...result, changed: false, command: displayCommand };
+    return { ok: result.ok, summary: result.summary, changed: false, command: displayCommand };
   }
 
   const cliPath = resolve(collectionRoot, "scripts", "cli.mjs");
@@ -80,7 +81,7 @@ export function handleRequest(request, { run = spawnSync, root } = {}) {
     const detail = [stderr, stdout].filter(Boolean).join("\n").trim() || `Setup failed for ${harnessId}`;
     return failure(detail, { status: result.status ?? 1, stdout, stderr, command: displayCommand });
   }
-  const response = { ok: true, summary, status: 0, command: displayCommand, stdout, stderr };
+  const response = { ok: true, summary, status: 0, command: displayCommand };
   if (request.dryRun) response.changed = false;
   return response;
 }

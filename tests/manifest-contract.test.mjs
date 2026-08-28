@@ -17,6 +17,26 @@ test("collection adapter has executable and args and no shell command", () => {
   assert.equal(Object.hasOwn(adapter, "command"), false);
 });
 
+test("collection actions keep data fields under config", () => {
+  const allowed = new Set(["action", "summary", "config"]);
+  for (const [harnessName, harness] of Object.entries(collection.harnesses)) {
+    for (const [index, declared] of harness.actions.entries()) {
+      assert.deepEqual(Object.keys(declared).filter((key) => !allowed.has(key)), [], `${harnessName}[${index}]`);
+      assert.equal(typeof declared.action, "string");
+      assert.equal(typeof declared.summary, "string");
+      assert.equal(typeof declared.config, "object", `${harnessName}[${index}] config`);
+      for (const key of ["manifest", "catalog", "lock", "source", "args"]) {
+        assert.equal(Object.hasOwn(declared, key), false, `${harnessName}.${key}`);
+      }
+    }
+  }
+  assert.deepEqual(collection.harnesses["pi-catalog"].actions[0].config, {
+    manifest: "./harnesses/pi.json",
+    catalog: "./harnesses/catalog.yaml",
+    lock: "./harnesses/catalog.lock.json",
+  });
+});
+
 test("Pi and OpenCode manifests contain executable vectors, not shell strings", () => {
   for (const pkg of pi.packages) {
     assert.equal(Object.hasOwn(pkg, ["install", "Commands"].join("")), false, pkg.name);
