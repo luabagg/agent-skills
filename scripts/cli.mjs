@@ -5,7 +5,8 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { npx, runCommand } from "./lib/command.mjs";
+import { npx } from "./lib/command.mjs";
+import { actionIdForScript, resolveAction } from "./lib/actions.mjs";
 
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptsDir, "..");
@@ -300,17 +301,23 @@ function packFlags(flags, names) {
 }
 
 function script(name, args = []) {
+  const id = actionIdForScript(name);
+  if (id) {
+    const action = resolveAction(id, args);
+    if (action.executable === node) return runNode(action.args);
+  }
   return runNode([resolve(scriptsDir, name), ...args]);
 }
 
 function runNode(args) {
-  const result = spawnSync(node, args, { stdio: "inherit" });
+  const result = spawnSync(node, args, { stdio: "inherit", shell: false });
   if (result.error) throw result.error;
   return result.status ?? 1;
 }
 
 function external(command) {
-  const result = runCommand(command, { stdio: "inherit" });
+  if (!Array.isArray(command) || command.some((arg) => typeof arg !== "string" || !arg)) throw new TypeError("External command requires string args");
+  const result = spawnSync(command[0], command.slice(1), { stdio: "inherit", shell: false });
   if (result.error) throw result.error;
   return result.status ?? 1;
 }
