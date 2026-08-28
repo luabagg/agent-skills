@@ -2,7 +2,16 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -94,7 +103,6 @@ test("list tools prints curated tools table", () => {
   assert.equal(result.status, 0);
   const out = combined(result);
   assert.match(out, /NAME\s+KIND\s+DESCRIPTION/);
-  assert.match(out, /headroom/);
   assert.match(out, /codegraph/);
 });
 
@@ -103,14 +111,14 @@ test("list tools --json returns array payload", () => {
   assert.equal(result.status, 0);
   const payload = JSON.parse(result.stdout);
   assert.ok(Array.isArray(payload));
-  assert.ok(payload.some((tool) => tool.name === "headroom"));
+  assert.ok(payload.some((tool) => tool.name === "codegraph"));
 });
 
 test("list tools --kind filters and rejects unknown kinds", () => {
   const ok = runCli(["list", "tools", "--kind", "cli"]);
   assert.equal(ok.status, 0);
   const out = combined(ok);
-  assert.match(out, /headroom/);
+  assert.match(out, /codegraph/);
   assert.doesNotMatch(out, /@google\/design\.md/);
 
   const bad = runCli(["list", "tools", "--kind", "nope"]);
@@ -241,9 +249,184 @@ test("windowsQuote leaves safe tokens alone and double-quotes the rest", () => {
 });
 
 test("sequence fail-fast: install all --dry-run runs ordered installers", () => {
-  const result = runCli(["install", "all", "--dry-run"]);
-  assert.equal(result.status, 0);
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-install-all-"));
+  try {
+    const result = runCli(["install", "all", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 0);
+    const out = combined(result);
+    assert.match(out, /skills add/);
+    assert.match(out, /AGENTS|agents|Global AGENTS|symlink|copy/i);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("verify stays isolated from the live home directory", () => {
+  const result = runCli(["verify"]);
   const out = combined(result);
-  assert.match(out, /skills add/);
-  assert.match(out, /AGENTS|agents|Global AGENTS|symlink|copy/i);
+  assert.equal(result.status, 0, out);
+  assert.match(out, /catalog check passed/);
+  assert.match(out, /agent-skills-verify-/);
+  assert.doesNotMatch(out, /Refusing to overwrite unmanaged file/);
+});
+
+test("install agents --dry-run reports unmanaged files without a stack", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-unmanaged-"));
+  const unmanaged = join(home, ".codex", "AGENTS.md");
+  mkdirSync(join(home, ".codex"), { recursive: true });
+  writeFileSync(unmanaged, "# unmanaged local instructions\n");
+  try {
+    const result = runCli(["install", "agents", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    const out = combined(result);
+    assert.match(out, /Refusing to overwrite unmanaged file/);
+    assert.doesNotMatch(out, /at installManagedFile/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("install agents refuses a symlink it does not own", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-unmanaged-link-"));
+  const local = join(home, "local-agents.md");
+  const target = join(home, ".codex", "AGENTS.md");
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(local, "# local instructions\n");
+  symlinkSync(local, target);
+  try {
+    const result = runCli(["install", "agents", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    assert.match(combined(result), /Refusing to overwrite unmanaged file/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("install agents refuses an unmanaged Copilot wrapper", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-copilot-wrapper-"));
+  const target = join(home, ".copilot", "instructions", "global-agent.instructions.md");
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, "# personal Copilot instructions\n");
+  try {
+    const result = runCli(["install", "agents", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    assert.match(combined(result), /Refusing to overwrite unmanaged file/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("install agents preserves valid trailing-comma OpenCode JSONC", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-jsonc-"));
+  const configDir = join(home, ".config", "opencode");
+  const configPath = join(configDir, "opencode.jsonc");
+  mkdirSync(configDir, { recursive: true });
+  writeFileSync(configPath, "{\n  // keep this comment\n  \"plugin\": [],\n}\n");
+  try {
+    const result = runCli(["install", "agents", "--copy"], { env: { HOME: home } });
+    assert.equal(result.status, 0, combined(result));
+    const content = readFileSync(configPath, "utf8");
+    assert.doesNotMatch(content, /,,/);
+    assert.match(content, /keep this comment/);
+    assert.match(content, /\"instructions\"/);
+    assert.ok(readdirSync(configDir).some((name) => name.startsWith("opencode.jsonc.bak-")));
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("setup cursor refuses to replace an unmanaged agent", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-cursor-agent-"));
+  const target = join(home, ".cursor", "agents", "coder.md");
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, "# personal Cursor agent\n");
+  try {
+    const result = runCli(["setup", "cursor", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    assert.match(combined(result), /Refusing to overwrite unmanaged file/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("setup cursor copy mode refuses an unmanaged symlink with a managed-looking target", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-cursor-link-"));
+  const local = join(home, "local-cursor-agent.md");
+  const target = join(home, ".cursor", "agents", "coder.md");
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(local, "<!-- managed-by: agent-skills -->\n# personal Cursor agent\n");
+  symlinkSync(local, target);
+  try {
+    const result = runCli(["setup", "cursor", "--copy", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    assert.match(combined(result), /Refusing to overwrite unmanaged symlink/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("setup opencode refuses to replace an unmanaged agent", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-opencode-agent-"));
+  const target = join(home, ".config", "opencode", "agent", "brainstorming.md");
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, "# personal OpenCode agent\n");
+  try {
+    const result = runCli(["setup", "opencode", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    assert.match(combined(result), /Refusing to overwrite unmanaged file/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("setup opencode preserves JSONC comments when adding plugins", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-opencode-jsonc-"));
+  const configDir = join(home, ".config", "opencode");
+  const configPath = join(configDir, "opencode.jsonc");
+  mkdirSync(configDir, { recursive: true });
+  writeFileSync(configPath, "{\n  // preserve this plugin note\n  \"plugin\": [\"existing-plugin\"],\n}\n");
+  try {
+    const result = runCli(["setup", "opencode", "--enable-recommended"], { env: { HOME: home } });
+    assert.equal(result.status, 0, combined(result));
+    const content = readFileSync(configPath, "utf8");
+    assert.match(content, /preserve this plugin note/);
+    assert.match(content, /existing-plugin/);
+    assert.match(content, /opencode-mission-control/);
+    assert.ok(readdirSync(configDir).some((name) => name.startsWith("opencode.jsonc.bak-")));
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("setup opencode refuses an unmanaged symlink with a managed-looking target", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-opencode-link-"));
+  const local = join(home, "local-opencode-agent.md");
+  const target = join(home, ".config", "opencode", "agent", "brainstorming.md");
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(local, "<!-- managed-by: agent-skills -->\n# personal OpenCode agent\n");
+  symlinkSync(local, target);
+  try {
+    const result = runCli(["setup", "opencode", "--dry-run"], { env: { HOME: home } });
+    assert.equal(result.status, 1);
+    assert.match(combined(result), /Refusing to overwrite unmanaged symlink/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("setup pi propagates package installer failures", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-pi-failure-"));
+  const bin = join(home, "bin");
+  const fakePi = join(bin, "pi");
+  mkdirSync(bin, { recursive: true });
+  writeFileSync(fakePi, "#!/bin/sh\nexit 23\n", { mode: 0o755 });
+  try {
+    const result = runCli(["setup", "pi", "--skip-cursor-bridge"], {
+      env: { HOME: home, PATH: `${bin}:${process.env.PATH}` },
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(combined(result), /failed|status 23|Command failed/i);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 });

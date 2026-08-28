@@ -1,1 +1,0 @@
-../../../../harnesses/opencode/agents/writing.md

@@ -1,1 +1,0 @@
-../../../harnesses/cursor/agents/advisor.md

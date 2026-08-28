@@ -1,49 +1,89 @@
 name: personal-agent-skills
 version: 1
 
-# Collection #1 for Agentfolio (https://github.com/luabagg/agentfolio).
-# Legacy `agent-skills setup|install` CLIs still work; this file is the
-# git-tracked inventory Agentfolio plan/apply/doctor consume.
-
+# Personal skills remain directly installable with Skills CLI.
 skills:
-  backend: skills-cli
   local: ./skills
-  imports: ./imports
+  scope: global
+  agents: ["*"]
 
+# Reference-only inventory; harness behavior is declared below.
 tools:
-  backend: reference
-  catalog: ./tools/catalog.json
-  apply: reference
+  catalog: ./curated-tools.json
+
+# Agentfolio knows only this JSON protocol command. This repository owns all
+# harness and platform-specific behavior behind the adapter.
+adapters:
+  agent-skills:
+    command: [node, ./scripts/agentfolio-adapter.mjs]
+    timeout: 300000
 
 harnesses:
-  - id: pi
-    source: ./harnesses/pi
-    backend: chezmoi
-  - id: cursor
-    source: ./harnesses/cursor
-    backend: chezmoi
-  - id: opencode
-    source: ./harnesses/opencode
-    backend: chezmoi
+  global:
+    adapter: agent-skills
+    actions:
+      - action: add-curated-skills
+        summary: Install curated third-party skills
+        catalog: ./curated-skills.json
+      - action: add-instructions
+        summary: Install global agent instructions
+        source: ./AGENTS.global.md
 
-instructions:
-  global: ./AGENTS.global.md
-  backend: chezmoi
+  pi:
+    adapter: agent-skills
+    actions:
+      - action: configure
+        summary: Configure Pi packages, extensions, models, and Cursor bridge
+        manifest: ./harnesses/pi.json
+        catalog: ./harnesses/catalog.yaml
+        lock: ./harnesses/catalog.lock.json
 
-plugins:
-  backend: none
-  # Curated plugin refs remain in curated-skills.json (list/hint only).
+  pi-catalog:
+    adapter: agent-skills
+    actions:
+      - action: configure
+        summary: Apply committed Pi model lock, Scope, and providers
+        manifest: ./harnesses/pi.json
+        catalog: ./harnesses/catalog.yaml
+        lock: ./harnesses/catalog.lock.json
+        args: ["--catalog-only"]
 
-models:
-  policy: ./harnesses/catalog.yaml
-  lock: ./harnesses/catalog.lock.json
+  cursor:
+    adapter: agent-skills
+    actions:
+      - action: add-agents
+        summary: Install Cursor agents
+        manifest: ./harnesses/cursor.json
+        source: ./harnesses/cursor/agents
 
-integrations:
-  cursorBridge:
-    enabled: true
-    manifest: ./harnesses/pi.json
+  opencode:
+    adapter: agent-skills
+    actions:
+      - action: configure-plugins-and-agents
+        summary: Configure OpenCode plugins and agents
+        manifest: ./harnesses/opencode.json
+        source: ./harnesses/opencode/agents
+        catalog: ./harnesses/catalog.yaml
 
-chezmoi:
-  sourceDir: ./chezmoi
-  # destinationDir defaults to $HOME. For safe dry-runs use:
-  # destinationDir: ./apply-target
+profiles:
+  default:
+    skills: true
+    harnesses: [global]
+  skills:
+    skills: true
+    harnesses: []
+  pi:
+    skills: true
+    harnesses: [pi]
+  pi-catalog:
+    skills: false
+    harnesses: [pi-catalog]
+  cursor:
+    skills: true
+    harnesses: [cursor]
+  opencode:
+    skills: true
+    harnesses: [opencode]
+  all:
+    skills: true
+    harnesses: [global, pi, cursor, opencode]

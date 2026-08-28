@@ -3,8 +3,8 @@
   "harness": "pi",
   "setupPolicy": {
     "defaultMode": "dry-run-first",
-    "defaultSetupCommand": "agentfolio setup pi",
-    "dryRunCommand": "agentfolio setup pi --dry-run",
+    "defaultSetupCommand": "agentfolio apply --profile pi",
+    "dryRunCommand": "agentfolio apply --profile pi --dry-run",
     "includedInDefaultSetup": false
   },
   "packages": [
@@ -80,7 +80,7 @@
       "recommended": true,
       "defaultEnabled": true,
       "install": "pi install npm:@ff-labs/pi-fff",
-      "notes": "User shorthand `src` maps to the manifest entry ./src/index.ts. RTK and headroom are preferred for output compression; pi-fff covers fuzzy path/grep search."
+      "notes": "User shorthand `src` maps to the manifest entry ./src/index.ts. pi-fff covers fuzzy path/grep search."
     }
   ],
   "localExtensions": [

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { npx, runCommand } from "./lib/command.mjs";
 
@@ -169,15 +170,23 @@ const COMMANDS = {
     run: () => external([npx, "--yes", "skills", "update", "--global", "--yes"]),
   },
   verify: {
-    description: "Non-destructive verification pass",
+    description: "Non-destructive repository verification pass",
     run() {
-      return sequence([
-        () => script("catalog.mjs", ["check"]),
-        () => external([npx, "--yes", "skills", "add", ".", "--list"]),
-        () => external([npx, "--yes", "skills", "list", "--global"]),
-        () => script("install-curated-skills.mjs", ["--dry-run"]),
-        () => script("install-agents.mjs", ["--dry-run"]),
-      ]);
+      const isolatedHome = mkdtempSync(join(tmpdir(), "agent-skills-verify-"));
+      const previousHome = process.env.HOME;
+      process.env.HOME = isolatedHome;
+      try {
+        return sequence([
+          () => script("catalog.mjs", ["check"]),
+          () => external([npx, "--yes", "skills", "add", ".", "--list"]),
+          () => script("install-curated-skills.mjs", ["--dry-run"]),
+          () => script("install-agents.mjs", ["--dry-run"]),
+        ]);
+      } finally {
+        if (previousHome === undefined) delete process.env.HOME;
+        else process.env.HOME = previousHome;
+        rmSync(isolatedHome, { recursive: true, force: true });
+      }
     },
   },
 };

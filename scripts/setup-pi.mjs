@@ -534,11 +534,7 @@ if (!catalogOnly && !dryRun && sourcesToAdd.length > 0) {
   for (const pkg of selectedPackages) {
     if (!sourcesToAdd.includes(pkg.source)) continue;
     console.log(`Running: ${pkg.install} (${pkg.name})`);
-    try {
-      execSync(pkg.install, { stdio: "inherit" });
-    } catch (error) {
-      console.warn(`Warning: ${pkg.install} failed: ${error.message}`);
-    }
+    execSync(pkg.install, { stdio: "inherit" });
   }
   changed = true;
 } else if (!catalogOnly && dryRun && sourcesToAdd.length > 0) {

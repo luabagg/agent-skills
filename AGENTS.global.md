@@ -1,5 +1,7 @@
 # Agent Instructions
 
+For every decision, ask what the best expert in that field would do and why they would reject your current choice; if you can name that reason, don't make the choice. Optimize for what that expert would judge correct, never for what satisfies the stated constraints most cheaply. Every trade-off you take must be stated to the user, never absorbed.
+
 ## Editing Rules
 
 - NO HACKS. The user values code quality over immediate results.
@@ -9,6 +11,7 @@
 - Do not preserve flawed APIs or behavior just for backward compatibility. Assume in-progress code is not production unless the user says otherwise.
 - Prefer clarity, correctness, maintainability, robust design, and simplicity over speed.
 - After changes, report any part of the implementation that feels uncertain, fragile, or hack-like.
+- Avoid cyclomatic complexity as much as possible.
 
 ## Karpathy-Style Context Engineering
 
@@ -20,7 +23,15 @@
 - Optimize for feedback loops: run the smallest meaningful verification, inspect the result, then iterate.
 - Avoid clever hidden state. Make assumptions, decisions, and uncertainty visible.
 
-## Technical Prose
+## Default Communication
+
+- No slop grenades: do not paste AI-generated walls of text where a human would answer in one sentence or a few bullets.
+- Answer the exact question first. Put the decision, finding, or recommendation before context.
+- Default to bullet point structured, easy-to-scan communication. Keep status updates, summaries, reviews, and explanations compact unless the user asks for depth.
+- Include only decisive evidence. Do not dump long logs, raw diffs, tool narration, generic caveats, or full audits when a short answer satisfies the request.
+- If more detail may help, offer a short "want deeper?" follow-up instead of expanding by default.
+
+### Technical Prose
 
 For docs, code comments, commit messages, PR descriptions, reports, and technical replies, use ASD-STE100 Simplified Technical English.
 
@@ -30,16 +41,6 @@ For docs, code comments, commit messages, PR descriptions, reports, and technica
 - Use active voice. Write "Turn the switch," not "The switch must be turned."
 - Write short paragraphs. Cover one topic in each paragraph.
 
-Keep `caveman` for casual status updates and ordinary replies. Use correct technical English when the reply explains durable technical work.
-
-## Default Communication
-
-- No slop grenades: do not paste AI-generated walls of text where a human would answer in one sentence or a few bullets.
-- Answer the exact question first. Put the decision, finding, or recommendation before context.
-- Default to bullet point structured, easy-to-scan communication. Keep status updates, summaries, reviews, and explanations compact unless the user asks for depth.
-- Include only decisive evidence. Do not dump long logs, raw diffs, tool narration, generic caveats, or full audits when a short answer satisfies the request.
-- If more detail may help, offer a short "want deeper?" follow-up instead of expanding by default.
-
 ## Default Skill Use
 
 - Use the `superpowers` skill set by default for software work when it is installed. Treat it as the baseline workflow layer for planning, debugging, TDD, reviews, verification, branch finishing, and other development process tasks.
@@ -48,26 +49,7 @@ Keep `caveman` for casual status updates and ordinary replies. Use correct techn
 - If either skill set is unavailable in the current agent environment, continue with the closest built-in workflow and mention the missing skill only when it affects the task.
 - Do not let default skill routing override explicit user instructions, safety constraints, repository rules, or a more specific skill trigger such as `branch-port`, `memory-palace`, or `thorough-pr-review`.
 
-## CodeGraph
-
-CodeGraph is a local pre-indexed code knowledge graph (`colbymchenry/codegraph`). It is optional per project: only rely on it when the workspace has a `.codegraph/` directory (after `codegraph init`).
-
-Before using the MCP tool, confirm the CLI is available:
-
-```bash
-codegraph --version
-codegraph status
-```
-
-When `.codegraph/` exists and the task is structural — how a flow works, callers/callees, blast radius before a change, or surveying an unfamiliar area — prefer **`codegraph_explore`** (MCP) or **`codegraph explore "<question>"`** instead of a broad grep/read crawl. Treat returned source as already read; do not re-verify every symbol with grep unless the response shows a staleness warning after recent edits.
-
-When there is no index, the user forbids graph tools, or the task is a single known file path, use normal search and Read. One-time setup per machine: `codegraph install`; per repo: `codegraph init`. See `curated-tools.json` in the agent-skills repo for the canonical reference.
-
 <!-- context7 -->
-Use the `ctx7` CLI to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service -- even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search for library docs.
-
-Do not use for: refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.
-
 ## Steps
 
 1. Resolve library: `npx ctx7@latest library <name> "<user's question>"` — use the official library name with proper punctuation (e.g., "Next.js" not "nextjs", "Customer.io" not "customerio", "Three.js" not "threejs")
@@ -81,49 +63,44 @@ For version-specific docs, use `/org/project/version` from the `library` output 
 
 If a command fails with a quota error, inform the user and suggest `npx ctx7@latest login` or setting `CONTEXT7_API_KEY` env var for higher limits. Do not silently fall back to training data.
 Run Context7 CLI requests outside Codex's default sandbox. If a Context7 CLI command fails with DNS or network errors such as ENOTFOUND, host resolution failures, or fetch failed, rerun it outside the sandbox instead of retrying inside the sandbox.
-<!-- context7 -->
+<!-- /context7 -->
 
+<!-- rtk-instructions -->
+RTK (Rust Token Killer) is a local CLI proxy. It filters command output before the model reads it.
 
-<!-- headroom:rtk-instructions -->
-# RTK (Rust Token Killer) - Token-Optimized Commands
+## Rule
 
-When running shell commands, **always prefix with `rtk`**. This reduces context
-usage by 60-90% with zero behavior change. If rtk has no filter for a command,
-it passes through unchanged — so it is always safe to use.
+Always prefix shell commands with `rtk`. If RTK has no filter, it passes the command through. It is always safe.
+In command chains, prefix each segment:
 
-## Key Commands
 ```bash
-# Git (59-80% savings)
+rtk git add . && rtk git commit -m "msg"
+```
+
+Do not prefix when you need raw output for debugging. Use `rtk proxy <cmd>` to run raw and still track usage.
+Context-mode tools (`ctx_execute`, `ctx_execute_file`) stay as-is. RTK applies to shell commands only.
+
+## Key commands
+
+```bash
+# Git
 rtk git status          rtk git diff            rtk git log
 
-# Files & Search (60-75% savings)
+# Files and search
 rtk ls <path>           rtk read <file>         rtk grep <pattern>
-rtk find <pattern>      rtk diff <file>
+rtk find <pattern>      rtk rg <pattern>        rtk diff <file>
 
-# Test (90-99% savings) — shows failures only
+# Test (failures only)
 rtk pytest tests/       rtk cargo test          rtk test <cmd>
 
-# Build & Lint (80-90% savings) — shows errors only
-rtk tsc                 rtk lint                rtk cargo build
-rtk prettier --check    rtk mypy                rtk ruff check
+# Build and lint (errors only)
+rtk tsc                 rtk lint                rtk npm run <script>
 
-# Analysis (70-90% savings)
+# Analysis
 rtk err <cmd>           rtk log <file>          rtk json <file>
 rtk summary <cmd>       rtk deps                rtk env
 
-# GitHub (26-87% savings)
-rtk gh pr view <n>      rtk gh run list         rtk gh issue list
-
-# Infrastructure (85% savings)
-rtk docker ps           rtk kubectl get         rtk docker logs <c>
-
-# Package managers (70-90% savings)
-rtk pip list            rtk pnpm install        rtk npm run <script>
+# GitHub and infra
+rtk gh pr view <n>      rtk gh run list         rtk docker ps
 ```
-
-## Rules
-- In command chains, prefix each segment: `rtk git add . && rtk git commit -m "msg"`
-- For debugging, use raw command without rtk prefix
-- `rtk proxy <cmd>` runs command without filtering but tracks usage
-<!-- /headroom:rtk-instructions -->
-
+<!-- /rtk-instructions -->

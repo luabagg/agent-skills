@@ -23,42 +23,6 @@
       "agentUse": "Reference when creating or reviewing UI that should follow a persistent visual identity. This is tooling/documentation, not an agent skill."
     },
     {
-      "name": "headroom",
-      "kind": "cli",
-      "description": "Context-optimization proxy for LLM clients. It compresses context, tracks savings, and can provide RTK-based shell-output guidance to supported agents.",
-      "source": "https://headroom-docs.vercel.app",
-      "package": "headroom-ai",
-      "install": "pip install -U headroom-ai",
-      "commands": [
-        {
-          "name": "doctor",
-          "command": "headroom doctor",
-          "purpose": "Verify that the local proxy is running and that configured clients are routed through it."
-        },
-        {
-          "name": "proxy",
-          "command": "headroom proxy",
-          "purpose": "Start the local optimization proxy on port 8787."
-        },
-        {
-          "name": "wrap-opencode",
-          "command": "headroom wrap opencode --no-proxy",
-          "purpose": "Launch OpenCode through an already-running Headroom proxy."
-        },
-        {
-          "name": "savings",
-          "command": "headroom savings",
-          "purpose": "Show durable token and cost savings recorded by Headroom."
-        },
-        {
-          "name": "perf",
-          "command": "headroom perf",
-          "purpose": "Analyze proxy compression, cache, routing, and context-tool performance from Headroom logs."
-        }
-      ],
-      "agentUse": "Route supported Anthropic, OpenAI, Codex, and explicitly configured compatible providers through Headroom. Treat Headroom-managed AGENTS.md instructions as the source of truth for RTK use; use raw commands when unfiltered output is required."
-    },
-    {
       "name": "codeburn",
       "kind": "cli",
       "description": "Local dashboard and reporting CLI for visualizing AI coding token usage, cost, providers, models, projects, and task categories.",
@@ -115,7 +79,7 @@
         {
           "name": "explore",
           "command": "codegraph explore \"<question>\"",
-          "purpose": "CLI equivalent of codegraph_explore — source, call paths, blast radius"
+          "purpose": "CLI equivalent of codegraph_explore \u2014 source, call paths, blast radius"
         },
         {
           "name": "status",
@@ -142,11 +106,6 @@
           "name": "run",
           "command": "npx autoskills",
           "purpose": "Run autoskills through npx to inspect context and surface useful skills."
-        },
-        {
-          "name": "repo-wrapper",
-          "command": "npm run autoskills",
-          "purpose": "Use this repo's convenience wrapper for npx autoskills."
         }
       ],
       "agentUse": "Use autoskills when the user wants automatic skill discovery or a quick context-aware skill recommendation pass."

@@ -2,11 +2,12 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, lstat, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { parseJsonc, setJsoncValue } from "./lib/jsonc.mjs";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
@@ -24,6 +25,7 @@ const agentDir = resolve(join(configDir, "agent"));
 const jsoncPath = resolve(join(configDir, "opencode.jsonc"));
 const jsonPath = resolve(join(configDir, "opencode.json"));
 const configPath = existsSync(jsoncPath) ? jsoncPath : existsSync(jsonPath) ? jsonPath : jsoncPath;
+const MANAGED_AGENT_MARKER = "<!-- managed-by: agent-skills -->";
 
 function validateManifest(value) {
   if (value.version !== 1) {
@@ -78,121 +80,16 @@ async function readUtf8IfExists(filePath) {
   }
 }
 
-function stripJsonc(input) {
-  let output = "";
-  let inString = false;
-  let escaped = false;
-  let inLineComment = false;
-  let inBlockComment = false;
-
-  for (let index = 0; index < input.length; index += 1) {
-    const char = input[index];
-    const next = input[index + 1];
-
-    if (inLineComment) {
-      if (char === "\n") {
-        inLineComment = false;
-        output += char;
-      }
-      continue;
-    }
-
-    if (inBlockComment) {
-      if (char === "*" && next === "/") {
-        inBlockComment = false;
-        index += 1;
-      }
-      continue;
-    }
-
-    if (inString) {
-      output += char;
-      if (escaped) {
-        escaped = false;
-      } else if (char === "\\") {
-        escaped = true;
-      } else if (char === '"') {
-        inString = false;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      inString = true;
-      output += char;
-      continue;
-    }
-
-    if (char === "/" && next === "/") {
-      inLineComment = true;
-      index += 1;
-      continue;
-    }
-
-    if (char === "/" && next === "*") {
-      inBlockComment = true;
-      index += 1;
-      continue;
-    }
-
-    output += char;
+async function isSymlink(filePath) {
+  try {
+    return (await lstat(filePath)).isSymbolicLink();
+  } catch {
+    return false;
   }
-
-  return removeTrailingCommas(output);
-}
-
-function removeTrailingCommas(input) {
-  let output = "";
-  let inString = false;
-  let escaped = false;
-
-  for (let index = 0; index < input.length; index += 1) {
-    const char = input[index];
-
-    if (inString) {
-      output += char;
-      if (escaped) {
-        escaped = false;
-      } else if (char === "\\") {
-        escaped = true;
-      } else if (char === '"') {
-        inString = false;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      inString = true;
-      output += char;
-      continue;
-    }
-
-    if (char === ",") {
-      let nextIndex = index + 1;
-      while (/\s/.test(input[nextIndex] ?? "")) {
-        nextIndex += 1;
-      }
-      if (input[nextIndex] === "}" || input[nextIndex] === "]") {
-        continue;
-      }
-    }
-
-    output += char;
-  }
-
-  return output;
 }
 
 function parseConfig(input, filePath) {
-  if (!input) {
-    return {};
-  }
-
-  try {
-    return JSON.parse(stripJsonc(input));
-  } catch (error) {
-    throw new Error(`Unable to parse ${filePath}: ${error.message}`);
-  }
+  return parseJsonc(input, filePath);
 }
 
 function pluginsToEnable() {
@@ -226,6 +123,18 @@ function renderAgentTemplate(agent, sourceContent) {
   return sourceContent.replace(`model: ${placeholder}`, `model: ${resolvedRoleModel(agent.modelRole)}`);
 }
 
+function markManagedAgent(content) {
+  if (content.includes(MANAGED_AGENT_MARKER)) return content;
+  if (content.startsWith("---\n")) {
+    const frontmatterEnd = content.indexOf("\n---\n", 4);
+    if (frontmatterEnd >= 0) {
+      const insertAt = frontmatterEnd + 5;
+      return `${content.slice(0, insertAt)}${MANAGED_AGENT_MARKER}\n${content.slice(insertAt)}`;
+    }
+  }
+  return `${MANAGED_AGENT_MARKER}\n${content}`;
+}
+
 async function installAgentFile(agent) {
   const source = resolve(harnessRoot, agent.sourceFile);
   const target = resolve(join(agentDir, `${agent.name}.md`));
@@ -235,17 +144,24 @@ async function installAgentFile(agent) {
   }
 
   const sourceContent = renderAgentTemplate(agent, await readFile(source, "utf8"));
+  const desiredContent = markManagedAgent(sourceContent);
   const currentContent = await readUtf8IfExists(target);
 
-  if (currentContent === sourceContent) {
+  if (await isSymlink(target)) {
+    throw new Error(`Refusing to overwrite unmanaged symlink: ${target}`);
+  }
+  if (currentContent === desiredContent) {
     console.log(`ok ${target}`);
     return false;
+  }
+  if (currentContent !== null && !currentContent.includes(MANAGED_AGENT_MARKER)) {
+    throw new Error(`Refusing to overwrite unmanaged file: ${target}`);
   }
 
   console.log(`${dryRun ? "would write" : "write"} ${target} <- ${source}`);
   if (!dryRun) {
     await mkdir(agentDir, { recursive: true });
-    await writeFile(target, sourceContent, "utf8");
+    await writeFile(target, desiredContent, "utf8");
   }
 
   return true;
@@ -349,7 +265,12 @@ if (!configChanged) {
   process.exit(0);
 }
 
-const nextContent = `${JSON.stringify(updatedConfig, null, 2)}\n`;
+const nextContent = setJsoncValue(
+  currentContent ?? "{}\n",
+  ["plugin"],
+  updatedConfig.plugin,
+  configPath,
+);
 
 if (dryRun) {
   console.log("\nWould write OpenCode config:");

@@ -3,8 +3,8 @@
   "harness": "cursor",
   "setupPolicy": {
     "defaultMode": "dry-run-first",
-    "defaultSetupCommand": "agent-skills setup cursor",
-    "dryRunCommand": "agent-skills setup cursor --dry-run",
+    "defaultSetupCommand": "agentfolio apply --profile cursor",
+    "dryRunCommand": "agentfolio apply --profile cursor --dry-run",
     "includedInDefaultSetup": false
   },
   "agents": [

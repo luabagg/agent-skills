@@ -20,12 +20,14 @@ This repo supports:
 |-- AGENTS.md                # Repo-scoped instructions for working in this repo
 |-- AGENTS.global.md         # Global agent instructions, distributed to ~/.codex, ~/.claude, etc.
 |-- CLAUDE.md -> AGENTS.md   # Symlink so Claude loads repo-scoped rules in this repo
+|-- collection.yaml          # Agentfolio profiles and ordered harness actions
 |-- skills/                  # Personal skills authored here
 |-- curated-skills.json      # Installable skill sources plus reference-only plugin inventory
 |-- curated-tools.json       # Non-skill tools, CLIs, packages, and docs I use
 |-- harnesses/               # Opt-in harness manifests + catalog.yaml / catalog.lock.json
 |-- docs/                    # Model catalog contract + CLI notes
-|-- scripts/                 # agent-skills CLI + install/setup helpers
+|-- scripts/                 # agent-skills CLI, adapter, and install/setup helpers
+|-- tests/                   # Node test runner for CLI and adapter protocol
 |-- package.json             # agent-skills bin entry
 `-- README.md
 ```
@@ -257,10 +259,12 @@ After changing OpenCode config, restart OpenCode. Running sessions keep already-
 
 ## Verify
 
-Run the non-destructive repo checks:
+Run the non-destructive repo checks. `verify` uses an isolated `$HOME`, so unmanaged live agent files do not fail the repository check:
 
 ```bash
 agent-skills verify
+agentfolio doctor --collection .
+agentfolio plan --collection .
 ```
 
 Optional runtime checks:
@@ -277,19 +281,33 @@ This repository is public. Do not add private dashboards, tokens, org IDs, inter
 
 ## Agentfolio collection
 
-This repo is **collection #1** for [Agentfolio](https://github.com/luabagg/agentfolio).
-
-Prefer Agentfolio for plan, models, and Pi apply. Use the `agentfolio-operator` skill to choose the profile.
+This repo is **collection #1** for [Agentfolio](https://github.com/luabagg/agentfolio). `collection.yaml` declares ordered harness actions; `scripts/agentfolio-adapter.mjs` implements them using this repository's existing setup commands.
 
 ```bash
-agentfolio plan --collection .
-agentfolio models check --collection .
-agentfolio apply --profile pi-catalog --dry-run --collection .
-agentfolio setup pi --dry-run --collection .
+agentfolio list harnesses --collection .
+agentfolio plan --profile pi --collection .
+agentfolio apply --profile pi --dry-run --collection .
+agentfolio apply --profile pi --collection .
 ```
 
-- `collection.yaml` — inventories and backends
-- `chezmoi/` — source for AGENTS and harness files
-- `harnesses/catalog.yaml` — model policy. Do not edit the lock by hand
-- Legacy `agent-skills setup|install` still works. Prefer Agentfolio for new Pi work
+Profiles:
+
+- `default` — personal skills, curated skills, and global instructions
+- `skills` — personal skills only
+- `pi`, `cursor`, `opencode` — personal skills plus the selected harness
+- `pi-catalog` — committed Pi model lock, Scope, and providers only
+- `all` — personal skills plus global, Pi, Cursor, and OpenCode harnesses
+
+Model catalog generation remains collection-owned:
+
+```bash
+agent-skills models check
+agent-skills models diff
+agent-skills models refresh
+```
+
+- `collection.yaml` — profiles and harness workflows
+- `scripts/agentfolio-adapter.mjs` — Agentfolio protocol implementation
+- `harnesses/catalog.yaml` — model policy; do not edit the generated lock by hand
+- `agent-skills setup|install|models` — implementation commands used behind the adapter
 
