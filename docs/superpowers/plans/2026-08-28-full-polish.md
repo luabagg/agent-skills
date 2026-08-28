@@ -73,7 +73,7 @@ test("Pi and OpenCode manifests contain no shell-string installer fields", () =>
 
 Run `node --test tests/manifest-contract.test.mjs`; **expected FAIL:** `adapter.executable` is `undefined` or the old `command` field is present.
 
-- [ ] **Step 2: Create registry tests with exact required IDs and vector shape.** Use `assert.deepEqual` for the five IDs and reject an unknown ID.
+- [ ] **Step 2: Create registry tests for exactly six collection actions with exact required IDs and vector shape.** Use `assert.deepEqual` for the six IDs and reject an unknown ID.
 
 ```js
 import assert from "node:assert/strict";
