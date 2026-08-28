@@ -10,7 +10,8 @@
   "scripts": {
     "agent-skills": "node scripts/cli.mjs",
     "test": "node --test tests/**/*.test.mjs",
-    "test:cli": "node --test tests/cli.test.mjs"
+    "test:cli": "node --test tests/cli.test.mjs",
+    "secret-scan": "node scripts/secret-scan.mjs"
   },
   "keywords": [
     "agent-skills",

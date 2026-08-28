@@ -25,7 +25,7 @@ export function redact(text, env = process.env) {
 
 export function assertNoTrackedSecrets(paths = []) {
   const files = paths.length ? paths : execFileSync("git", ["ls-files"], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
-  const keyLike = /(?:sk-[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:api[_-]?key|token|secret)\s*[:=]\s*[A-Za-z0-9._-]{16,})/i;
+  const keyLike = /(?:sk-[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._-]{16,}|(?:api[_-]?key|token|secret)\s*[:=]\s*["']?[A-Za-z0-9._-]{24,})/i;
   for (const path of files) {
     const content = readFileSync(path, "utf8");
     if (keyLike.test(content) && !/YOUR_API_KEY/.test(content)) throw new Error(`Tracked secret detected in ${path}`);

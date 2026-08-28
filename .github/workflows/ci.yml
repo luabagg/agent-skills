@@ -1,0 +1,22 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  verify:
+    strategy:
+      matrix: { node: [20, 22] }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ matrix.node }}, cache: npm }
+      - run: npm ci
+      - run: git clone https://github.com/luabagg/agentfolio.git ../agentfolio
+      - run: git -C ../agentfolio checkout --detach 1396fff17a857c4b821edda96389cc2f636b5ac0
+      - run: npm ci --prefix ../agentfolio
+      - run: npm test
+      - run: node scripts/catalog.mjs check
+      - run: git diff --check
+      - run: npm run secret-scan
+      - run: node --test tests/cross-repo-smoke.test.mjs
+        env:
+          AGENTFOLIO_BIN: ${{ github.workspace }}/../agentfolio/bin/agentfolio.mjs
