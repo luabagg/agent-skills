@@ -1,6 +1,6 @@
 # Full Polish Implementation Plan
 
-> **REQUIRED SUB-SKILL:** Use `subagent-driven-development` (or `executing-plans`) and track every implementation step with the checkboxes below.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 ## Goal
 
@@ -80,7 +80,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveAction } from "../scripts/lib/actions.mjs";
 
-test("registry exposes the five collection actions", () => {
+test("registry exposes the six collection actions", () => {
   for (const id of [
     "global.add-curated-skills",
     "global.add-instructions",
@@ -212,14 +212,23 @@ git commit -m "refactor: centralize collection action execution"
 
 **Interfaces Produces:** `validateVector(field, collection, vector)`, `validateCollectionManifest(collection, value)`, and strict vector-only manifest data.
 
-- [ ] **Step 1: Convert the three known unsafe shapes.** Set `collection.yaml` adapter to `executable: node` plus `args: [./scripts/agentfolio-adapter.mjs]`; change every Pi `install` to `{ executable: "pi", args: ["install", source] }`; change OpenCode manual installer data to `{ executable: "bunx", args: ["oh-my-openagent", "install"] }` with display-only semantics.
+- [ ] **Step 1: Convert the three known unsafe shapes.** Set `collection.yaml` adapter to `executable: node` plus `args: [./scripts/agentfolio-adapter.mjs]`; remove `args: ["--catalog-only"]` from the `pi-catalog` action declaration because that flag is already in the `pi-catalog.configure` registry base vector; change every Pi `install` to `{ executable: "pi", args: ["install", source] }`; change OpenCode manual installer data to `{ executable: "bunx", args: ["oh-my-openagent", "install"] }` with display-only semantics. The adapter rejects a second `--catalog-only` passthrough rather than forwarding a duplicate.
 
 ```yaml
 adapters:
   agent-skills:
     executable: node
     args: [./scripts/agentfolio-adapter.mjs]
+harnesses:
+  pi-catalog:
+    actions:
+      - action: configure
+        manifest: ./harnesses/pi.json
+        catalog: ./harnesses/catalog.yaml
+        lock: ./harnesses/catalog.lock.json
 ```
+
+The `pi-catalog` action has no `args` field in `collection.yaml`; the registry contributes exactly one `--catalog-only` argument.
 
 ```json
 {
@@ -272,14 +281,15 @@ test("Pi package vectors use pi install", () => {
   }
 });
 
-test("pi-catalog remains a distinct catalog-only action", () => {
+test("pi-catalog remains a distinct catalog-only action with one flag", () => {
   const response = handleRequest(request("plan", "pi-catalog", { action: "configure" }));
   assert.equal(response.ok, true);
   assert.deepEqual(response.command, ["agent-skills", "setup", "pi", "--catalog-only"]);
+  assert.equal(response.command.filter((arg) => arg === "--catalog-only").length, 1);
 });
 ```
 
-Run `node --test tests/manifest-validation.test.mjs tests/agentfolio-adapter.test.mjs`; **expected PASS:** Pi package and `pi-catalog.configure` assertions pass. Run `npm test`; **expected PASS:** all manifest, CLI, and adapter tests pass.
+Run `node --test tests/manifest-validation.test.mjs tests/agentfolio-adapter.test.mjs`; **expected PASS:** Pi package, `pi-catalog.configure`, and one-flag-only assertions pass. Run `npm test`; **expected PASS:** all manifest, CLI, and adapter tests pass.
 
 - [ ] **Step 4: Commit the manifest contract.**
 
@@ -629,13 +639,20 @@ Run `node --test tests/cross-repo-smoke.test.mjs`; **expected FAIL:** smoke test
 - [ ] **Step 2: Add a non-mutating smoke test with isolated HOME.** Spawn Agentfolio against the collection root and assert doctor/plan/dry-run status zero plus unchanged repository status.
 
 ```js
+import assert from "node:assert/strict";
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+
 const commands = [
   ["doctor", "--collection", root],
   ["plan", "--profile", "pi", "--collection", root],
   ["apply", "--profile", "pi", "--dry-run", "--collection", root],
 ];
 const agentfolioBin = process.env.AGENTFOLIO_BIN;
-assert.equal(agentfolioBin, resolve(root, "../agentfolio/bin/agentfolio.mjs"));
+assert.equal(typeof agentfolioBin, "string");
+assert.ok(path.isAbsolute(agentfolioBin));
+assert.ok(existsSync(agentfolioBin));
 for (const args of commands) {
   const result = spawnSync(process.execPath, [agentfolioBin, ...args], { cwd: root, env: Object.assign({}, process.env, { HOME: tempHome }), encoding: "utf8" });
   assert.equal(result.status, 0, `${args.join(" ")}\\n${result.stderr}`);
@@ -645,7 +662,7 @@ assert.equal(spawnSync("git", ["diff", "--cached", "--exit-code"], { cwd: root }
 assert.equal(spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).stdout, "");
 ```
 
-Run `AGENTFOLIO_BIN=/home/luabagg/development/agentfolio/bin/agentfolio.mjs node --test tests/cross-repo-smoke.test.mjs`; **expected PASS:** all three commands return zero, tracked and cached diffs are empty, and `git status --porcelain` is empty.
+Run `AGENTFOLIO_BIN=/home/luabagg/development/.worktrees/agentfolio-full-polish/bin/agentfolio.mjs node --test tests/cross-repo-smoke.test.mjs`; **expected PASS:** the explicit absolute binary exists, all three commands return zero, tracked and cached diffs are empty, and `git status --porcelain` is empty.
 
 - [ ] **Step 3: Add `secret-scan` as a deterministic repository-only check.** The script must reject credential-shaped strings while allowing `YOUR_API_KEY`, and must inspect tracked files only.
 
@@ -706,11 +723,12 @@ printf 'tasks='; grep -Ec '^### Task [0-9]+:' "$plan"
 printf 'checkboxes='; grep -Ec '^- \[ \] \*\*Step [0-9]+:' "$plan"
 printf 'code_fences='; grep -Ec '^```' "$plan"
 printf 'placeholders='; (grep -v "printf 'placeholders='" "$plan" | grep -Eo 'TODO|TBD|FIXME|PLACEHOLDER' || true) | wc -l
-printf 'header='; test "$(head -31 "$plan" | grep -Ec '^(# Full Polish|> \\*\\*Required sub-skill|## Goal|## Architecture|## Tech Stack|## Spec|## Global Constraints|---)')" -eq 8 && echo yes || echo no
+printf 'for_agentic_workers='; test "$(head -3 "$plan" | grep -F -c 'For agentic workers')" -eq 1 && echo yes || echo no
+printf 'header='; test "$(head -1 "$plan" | grep -Fc '# Full Polish Implementation Plan')" -eq 1 && test "$(head -3 "$plan" | grep -Fc 'For agentic workers')" -eq 1 && test "$(head -31 "$plan" | grep -Fc '## Goal')" -eq 1 && test "$(head -31 "$plan" | grep -Fc '## Architecture')" -eq 1 && test "$(head -31 "$plan" | grep -Fc '## Tech Stack')" -eq 1 && test "$(head -31 "$plan" | grep -Fc '## Spec')" -eq 1 && test "$(head -31 "$plan" | grep -Fc '## Global Constraints')" -eq 1 && test "$(head -31 "$plan" | grep -Fx -c -- '---')" -eq 1 && echo yes || echo no
 head -31 "$plan"
 ```
 
-Expected: `tasks=10`, `checkboxes=41`, `header=yes`, an even positive `code_fences` count, `placeholders=0` (the scan excludes its own metric command), and the first sections are title, required sub-skill note, Goal, Architecture, Tech Stack, Spec, Global Constraints, separator.
+Expected: `tasks=10`, `checkboxes=41`, `for_agentic_workers=yes`, `header=yes`, an even positive `code_fences` count, `placeholders=0` (the scan excludes its own metric command), and the first sections are title, exact `For agentic workers` required-sub-skill line, Goal, Architecture, Tech Stack, Spec, Global Constraints, separator.
 
 - [ ] **Step 4: Commit only any final correction and verify no staged files.**
 
