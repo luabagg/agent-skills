@@ -292,12 +292,41 @@ function commandPath(name) {
   }
 }
 
-function replaceTemplate(template, values) {
-  return template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
+export function renderService(template, values) {
+  const rendered = template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
     if (!(key in values)) throw new Error(`Missing template value: ${key}`);
     return values[key];
   });
+  if (/\$\(|`/.test(rendered)) throw new Error("Unsafe shell substitution in bridge template");
+  return rendered;
 }
+
+const LOOPBACK = {
+  controlUrl: "http://127.0.0.1:32125",
+  providerUrl: "http://127.0.0.1:32124/v1",
+};
+
+export function validateBridgeConfig(value) {
+  if (!value || value.controlUrl !== LOOPBACK.controlUrl || value.providerUrl !== LOOPBACK.providerUrl) {
+    throw new Error("Bridge URLs must use fixed loopback HTTP endpoints and ports");
+  }
+  return value;
+}
+
+export function validateWorkspace(value, root = homedir()) {
+  if (typeof value !== "string" || !value || /[\\$`;&|\n]/.test(value)) throw new Error("Unsafe workspace value");
+  const candidate = resolve(value);
+  const base = resolve(root);
+  if (candidate !== base && !candidate.startsWith(`${base}${process.platform === "win32" ? "\\\\" : "/"}`)) throw new Error("Workspace must stay inside approved local root");
+  return candidate;
+}
+
+export function planBridge(value) {
+  validateBridgeConfig(value);
+  return { controlUrl: value.controlUrl, providerUrl: value.providerUrl, cursorAuthDir: value.cursorAuthDir ?? null, auth: "native Cursor login" };
+}
+
+const replaceTemplate = renderService;
 
 function systemdEnvironmentValue(value) {
   return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("%", "%%");
@@ -345,6 +374,7 @@ function globalPackageMatches(npmBin, spec) {
 async function setupCursorBridge() {
   const bridge = manifest.cursorBridge;
   if (!bridge?.enabled) return false;
+  validateBridgeConfig(bridge);
 
   const configHome = expandTilde(bridge.configHome);
   const opencodeConfig = join(configHome, "opencode", "opencode.json");
@@ -353,7 +383,7 @@ async function setupCursorBridge() {
   const isolatedCursorDir = join(configHome, "cursor");
   const servicePath = expandTilde(bridge.systemdUnit);
   const refreshPath = expandTilde(bridge.refreshPath);
-  const workspace = resolve(process.env[bridge.workspaceEnv] || homedir());
+  const workspace = validateWorkspace(process.env[bridge.workspaceEnv] || homedir(), homedir());
 
   console.log("\nCursor ACP provider bridge:");
   console.log(`- package: ${bridge.package}`);
@@ -482,6 +512,7 @@ async function setupCursorBridge() {
   return bridgeChanged;
 }
 
+async function main() {
 execFileSync(process.execPath, [fileURLToPath(new URL("./catalog.mjs", import.meta.url)), "check"], {
   stdio: "inherit",
 });
@@ -575,3 +606,6 @@ if (dryRun) {
 } else {
   console.log("\nPi harness setup complete. Restart pi to load updated models/extensions.");
 }
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
