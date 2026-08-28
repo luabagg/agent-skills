@@ -16,3 +16,4 @@ Task 6: complete (commit cf7e8e8, tests `node --test tests/secrets.test.mjs test
 Task 7: complete (commit cf77cde, tests `node --test tests/bridge-safety.test.mjs tests/transaction.test.mjs tests/cli.test.mjs`)
 Task 8: complete (commit 60815e6, tests `node --test tests/docs-contract.test.mjs`)
 Task 9: complete (commit 5663205, tests `npm test && npm run secret-scan`)
+Task 10: complete (commit pending, tests `npm test; node scripts/catalog.mjs check; git diff --check; npm run secret-scan; AGENTFOLIO_BIN=/home/luabagg/development/.worktrees/agentfolio-full-polish/bin/agentfolio.mjs node --test tests/cross-repo-smoke.test.mjs; git status --short`)

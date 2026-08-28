@@ -15,12 +15,13 @@ Implemented Tasks 1–9 and completed Task 10 validation on `refactor/full-polis
 - `cf77cde` fix: constrain local Cursor bridge boundaries
 - `60815e6` docs: document full-polish ownership and onboarding
 - `5663205` ci: gate full-polish safety checks
-- Task 10 evidence/report commit follows this report.
+- `54179a7` docs: record full-polish implementation evidence
+- Task 10 process runner API correction follows this report.
 
 ## Changed files by task
 
 - Task 1: `tests/manifest-contract.test.mjs`, `tests/action-registry.test.mjs`
-- Task 2: `scripts/lib/actions.mjs`, `scripts/lib/process.mjs`, `scripts/cli.mjs`, `scripts/agentfolio-adapter.mjs`
+- Task 2: `scripts/lib/actions.mjs`, `scripts/lib/process.mjs` (`runProcess`, inherited/captured boundaries), `scripts/cli.mjs`, `scripts/agentfolio-adapter.mjs`
 - Task 3: `collection.yaml`, `harnesses/pi.json`, `harnesses/opencode.json`, `scripts/lib/manifest.mjs`, setup validation, manifest tests
 - Task 4: `scripts/lib/plan.mjs`, `scripts/lib/mutate.mjs`, adapter integration, `tests/planning.test.mjs`
 - Task 5: `scripts/lib/transaction.mjs`, `tests/transaction.test.mjs`
@@ -28,7 +29,7 @@ Implemented Tasks 1–9 and completed Task 10 validation on `refactor/full-polis
 - Task 7: bridge validators/exports in `scripts/setup-pi.mjs`, `tests/bridge-safety.test.mjs`
 - Task 8: `package.json`, `README.md`, `docs/model-catalog.md`, `skills/agentfolio-operator/SKILL.md`, `tests/docs-contract.test.mjs`
 - Task 9: `.github/workflows/ci.yml`, `scripts/secret-scan.mjs`, `tests/cross-repo-smoke.test.mjs`, package script
-- Task 10: this report and `.superpowers/sdd/2026-08-28-full-polish/progress.md`
+- Task 10: this report, `.superpowers/sdd/2026-08-28-full-polish/progress.md`, and the explicit `runProcess` process-boundary export
 
 ## Test evidence
 

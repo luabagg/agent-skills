@@ -16,6 +16,10 @@ export function spawnInherited({ executable, args, cwd, env }) {
   });
 }
 
+export function runProcess({ executable, args, cwd, env, capture = false }) {
+  return capture ? execCaptured({ executable, args, cwd, env }) : spawnInherited({ executable, args, cwd, env });
+}
+
 export function execCaptured({ executable, args, cwd, env }) {
   checked({ executable, args });
   return new Promise((resolve, reject) => {
