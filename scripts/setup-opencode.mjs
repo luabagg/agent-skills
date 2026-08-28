@@ -8,6 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 import { parseJsonc, setJsoncValue } from "./lib/jsonc.mjs";
+import { validateVector } from "./lib/manifest.mjs";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
@@ -66,8 +67,9 @@ function validateManifest(value) {
       throw new Error(`${plugin.name} is missing pluginEntry.`);
     }
 
-    if (plugin.kind === "manual-installer" && !Array.isArray(plugin.installCommands)) {
-      throw new Error(`${plugin.name} is missing installCommands.`);
+    if (plugin.kind === "manual-installer") {
+      if (!plugin.install || plugin.displayOnly !== true) throw new Error(`${plugin.name} needs a display-only executable vector.`);
+      validateVector(`${plugin.name}.install`, "opencode", plugin.install);
     }
   }
 }
@@ -197,9 +199,7 @@ function printManualInstallers() {
   console.log("\nManual installers:");
   for (const plugin of installers) {
     console.log(`- ${plugin.name}`);
-    for (const command of plugin.installCommands) {
-      console.log(`  ${command}`);
-    }
+    console.log(`  ${plugin.install.executable} ${plugin.install.args.join(" ")} (display-only)`);
     if (plugin.notes) {
       console.log(`  ${plugin.notes}`);
     }

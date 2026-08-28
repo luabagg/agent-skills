@@ -15,7 +15,8 @@ tools:
 # harness and platform-specific behavior behind the adapter.
 adapters:
   agent-skills:
-    command: [node, ./scripts/agentfolio-adapter.mjs]
+    executable: node
+    args: [./scripts/agentfolio-adapter.mjs]
     timeout: 300000
 
 harnesses:
@@ -46,7 +47,6 @@ harnesses:
         manifest: ./harnesses/pi.json
         catalog: ./harnesses/catalog.yaml
         lock: ./harnesses/catalog.lock.json
-        args: ["--catalog-only"]
 
   cursor:
     adapter: agent-skills

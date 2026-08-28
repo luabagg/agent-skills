@@ -54,8 +54,15 @@
       "kind": "manual-installer",
       "recommended": true,
       "defaultEnabled": false,
-      "installCommands": ["bunx oh-my-openagent install"],
-      "notes": "Broad installer that may configure models, providers, hooks, MCPs, and workflow defaults. The setup script prints this command but does not run it. Review telemetry and config behavior before installing."
+      "notes": "Broad installer that may configure models, providers, hooks, MCPs, and workflow defaults. The setup script prints this command but does not run it. Review telemetry and config behavior before installing.",
+      "install": {
+        "executable": "bunx",
+        "args": [
+          "oh-my-openagent",
+          "install"
+        ]
+      },
+      "displayOnly": true
     },
     {
       "name": "opencode-mission-control",

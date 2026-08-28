@@ -20,7 +20,13 @@
       ],
       "recommended": true,
       "defaultEnabled": true,
-      "install": "pi install npm:pi-web-access",
+      "install": {
+        "executable": "pi",
+        "args": [
+          "install",
+          "npm:pi-web-access"
+        ]
+      },
       "notes": "Installs to ~/.pi/agent/npm/node_modules/pi-web-access. Manifest declares ./index.ts as the extension entry and bundles a skills/ directory (librarian, web-access)."
     },
     {
@@ -35,7 +41,13 @@
       ],
       "recommended": true,
       "defaultEnabled": true,
-      "install": "pi install npm:context-mode",
+      "install": {
+        "executable": "pi",
+        "args": [
+          "install",
+          "npm:context-mode"
+        ]
+      },
       "notes": "Standalone npm package installed via `pi install`. The build/adapters/pi/extension.js adapter is the pi entry; OpenCode/Claude use different adapters. Bundles the context-mode skills."
     },
     {
@@ -51,7 +63,13 @@
       ],
       "recommended": true,
       "defaultEnabled": true,
-      "install": "pi install npm:pi-subagents",
+      "install": {
+        "executable": "pi",
+        "args": [
+          "install",
+          "npm:pi-subagents"
+        ]
+      },
       "notes": "User shorthand `src/extension` maps to ./src/extension/index.ts. Bundles the pi-subagents skill and prompt templates."
     },
     {
@@ -65,7 +83,13 @@
       ],
       "recommended": true,
       "defaultEnabled": true,
-      "install": "pi install npm:@plannotator/pi-extension",
+      "install": {
+        "executable": "pi",
+        "args": [
+          "install",
+          "npm:@plannotator/pi-extension"
+        ]
+      },
       "notes": "Package uses `pi.extensions: [\"./\"]`, so the extension entry is the root index.ts (user shorthand `pi-extension` references the package, not a subpath). Large HTML assets (plannotator.html, review-editor.html) ship in the tarball."
     },
     {
@@ -79,14 +103,20 @@
       ],
       "recommended": true,
       "defaultEnabled": true,
-      "install": "pi install npm:@ff-labs/pi-fff",
+      "install": {
+        "executable": "pi",
+        "args": [
+          "install",
+          "npm:@ff-labs/pi-fff"
+        ]
+      },
       "notes": "User shorthand `src` maps to the manifest entry ./src/index.ts. pi-fff covers fuzzy path/grep search."
     }
   ],
   "localExtensions": [
     {
       "name": "variants.ts",
-      "description": "Claude-style /models picker: model list, ←→ effort, and fast-mode toggle for sibling models (e.g. grok-4.6-fast). Also registers /effort, /fast, /variants.",
+      "description": "Claude-style /models picker: model list, \u2190\u2192 effort, and fast-mode toggle for sibling models (e.g. grok-4.6-fast). Also registers /effort, /fast, /variants.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "variants.ts",

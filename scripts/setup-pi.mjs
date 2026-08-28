@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execFileSync, execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
   chmod,
@@ -18,6 +18,8 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { validateVector } from "./lib/manifest.mjs";
+import { spawnInherited } from "./lib/process.mjs";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
@@ -41,6 +43,7 @@ if (unknownArgs.length > 0) {
 }
 const manifestPath = new URL("../harnesses/pi.json", import.meta.url);
 const harnessRoot = resolve(fileURLToPath(new URL("../harnesses/pi/", import.meta.url)));
+const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const catalogPath = new URL("../harnesses/catalog.yaml", import.meta.url);
 const catalogLockPath = new URL("../harnesses/catalog.lock.json", import.meta.url);
@@ -68,6 +71,8 @@ function validateManifest(value) {
       throw new Error('Each pi package entry needs name, kind "pi-package", and defaultEnabled.');
     }
     if (!pkg.source || !pkg.install) throw new Error(`${pkg.name} needs source and install.`);
+    validateVector(`${pkg.name}.install`, "pi", pkg.install);
+    if (pkg.install.args.at(-1) !== pkg.source) throw new Error(`${pkg.name}.install must end with source.`);
   }
 
   for (const ext of localExtensions) {
@@ -533,14 +538,15 @@ changed = (await installCatalogLock()) || changed;
 if (!catalogOnly && !dryRun && sourcesToAdd.length > 0) {
   for (const pkg of selectedPackages) {
     if (!sourcesToAdd.includes(pkg.source)) continue;
-    console.log(`Running: ${pkg.install} (${pkg.name})`);
-    execSync(pkg.install, { stdio: "inherit" });
+    console.log(`Running: ${pkg.install.executable} ${pkg.install.args.join(" ")} (${pkg.name})`);
+    const result = await spawnInherited({ executable: pkg.install.executable, args: pkg.install.args, cwd: repoRoot, env: process.env });
+    if (result.status !== 0) throw new Error(`Command failed with status ${result.status}: ${pkg.name}`);
   }
   changed = true;
 } else if (!catalogOnly && dryRun && sourcesToAdd.length > 0) {
   for (const pkg of selectedPackages) {
     if (!sourcesToAdd.includes(pkg.source)) continue;
-    console.log(` would run: ${pkg.install} (${pkg.name})`);
+    console.log(` would run: ${pkg.install.executable} ${pkg.install.args.join(" ")} (${pkg.name})`);
   }
   changed = true;
 }
