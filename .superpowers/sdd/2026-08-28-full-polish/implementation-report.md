@@ -54,3 +54,11 @@ Implemented Tasks 1–9 and completed Task 10 validation on `refactor/full-polis
 ## Working-tree evidence
 
 The implementation commits are task-scoped. Final validation was run before writing this report; after the report/progress commit, `git status --short` is expected to be empty.
+
+## Follow-up: strict nested action config
+
+Follow-up commit `6e884a0` moves every collection-specific action field under `config`, updates adapter doctor asset checks to read `declaredAction.config`, and removes the cross-repository compatibility skip. CI now pins Agentfolio commit `edd8d96f0e2069ebcc7a7eb33746a7de2e81df84`, the owning executable/args contract fix.
+
+Follow-up validation: strict manifest and doctor tests passed; full `npm test` with `AGENTFOLIO_BIN` passed with zero skipped tests; Agentfolio doctor/plan/dry-run apply smoke passed and verified no staged, unstaged, or untracked changes; catalog check, secret scan, and `git diff --check` passed.
+
+Ruling: Agentfolio's owning fix is the required compatibility boundary; no Agentfolio code was changed in this collection worktree. The adapter's plan/apply request payload remains `request.action.config`, while doctor reads declared action metadata from `declaredAction.config`.

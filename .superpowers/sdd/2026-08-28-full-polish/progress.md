@@ -17,3 +17,5 @@ Task 7: complete (commit cf77cde, tests `node --test tests/bridge-safety.test.mj
 Task 8: complete (commit 60815e6, tests `node --test tests/docs-contract.test.mjs`)
 Task 9: complete (commit 5663205, tests `npm test && npm run secret-scan`)
 Task 10: complete (commit cca3c45, tests `npm test; node scripts/catalog.mjs check; git diff --check; npm run secret-scan; AGENTFOLIO_BIN=/home/luabagg/development/.worktrees/agentfolio-full-polish/bin/agentfolio.mjs node --test tests/cross-repo-smoke.test.mjs; git status --short`)
+Ruling: The collection action contract now keeps only action, summary, and config at action level; manifest/catalog/lock/source/args are opaque config data consumed by the adapter. Agentfolio is pinned to owning fix edd8d96f0e2069ebcc7a7eb33746a7de2e81df84.
+Test evidence: strict manifest-shape and doctor config asset tests pass; cross-repo smoke runs doctor, plan, and dry-run apply with zero skipped tests and verifies clean git state.
