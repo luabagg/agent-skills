@@ -1,6 +1,6 @@
 # Full Polish Implementation Plan
 
-> **Required sub-skill:** `writing-plans` (required for this plan; implementation agents must read and follow it before changing code).
+> **REQUIRED SUB-SKILL:** Use `subagent-driven-development` (or `executing-plans`) and track every implementation step with the checkboxes below.
 
 ## Goal
 
@@ -8,7 +8,7 @@ Replace unsafe manifest shell strings with strict executable/argument vectors, c
 
 ## Architecture
 
-`collection.yaml` declares profiles and action IDs. `harnesses/pi.json`, `harnesses/cursor.json`, and `harnesses/opencode.json` declare collection data, never shell commands. `scripts/lib/actions.mjs` is the one action registry consumed by `scripts/cli.mjs` and `scripts/agentfolio-adapter.mjs`. `scripts/lib/manifest.mjs` validates collection-specific executable/subcommand vectors. `scripts/lib/plan.mjs` reads state and produces a delta; `scripts/lib/mutate.mjs` applies a delta through `scripts/lib/transaction.mjs`; `scripts/lib/process.mjs` runs only explicit executable/args with `shell: false`. A dry-run performs validation and planning only. A failed mutation or child process rolls back the transaction.
+`collection.yaml` declares profiles and action IDs, including `pi-catalog.configure`. `harnesses/pi.json`, `harnesses/cursor.json`, and `harnesses/opencode.json` declare collection data, never shell commands. `scripts/lib/actions.mjs` is the one action registry consumed by `scripts/cli.mjs` and `scripts/agentfolio-adapter.mjs`. `scripts/lib/manifest.mjs` validates collection-specific executable/subcommand vectors. `scripts/lib/plan.mjs` reads state and produces a delta; `scripts/lib/mutate.mjs` applies a delta through `scripts/lib/transaction.mjs`; `scripts/lib/process.mjs` runs only explicit executable/args with `shell: false`. A dry-run performs validation and planning only. A failed mutation or child process rolls back the transaction.
 
 ## Tech Stack
 
@@ -40,7 +40,7 @@ Node.js ESM built-ins (`node:child_process`, `node:fs`, `node:fs/promises`, `nod
 
 **Interfaces Consumes:** `collection.yaml` adapter and action declarations; `harnesses/pi.json` package entries; `harnesses/opencode.json` plugin entries; future exports from `scripts/lib/actions.mjs` and `scripts/lib/manifest.mjs`.
 
-**Interfaces Produces:** failing contract assertions that define `executable: string`, `args: string[]`, no `command`/`install`/`installCommands`, and stable registry IDs.
+**Interfaces Produces:** failing contract assertions that define `executable: string`, `args: string[]`, no `command`/`install`/`installCommands`, and stable registry IDs including `pi-catalog.configure`.
 
 - [ ] **Step 1: Create the manifest fixture loader and strict field assertions.** Read YAML with the existing `parse as parseYaml` import shape and JSON with `JSON.parse`; assert the current unsafe fields are rejected.
 
@@ -85,6 +85,7 @@ test("registry exposes the five collection actions", () => {
     "global.add-curated-skills",
     "global.add-instructions",
     "pi.configure",
+    "pi-catalog.configure",
     "cursor.add-agents",
     "opencode.configure-plugins-and-agents",
   ]) {
@@ -107,7 +108,7 @@ Run `node --test tests/action-registry.test.mjs`; **expected FAIL:** module `scr
 ```js
 import { validateVector } from "../scripts/lib/manifest.mjs";
 for (const value of [";", "&&", "|", "\n", "$(id)", "`id`", "", "../escape"]) {
-  assert.throws(() => validateVector("pi.packages[0].install", "pi", ["install", value]), /unsafe|empty|path/i);
+  assert.throws(() => validateVector("pi.packages[0].install", "pi", { executable: "pi", args: ["install", value] }), /unsafe|empty|path/i);
 }
 ```
 
@@ -130,17 +131,19 @@ git commit -m "test: define strict action and manifest contracts"
 
 **Interfaces Consumes:** command names currently in `COMMANDS` in `scripts/cli.mjs`; duplicated `ACTIONS` in `scripts/agentfolio-adapter.mjs`; `runCommand(command, options)` in `scripts/lib/command.mjs`.
 
-**Interfaces Produces:** `ACTIONS`, `resolveAction(id, extraArgs)`, `runProcess({ executable, args, cwd, env, stdio })`; the same CLI and protocol-v1 output with one dispatch source.
+**Interfaces Produces:** `ACTIONS`, `resolveAction(id, extraArgs)`, `runProcess({ executable, args, cwd, env, stdio, capture })`; the same CLI and protocol-v1 output with one dispatch source, including `pi-catalog.configure`.
 
 - [ ] **Step 1: Add the registry with concrete base vectors and metadata.** Export an immutable object and resolve relative script paths from `root` without joining untrusted strings.
 
 ```js
+const action = (executable, args) => Object.freeze({ executable, args: Object.freeze(args) });
 export const ACTIONS = Object.freeze({
-  "global.add-curated-skills": Object.freeze({ executable: "npx", args: ["--yes", "skills", "add", "."] }),
-  "global.add-instructions": Object.freeze({ executable: process.execPath, args: ["scripts/install-agents.mjs"] }),
-  "pi.configure": Object.freeze({ executable: process.execPath, args: ["scripts/setup-pi.mjs"] }),
-  "cursor.add-agents": Object.freeze({ executable: process.execPath, args: ["scripts/setup-cursor.mjs"] }),
-  "opencode.configure-plugins-and-agents": Object.freeze({ executable: process.execPath, args: ["scripts/setup-opencode.mjs"] }),
+  "global.add-curated-skills": action("npx", ["--yes", "skills", "add", "."]),
+  "global.add-instructions": action(process.execPath, ["scripts/install-agents.mjs"]),
+  "pi.configure": action(process.execPath, ["scripts/setup-pi.mjs"]),
+  "pi-catalog.configure": action(process.execPath, ["scripts/setup-pi.mjs", "--catalog-only"]),
+  "cursor.add-agents": action(process.execPath, ["scripts/setup-cursor.mjs"]),
+  "opencode.configure-plugins-and-agents": action(process.execPath, ["scripts/setup-opencode.mjs"]),
 });
 
 export function resolveAction(id, extraArgs = []) {
@@ -149,20 +152,29 @@ export function resolveAction(id, extraArgs = []) {
   if (!Array.isArray(extraArgs) || extraArgs.some((arg) => typeof arg !== "string" || arg.length === 0)) {
     throw new Error("Action args must be non-empty strings");
   }
-  return { executable: base.executable, args: base.args.concat(extraArgs) };
+  return Object.freeze({ executable: base.executable, args: Object.freeze(base.args.concat(extraArgs)) });
 }
 ```
 
 Run `node --test tests/action-registry.test.mjs`; **expected PASS:** registry IDs and unknown-action assertions pass.
 
-- [ ] **Step 2: Add a process runner that cannot invoke a shell.** Use `execFile` for asynchronous production execution and retain an injectable runner for tests.
+- [ ] **Step 2: Add separate inherited-I/O and captured-I/O runners with explicit interfaces.** Use `spawn` when CLI output must stream and `execFile` when adapter output must be captured; both force `shell: false` and preserve executable/args boundaries.
 
 ```js
 import { execFile } from "node:child_process";
+import { spawn } from "node:child_process";
 
-export function runProcess({ executable, args, cwd, env, stdio = "inherit" }) {
+export function spawnInherited({ executable, args, cwd, env }) {
   return new Promise((resolve, reject) => {
-    execFile(executable, args, { cwd, env, shell: false, stdio }, (error, stdout, stderr) => {
+    const child = spawn(executable, args, { cwd, env, shell: false, stdio: "inherit" });
+    child.once("error", reject);
+    child.once("close", (status) => resolve({ status: status ?? 1 }));
+  });
+}
+
+export function execCaptured({ executable, args, cwd, env }) {
+  return new Promise((resolve, reject) => {
+    execFile(executable, args, { cwd, env, shell: false, encoding: "utf8" }, (error, stdout, stderr) => {
       if (error) reject(Object.assign(error, { stdout, stderr }));
       else resolve({ status: 0, stdout, stderr });
     });
@@ -170,7 +182,7 @@ export function runProcess({ executable, args, cwd, env, stdio = "inherit" }) {
 }
 ```
 
-Run `node --test tests/cli.test.mjs tests/agentfolio-adapter.test.mjs`; **expected PASS:** existing routing remains green and injected calls contain separate args.
+Run `node --test tests/cli.test.mjs tests/agentfolio-adapter.test.mjs`; **expected PASS:** existing routing remains green, CLI output remains inherited, adapter output is captured, and injected calls contain separate args.
 
 - [ ] **Step 3: Route both callers through `resolveAction`.** Remove adapter-local `ACTIONS` and replace direct script/external mapping in CLI with IDs; preserve `request.action.config.args` as an array.
 
@@ -259,9 +271,15 @@ test("Pi package vectors use pi install", () => {
     assert.equal(pkg.install.args.at(-1), pkg.source);
   }
 });
+
+test("pi-catalog remains a distinct catalog-only action", () => {
+  const response = handleRequest(request("plan", "pi-catalog", { action: "configure" }));
+  assert.equal(response.ok, true);
+  assert.deepEqual(response.command, ["agent-skills", "setup", "pi", "--catalog-only"]);
+});
 ```
 
-Run `npm test`; **expected PASS:** all manifest, CLI, and adapter tests pass.
+Run `node --test tests/manifest-validation.test.mjs tests/agentfolio-adapter.test.mjs`; **expected PASS:** Pi package and `pi-catalog.configure` assertions pass. Run `npm test`; **expected PASS:** all manifest, CLI, and adapter tests pass.
 
 - [ ] **Step 4: Commit the manifest contract.**
 
@@ -330,24 +348,45 @@ git commit -m "refactor: separate planning from mutations"
 
 **Test paths:** `tests/transaction.test.mjs`.
 
-**Interfaces Consumes:** planned `changes`; existing backup naming `${filePath}.bak-${timestamp}`; ownership-marker and symlink checks in setup/install scripts.
+**Interfaces Consumes:** planned `changes`; existing backup naming `${filePath}.bak-${timestamp}`; ownership-marker and symlink checks in setup/install scripts; destination-local filesystem paths.
 
 **Interfaces Produces:** `beginTransaction(targets)`, `atomicWrite(path, content, mode)`, `rollback(transaction)`, `pruneBackups(path, limit = 5)`.
 
-- [ ] **Step 1: Implement transaction records and atomic writes.** Create temp files beside the target, write with mode `0o600`, rename atomically, and record original bytes/stat state.
+- [ ] **Step 1: Write failing transaction tests first.** Cover `beginTransaction`, `atomicWrite`, reverse rollback, unmanaged symlink refusal, mode `0o600`, and backup retention with exact assertions.
 
 ```js
-export async function atomicWrite(filePath, content, mode = 0o600) {
-  const tempPath = `${filePath}.tmp-${process.pid}`;
-  await writeFile(tempPath, content, { encoding: "utf8", mode });
-  await rename(tempPath, filePath);
-  return filePath;
-}
+import assert from "node:assert/strict";
+import test from "node:test";
+import { atomicWrite, beginTransaction, rollback } from "../scripts/lib/transaction.mjs";
+
+test("atomicWrite replaces bytes and transaction rollback restores them", async () => {
+  const tx = await beginTransaction([target]);
+  await atomicWrite(target, "new-first\n");
+  await rollback(tx);
+  assert.equal(readFileSync(target, "utf8"), "old-first\n");
+});
+
+test("atomicWrite leaves no temporary files after failure", async () => {
+  await assert.rejects(() => atomicWrite(target, "new-first\n", 0o600), /injected failure/);
+  assert.equal(readdirSync(dirname(target)).some((name) => name.includes(".tmp-")), false);
+});
 ```
 
-Run `node --test tests/transaction.test.mjs`; **expected FAIL:** transaction exports and tests do not exist.
+Run `node --test tests/transaction.test.mjs`; **expected FAIL:** the new test file fails because transaction exports are absent.
 
-- [ ] **Step 2: Add reverse rollback and unmanaged-target refusal.** Before mutation, use `lstat`; reject an existing unmanaged regular file or symlink, and restore changed targets in reverse order after injected failure.
+- [ ] **Step 2: Implement transaction records and atomic writes.** Create unique temp files in the destination directory, write with mode `0o600`, flush with `filehandle.sync()`, atomically rename, record original bytes/stat state, and remove the temp file on every error.
+
+```js
+const tempPath = join(dirname(filePath), `.${basename(filePath)}.tmp-${process.pid}-${randomUUID()}`);
+const handle = await open(tempPath, "w", 0o600);
+try { await handle.writeFile(content, "utf8"); await handle.sync(); }
+finally { await handle.close(); }
+try { await rename(tempPath, filePath); } catch (error) { await rm(tempPath, { force: true }); throw error; }
+```
+
+Run `node --test tests/transaction.test.mjs`; **expected PASS:** transaction exports, unique destination-local temp files, flush, and cleanup assertions pass.
+
+- [ ] **Step 3: Add reverse rollback and unmanaged-target refusal.** Before mutation, use `lstat`; reject an existing unmanaged regular file or symlink, and restore changed targets in reverse order after injected failure.
 
 ```js
 test("rollback restores earlier target after second write fails", async () => {
@@ -360,7 +399,7 @@ test("rollback restores earlier target after second write fails", async () => {
 
 Run `node --test tests/transaction.test.mjs`; **expected PASS:** rollback restores bytes and preserves unmanaged files.
 
-- [ ] **Step 3: Enforce sensitive local modes and five-backup retention.** Set new config directories to `0o700`, files to `0o600`, and remove only oldest managed backups after successful replacement.
+- [ ] **Step 4: Enforce sensitive local modes and five-backup retention.** Set new config directories to `0o700`, files to `0o600`, and remove only oldest managed backups after successful replacement.
 
 ```js
 test("backup retention keeps five managed backups", async () => {
@@ -372,7 +411,7 @@ test("backup retention keeps five managed backups", async () => {
 
 Run `node --test tests/transaction.test.mjs`; **expected PASS:** mode and retention assertions pass.
 
-- [ ] **Step 4: Commit transaction support.**
+- [ ] **Step 5: Commit transaction support.**
 
 ```bash
 git add scripts/lib/transaction.mjs scripts/lib/mutate.mjs scripts/setup-pi.mjs scripts/setup-opencode.mjs scripts/setup-cursor.mjs scripts/install-agents.mjs tests/transaction.test.mjs
@@ -389,22 +428,24 @@ git commit -m "feat: add transactional rollback for local setup"
 
 **Interfaces Consumes:** Pi provider login/keychain behavior; `XAI_API_KEY`; Claude CLI bridge; adapter `stdout`, `stderr`, and `error` response fields.
 
-**Interfaces Produces:** `redact(text, env)`, `assertNoTrackedSecrets(paths)`, and diagnostics with secret values removed.
+**Interfaces Produces:** `scripts/lib/secrets.mjs` exports `resolveAuth({ keychain, env, variable })`, `redact(text, env)`, and `assertNoTrackedSecrets(paths)`; diagnostics contain no secret values.
 
-- [ ] **Step 1: Implement deterministic redaction.** Replace values of known environment variables and bearer/basic/token/key patterns before logs or protocol responses.
+- [ ] **Step 1: Write failing redaction and auth tests first.** Assert `redact` removes the exact `XAI_API_KEY` value and `resolveAuth` selects keychain before environment fallback.
 
 ```js
-const SECRET_NAMES = ["XAI_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "CURSOR_API_KEY"];
-export function redact(text, env = process.env) {
-  let output = String(text ?? "");
-  for (const name of SECRET_NAMES) if (env[name]) output = output.replaceAll(env[name], `[redacted:${name}]`);
-  return output.replace(/(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi, "$1 [redacted]");
-}
+import assert from "node:assert/strict";
+import test from "node:test";
+import { redact, resolveAuth } from "../scripts/lib/secrets.mjs";
+
+test("redact removes environment secret and bearer value", () => {
+  const env = { XAI_API_KEY: "env-value" };
+  assert.doesNotMatch(redact("XAI_API_KEY=env-value Bearer bearer-value", env), /env-value|bearer-value/);
+});
 ```
 
 Run `node --test tests/secrets.test.mjs`; **expected FAIL:** module is absent.
 
-- [ ] **Step 2: Assert keychain-first and env fallback without persistence.** Test provider auth selection with a fake keychain result, then fake env fallback; assert neither value occurs in serialized plan, error, or file contents.
+- [ ] **Step 2: Implement `resolveAuth` and deterministic `redact`.** In `scripts/lib/secrets.mjs`, export both functions; keychain success returns `{ source: "keychain", configured: true }`, otherwise environment presence returns `{ source: "environment", configured: true }` without returning the secret value.
 
 ```js
 test("keychain wins over environment fallback", async () => {
@@ -414,7 +455,7 @@ test("keychain wins over environment fallback", async () => {
 });
 ```
 
-Run `node --test tests/secrets.test.mjs`; **expected PASS:** keychain-first and fallback assertions pass.
+Run `node --test tests/secrets.test.mjs`; **expected PASS:** keychain-first, fallback, and redaction assertions pass.
 
 - [ ] **Step 3: Add ignore rules and scan assertions.** Ignore `.env`, `.env.*`, local credentials, runtime state, and managed backup suffixes; scan tracked paths and fail on real key-shaped values while allowing `YOUR_API_KEY`.
 
@@ -446,7 +487,7 @@ git commit -m "feat: enforce credential-safe setup diagnostics"
 
 **Interfaces Consumes:** `cursorBridge.controlUrl`, `cursorBridge.providerUrl`, `PI_CURSOR_WORKSPACE`, `serviceTemplate`, and `refreshScript` values in `scripts/setup-pi.mjs`.
 
-**Interfaces Produces:** `validateBridgeConfig(value)` accepting only fixed loopback HTTP endpoints and safe local substitutions.
+**Interfaces Produces:** `scripts/setup-pi.mjs` exports `validateBridgeConfig(value)`, `validateWorkspace(value, root)`, `renderService(template, values)`, and `planBridge(value)`; these accept only fixed loopback HTTP endpoints and safe local substitutions.
 
 - [ ] **Step 1: Add URL validation tests.** Accept `http://127.0.0.1:32125` and `http://127.0.0.1:32124/v1`; reject `0.0.0.0`, `localhost`, public addresses, HTTPS, and changed ports.
 
@@ -465,8 +506,8 @@ Run `node --test tests/bridge-safety.test.mjs`; **expected FAIL:** validator exp
 
 ```js
 test("workspace substitution cannot inject shell syntax", () => {
-  assert.throws(() => validateWorkspace("/tmp/$(touch-pwned)"), /workspace|unsafe/i);
-  assert.doesNotMatch(renderService({ workspace: "/home/user/project" }), /\$\(|`/);
+  assert.throws(() => validateWorkspace("/tmp/$(touch-pwned)", "/home/user"), /workspace|unsafe/i);
+  assert.doesNotMatch(renderService("WORKSPACE={{WORKSPACE}}", { WORKSPACE: "/home/user/project" }), /\$\(|`/);
 });
 ```
 
@@ -476,8 +517,8 @@ Run `node --test tests/bridge-safety.test.mjs`; **expected PASS:** safety assert
 
 ```js
 test("bridge plan does not include Cursor credential bytes", () => {
-  const plan = planBridge({ cursorAuthDir: "/home/user/.config/cursor" });
-  assert.doesNotMatch(JSON.stringify(plan), /accessToken|refreshToken|apiKey/i);
+  const bridgePlan = planBridge({ controlUrl: "http://127.0.0.1:32125", providerUrl: "http://127.0.0.1:32124/v1", cursorAuthDir: "/home/user/.config/cursor" });
+  assert.doesNotMatch(JSON.stringify(bridgePlan), /accessToken|refreshToken|apiKey/i);
 });
 ```
 
@@ -552,11 +593,11 @@ git commit -m "docs: document full-polish ownership and onboarding"
 
 **Test paths:** `tests/cross-repo-smoke.test.mjs`; CI workflow.
 
-**Interfaces Consumes:** package scripts `test`, `test:cli`; `scripts/catalog.mjs check`; Agentfolio `doctor`, `plan`, and dry-run `apply`; temporary HOME behavior in `scripts/cli.mjs`.
+**Interfaces Consumes:** finalized `package.json#engines.node` and package scripts `test`, `test:cli`, `secret-scan`; `scripts/catalog.mjs check`; Agentfolio checkout pinned to commit `1396fff17a857c4b821edda96389cc2f636b5ac0`; Agentfolio `doctor`, `plan`, and dry-run `apply`; temporary HOME behavior in `scripts/cli.mjs`.
 
-**Interfaces Produces:** matrix CI for supported/current Node, secret scan, catalog check, and a smoke test that proves no local mutation.
+**Interfaces Produces:** matrix CI for the finalized supported/current Node versions, secret scan, catalog check, and a smoke test that proves no tracked, staged, or untracked local mutation.
 
-- [ ] **Step 1: Add the exact CI workflow.** Run `npm ci`, `npm test`, `node scripts/catalog.mjs check`, `git diff --check`, secret scan, and the smoke test on Node 20 and Node 22.
+- [ ] **Step 1: Add the exact CI workflow after Task 8 finalizes engines.** Read the finalized `package.json#engines.node` range and use its lower supported version plus current Node 22; provision Agentfolio from an exact sibling checkout at commit `1396fff17a857c4b821edda96389cc2f636b5ac0`, never from floating `npx` installation.
 
 ```yaml
 name: CI
@@ -571,11 +612,16 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: ${{ matrix.node }}, cache: npm }
       - run: npm ci
+      - run: git clone https://github.com/luabagg/agentfolio.git ../agentfolio
+      - run: git -C ../agentfolio checkout --detach 1396fff17a857c4b821edda96389cc2f636b5ac0
+      - run: npm ci --prefix ../agentfolio
       - run: npm test
       - run: node scripts/catalog.mjs check
       - run: git diff --check
       - run: npm run secret-scan
       - run: node --test tests/cross-repo-smoke.test.mjs
+        env:
+          AGENTFOLIO_BIN: ${{ github.workspace }}/../agentfolio/bin/agentfolio.mjs
 ```
 
 Run `node --test tests/cross-repo-smoke.test.mjs`; **expected FAIL:** smoke test and script are absent.
@@ -588,14 +634,18 @@ const commands = [
   ["plan", "--profile", "pi", "--collection", root],
   ["apply", "--profile", "pi", "--dry-run", "--collection", root],
 ];
+const agentfolioBin = process.env.AGENTFOLIO_BIN;
+assert.equal(agentfolioBin, resolve(root, "../agentfolio/bin/agentfolio.mjs"));
 for (const args of commands) {
-  const result = spawnSync("agentfolio", args, { cwd: root, env: Object.assign({}, process.env, { HOME: tempHome }), encoding: "utf8" });
+  const result = spawnSync(process.execPath, [agentfolioBin, ...args], { cwd: root, env: Object.assign({}, process.env, { HOME: tempHome }), encoding: "utf8" });
   assert.equal(result.status, 0, `${args.join(" ")}\\n${result.stderr}`);
 }
 assert.equal(spawnSync("git", ["diff", "--exit-code"], { cwd: root }).status, 0);
+assert.equal(spawnSync("git", ["diff", "--cached", "--exit-code"], { cwd: root }).status, 0);
+assert.equal(spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).stdout, "");
 ```
 
-Run `node --test tests/cross-repo-smoke.test.mjs`; **expected PASS:** all three commands return zero and `git diff --exit-code` returns zero.
+Run `AGENTFOLIO_BIN=/home/luabagg/development/agentfolio/bin/agentfolio.mjs node --test tests/cross-repo-smoke.test.mjs`; **expected PASS:** all three commands return zero, tracked and cached diffs are empty, and `git status --porcelain` is empty.
 
 - [ ] **Step 3: Add `secret-scan` as a deterministic repository-only check.** The script must reject credential-shaped strings while allowing `YOUR_API_KEY`, and must inspect tracked files only.
 
@@ -617,7 +667,7 @@ git commit -m "ci: gate full-polish safety checks"
 
 **Create:** none.
 
-**Modify:** only corrections found by the checks; no implementation/config changes are permitted for this documentation-only execution.
+**Modify:** only the exact implementation/config/docs paths listed in Tasks 1-9 when a self-review correction is required; never add unrelated scope.
 
 **Test paths:** all files changed by Tasks 1-9; current plan path `docs/superpowers/plans/2026-08-28-full-polish.md`.
 
@@ -655,12 +705,12 @@ plan=docs/superpowers/plans/2026-08-28-full-polish.md
 printf 'tasks='; grep -Ec '^### Task [0-9]+:' "$plan"
 printf 'checkboxes='; grep -Ec '^- \[ \] \*\*Step [0-9]+:' "$plan"
 printf 'code_fences='; grep -Ec '^```' "$plan"
-printf 'placeholders='; (grep -Eio 'TODO|TBD|FIXME|PLACEHOLDER' "$plan" || true) | wc -l
+printf 'placeholders='; (grep -v "printf 'placeholders='" "$plan" | grep -Eo 'TODO|TBD|FIXME|PLACEHOLDER' || true) | wc -l
 printf 'header='; test "$(head -31 "$plan" | grep -Ec '^(# Full Polish|> \\*\\*Required sub-skill|## Goal|## Architecture|## Tech Stack|## Spec|## Global Constraints|---)')" -eq 8 && echo yes || echo no
 head -31 "$plan"
 ```
 
-Expected: `tasks=10`, `checkboxes=40`, `header=yes`, an even positive `code_fences` count, `placeholders=0`, and the first sections are title, required sub-skill note, Goal, Architecture, Tech Stack, Spec, Global Constraints, separator.
+Expected: `tasks=10`, `checkboxes=41`, `header=yes`, an even positive `code_fences` count, `placeholders=0` (the scan excludes its own metric command), and the first sections are title, required sub-skill note, Goal, Architecture, Tech Stack, Spec, Global Constraints, separator.
 
 - [ ] **Step 4: Commit only any final correction and verify no staged files.**
 
