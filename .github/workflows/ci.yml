@@ -11,7 +11,7 @@ jobs:
         with: { node-version: ${{ matrix.node }}, cache: npm }
       - run: npm ci
       - run: git clone https://github.com/luabagg/agentfolio.git ../agentfolio
-      - run: git -C ../agentfolio checkout --detach edd8d96f0e2069ebcc7a7eb33746a7de2e81df84
+      - run: git -C ../agentfolio checkout --detach a33b969601877bb9ebf8568bd56d34aa4b1ac6e1
       - run: npm ci --prefix ../agentfolio
       - run: npm test
       - run: node scripts/catalog.mjs check
