@@ -283,6 +283,14 @@ This repository is public. Do not add private dashboards, tokens, org IDs, inter
 
 This repo is **collection #1** for [Agentfolio](https://github.com/luabagg/agentfolio). `collection.yaml` declares ordered harness actions; `scripts/agentfolio-adapter.mjs` implements them using this repository's existing setup commands.
 
+Agentfolio is a separate tool. Install it first. It requires Node.js 20+:
+
+```bash
+npm install -g @luabagg/agentfolio
+```
+
+To run it without a global install, use `npx @luabagg/agentfolio` in place of `agentfolio` below.
+
 ```bash
 agentfolio list harnesses --collection .
 agentfolio plan --profile pi --collection .
