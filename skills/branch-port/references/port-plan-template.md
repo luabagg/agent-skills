@@ -19,24 +19,24 @@ Produce this at the end of Phase 3. Share with the user. Wait for confirmation.
 - Fixups / refactors on top of feature: <commits>
 
 ### range-diff findings
-- <sha>: <title> — `=` identical on target, skip
-- <sha>: <title> — `!` similar on target, **inspected**: <what's different + decision>
+- <sha>: <title>: `=` identical on target, skip
+- <sha>: <title>: `!` similar on target, **inspected**: <what's different + decision>
 - (remaining commits are `-`, port normally)
 
 ### Files to create (new on source, absent on target)
-- <path> — adaptation notes
+- <path>: adaptation notes
 
 ### Files to modify (exist on both)
-- <path> — what the feature changes + what target changed + adaptation plan
+- <path>: what the feature changes + what target changed + adaptation plan
 
 ### Dependencies to add / update
-- <pkg>@<version> — why
+- <pkg>@<version>: why
 
 ### Config / env vars
-- <VAR_NAME> — purpose, default
+- <VAR_NAME>: purpose, default
 
 ### Migrations / schema
-- <migration> — verified against target schema: yes/no
+- <migration>: verified against target schema: yes/no
 
 ### Risks and open questions
 - [ ] <question that changes the port strategy>
@@ -61,21 +61,21 @@ Produce this at the end of Phase 3. Share with the user. Wait for confirmation.
 - All 5 commits show as `-` (missing on target). Nothing to skip.
 
 ### Files to create
-- src/ratelimit/limiter.ts — pure new file, no conflicts
-- test/ratelimit/limiter.test.ts — pure new file
+- src/ratelimit/limiter.ts: pure new file, no conflicts
+- test/ratelimit/limiter.test.ts: pure new file
 
 ### Files to modify
-- src/api/search.ts — source wraps the handler in `withRateLimit(...)`. Target
+- src/api/search.ts: source wraps the handler in `withRateLimit(...)`. Target
   has since extracted the handler into a class-based controller
   (SearchController). Adaptation: apply the rate limit as a decorator on the
   controller method, not as a wrapping HOF.
-- src/config/index.ts — add RATE_LIMIT_PER_MIN with default 60.
+- src/config/index.ts: add RATE_LIMIT_PER_MIN with default 60.
 
 ### Dependencies to add / update
-- None — feature uses only stdlib + existing deps.
+- None: feature uses only stdlib + existing deps.
 
 ### Config / env vars
-- RATE_LIMIT_PER_MIN — default 60; set per-env in infra repo.
+- RATE_LIMIT_PER_MIN: default 60; set per-env in infra repo.
 
 ### Migrations / schema
 - None.

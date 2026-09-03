@@ -7,9 +7,9 @@ Two templates. Match the template to the depth needed, not the other way around.
 One bullet per issue:
 
 ```
-- `src/patient/service.py:142` — `d` is cryptic; suggest `days_remaining`. (Low)
-- `src/api/routes.py:88` — missing response_model on GET /patients/{id}. (Medium)
-- `tests/test_search.py:34` — asserts the mock was called but not the return value. (Medium)
+- `src/patient/service.py:142`: `d` is cryptic; suggest `days_remaining`. (Low)
+- `src/api/routes.py:88`: missing response_model on GET /patients/{id}. (Medium)
+- `tests/test_search.py:34`: asserts the mock was called but not the return value. (Medium)
 ```
 
 File, line, one-line issue, severity in parens. No ceremony.
@@ -50,7 +50,7 @@ safe.
 
 **Scope**: PR #1234 / `feat/rate-limit` (12 files, +340 -80)
 **Intent**: Add per-user rate limiting to /api/search (matches description).
-**CI**: 2 checks passing, 1 failing (typecheck — see details).
+**CI**: 2 checks passing, 1 failing (typecheck, see details).
 **Prior reviews**: 1 reviewer requested changes on 2026-04-20; their comments
 are addressed in the latest commit.
 
@@ -68,10 +68,10 @@ merge. Positive: clean separation between limiter and search handler.
 
 ## Positive observations
 
-Always include 1–3 concrete things done well. Reasons:
+Always include 1 to 3 concrete things done well. Reasons:
 - Signals what the author shouldn't change in revision.
 - Counteracts review-as-fault-finding framing.
 - Makes the feedback easier to act on without defensiveness.
 
 Keep them specific: *"the `RateLimiter` interface is small enough to mock in
-tests without a helper"* — not *"good code quality"*.
+tests without a helper"*, not *"good code quality"*.

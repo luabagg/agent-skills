@@ -19,7 +19,7 @@
       "source": "obra/superpowers",
       "sourceType": "github",
       "preferredInstall": "skills-cli",
-      "notes": "Official plugin installs are also available for Cursor, Claude Code, and Codex. Use this entry when you want this repo's curated install script to manage it. Explicit skill list (not *) so brainstorming and requesting-code-review stay excluded.",
+      "notes": "Official plugin installs are also available for Cursor, Claude Code, and Codex. Use this entry when you want this repo's curated install script to manage it. Explicit skill list (not *) so brainstorming and requesting-code-review stay excluded. The OpenCode brainstorming agent in harnesses/opencode.json still needs the brainstorming skill installed.",
       "skills": [
         "dispatching-parallel-agents",
         "executing-plans",
@@ -31,17 +31,6 @@
         "using-superpowers",
         "writing-plans",
         "writing-skills"
-      ]
-    },
-    {
-      "name": "caveman",
-      "description": "Compressed communication, commit, review, and memory-file compression skills.",
-      "source": "git@github.com:JuliusBrussee/caveman.git",
-      "sourceType": "git",
-      "preferredInstall": "skills-cli",
-      "skills": [
-        "caveman",
-        "caveman-commit"
       ]
     },
     {
@@ -58,45 +47,6 @@
       ]
     },
     {
-      "name": "find-skills",
-      "description": "Discover and install skills from the open agent skills ecosystem.",
-      "source": "vercel-labs/skills",
-      "sourceType": "github",
-      "preferredInstall": "skills-cli",
-      "skills": [
-        "find-skills"
-      ]
-    },
-    {
-      "name": "taste-skill",
-      "description": "Anti-slop frontend design skills: stronger layout, typography, motion, and spacing for AI-built interfaces. Includes image-generation skills for reference boards.",
-      "source": "Leonxlnx/taste-skill",
-      "sourceType": "github",
-      "preferredInstall": "skills-cli",
-      "skills": [
-        "design-taste-frontend",
-        "gpt-taste",
-        "image-to-code",
-        "redesign-existing-projects",
-        "minimalist-ui",
-        "imagegen-frontend-web",
-        "imagegen-frontend-mobile",
-        "brandkit"
-      ]
-    },
-    {
-      "name": "hermes-design-md",
-      "description": "Google DESIGN.md token-spec authoring/validation skill from Hermes Agent.",
-      "source": "NousResearch/hermes-agent",
-      "sourceType": "github",
-      "preferredInstall": "skills-cli",
-      "notes": "Discoverable via skills CLI from the Hermes monorepo (skills/creative/design-md). May require --full-depth if auto-discovery misses nested creative skills.",
-      "skills": [
-        "design-md"
-      ],
-      "fullDepth": true
-    },
-    {
       "name": "grill-with-docs",
       "description": "Relentless interview that sharpens a plan or design and writes ADRs and a glossary as decisions land.",
       "source": "mattpocock/skills",
@@ -104,6 +54,17 @@
       "preferredInstall": "skills-cli",
       "skills": [
         "grill-with-docs"
+      ]
+    },
+    {
+      "name": "show-me",
+      "description": "Explain the current topic visually with pseudocode, call trees, file trees, Mermaid, diffs, or one focused HTML file.",
+      "source": "humanlayer/skills",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "notes": "Its last step runs `open <file>.html`, which exists only on macOS. On Linux or in remote sessions, publish the HTML through the harness artifact tool instead.",
+      "skills": [
+        "show-me"
       ]
     }
   ],

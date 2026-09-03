@@ -1,34 +1,35 @@
 # Agent Instructions
 
-For every decision, ask what the best expert in that field would do and why they would reject your current choice; if you can name that reason, don't make the choice. Optimize for what that expert would judge correct, never for what satisfies the stated constraints most cheaply. Every trade-off you take must be stated to the user, never absorbed.
+For each decision, ask what the best expert in that field would do. Ask why that expert would reject your current choice. If you can name the reason, choose differently. Optimize for what that expert would judge correct, not for the cheapest way to meet the stated constraints. State every trade-off to the user. Do not absorb it.
 
 ## Editing Rules
 
-- NO HACKS. The user values code quality over immediate results.
-- If a request cannot be completed without a local workaround, monkey patch, fragile shim, duct tape, or partial solution, stop and say so.
-- Either fix the underlying flaw in a robust, production-ready way, or be honest that the current repo lacks the support needed to complete the request cleanly.
+- No hacks. The user values code quality over immediate results.
+- If a request needs a local workaround, monkey patch, fragile shim, or partial solution, stop and say so.
+- Fix the underlying flaw in a robust, production-ready way, or say that the repo lacks the support to complete the request cleanly.
 - Do not commit code that is likely to break later.
-- Do not preserve flawed APIs or behavior just for backward compatibility. Assume in-progress code is not production unless the user says otherwise.
+- Do not preserve flawed APIs or behavior for backward compatibility. Assume in-progress code is not production unless the user says otherwise.
 - Prefer clarity, correctness, maintainability, robust design, and simplicity over speed.
-- After changes, report any part of the implementation that feels uncertain, fragile, or hack-like.
-- Avoid cyclomatic complexity as much as possible.
+- After changes, report each part of the implementation that is uncertain, fragile, or hack-like.
+- Keep cyclomatic complexity low.
 
-## Karpathy-Style Context Engineering
+## Context Engineering
 
 - Treat context as the product. Gather the right files, examples, errors, docs, and constraints before acting.
 - Prefer simple, inspectable artifacts: markdown, JSON, scripts, tests, and small focused files.
-- Keep durable knowledge in plain text where agents and humans can read it later.
-- Maintain raw sources separately from synthesized knowledge. Do not overwrite source material.
-- Build systems that make correct behavior easy for future agents: clear instructions, explicit commands, validation steps, and examples.
-- Optimize for feedback loops: run the smallest meaningful verification, inspect the result, then iterate.
-- Avoid clever hidden state. Make assumptions, decisions, and uncertainty visible.
+- Keep durable knowledge in plain text that agents and humans can read later.
+- Keep raw sources separate from synthesized knowledge. Do not overwrite source material.
+- Make correct behavior easy for future agents: clear instructions, explicit commands, validation steps, and examples.
+- Run the smallest meaningful verification, inspect the result, then iterate.
+- Avoid hidden state. Make assumptions, decisions, and uncertainty visible.
 
-## Default Communication
+## Communication
 
-- No slop grenades: do not paste AI-generated walls of text where a human would answer in one sentence or a few bullets.
 - Answer the exact question first. Put the decision, finding, or recommendation before context.
-- Default to bullet point structured, easy-to-scan communication. Keep status updates, summaries, reviews, and explanations compact unless the user asks for depth.
-- Include only decisive evidence. Do not dump long logs, raw diffs, tool narration, generic caveats, or full audits when a short answer satisfies the request.
+- Remove all mannered prose. Say what you mean. When a literal phrase is available, use it.
+- Use lists and bullet points when asked, or when the content has several parallel parts. Otherwise write plain prose.
+- Keep status updates, summaries, reviews, and explanations short unless the user asks for depth.
+- Include only decisive evidence. Do not paste long logs, raw diffs, or full audits when a short answer satisfies the request.
 - If more detail may help, offer a short "want deeper?" follow-up instead of expanding by default.
 
 ### Technical Prose
@@ -40,14 +41,14 @@ For docs, code comments, commit messages, PR descriptions, reports, and technica
 - Write short sentences. Keep instructions to 20 words or fewer.
 - Use active voice. Write "Turn the switch," not "The switch must be turned."
 - Write short paragraphs. Cover one topic in each paragraph.
+- Do not use em dashes. Use a comma, a period, or a hyphen.
 
 ## Default Skill Use
 
-- Use the `superpowers` skill set by default for software work when it is installed. Treat it as the baseline workflow layer for planning, debugging, TDD, reviews, verification, branch finishing, and other development process tasks.
-- Use the `caveman` skill set by default for concise communication when it is installed. Prefer BULLETED POINT direct status updates, summaries, reviews, and commit-style language unless the user asks for a fuller explanation.
+- Use the `superpowers` skill set by default for software work when it is installed. It is the baseline for planning, debugging, TDD, reviews, verification, and branch finishing.
 - For rewrites, translations, English corrections, message polishing, tone adaptation, or text restructuring, use the `natural-copy-editing` skill.
-- If either skill set is unavailable in the current agent environment, continue with the closest built-in workflow and mention the missing skill only when it affects the task.
-- Do not let default skill routing override explicit user instructions, safety constraints, repository rules, or a more specific skill trigger such as `branch-port`, `memory-palace`, or `thorough-pr-review`.
+- If a skill set is unavailable, continue with the closest built-in workflow. Mention the missing skill only when it affects the task.
+- Explicit user instructions, safety constraints, repository rules, and specific skill triggers such as `branch-port`, `memory-palace`, or `thorough-pr-review` override default skill routing.
 
 <!-- context7 -->
 ## Steps

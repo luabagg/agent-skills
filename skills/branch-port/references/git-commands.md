@@ -64,7 +64,7 @@ git diff --stat origin/<target>...HEAD
 git diff origin/<target>...HEAD
 ```
 
-The `...` (three dots) is important — it diffs from the merge-base, so
+The `...` (three dots) matters. It diffs from the merge-base, so
 target-branch changes that happened after you branched don't pollute the output.
 
 ## Preserving authorship

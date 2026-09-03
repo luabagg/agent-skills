@@ -7,13 +7,13 @@ user-visible, hard-to-unsend action. Follow the safety rules.
 
 - **Ask the user explicitly before posting.** One review approval is not
   standing authorization to post future reviews.
-- **Prefer a single pending review** over per-line `pulls/comments` calls —
-  the latter fires one notification per comment.
+- **Prefer a single pending review** over per-line `pulls/comments` calls.
+  Per-line calls fire one notification per comment.
 - **Never approve** the PR on behalf of the user unless they said "approve".
   Default to `COMMENT` event.
 - **Don't self-request-changes** on a user's own PR without explicit ask.
 
-## Preferred command — `gh pr review`
+## Preferred command: `gh pr review`
 
 For the common case (summary + inline comments as a single review), use the
 `gh` CLI:
@@ -35,14 +35,14 @@ lines, use the API form below.
 ## Inline comments via API (when line-anchored feedback helps)
 
 The correct endpoint is `POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews`
-with a `comments[]` array — this creates a single review with line-anchored
+with a `comments[]` array. This creates a single review with line-anchored
 comments in one notification.
 
 Required per comment:
-- `path` — the file path
-- `line` — the line number in the **new** file
-- `side` — `"RIGHT"` for the new file (typical), `"LEFT"` for the old file
-- `body` — the comment text
+- `path`: the file path
+- `line`: the line number in the **new** file
+- `side`: `"RIGHT"` for the new file (typical), `"LEFT"` for the old file
+- `body`: the comment text
 
 Example:
 
@@ -61,14 +61,14 @@ gh api -X POST repos/<owner>/<repo>/pulls/<pull_number>/reviews \
 ```
 
 `event` values:
-- `COMMENT` — default, no approval signal
-- `APPROVE` — approve the PR (only when user asked)
-- `REQUEST_CHANGES` — block merge
+- `COMMENT`: default, no approval signal
+- `APPROVE`: approve the PR (only when user asked)
+- `REQUEST_CHANGES`: block merge
 
 ## What NOT to do
 
 - **Do not** loop `gh api repos/.../pulls/<pr>/comments` per finding. That uses
-  the *standalone* PR-comment endpoint — each call fires its own notification
+  the *standalone* PR-comment endpoint. Each call fires its own notification
   and the comments are not grouped as a review.
 - **Do not** post a review, then edit it by deleting and re-posting. Edit via
   `PATCH /repos/{owner}/{repo}/pulls/comments/{comment_id}` if needed, or

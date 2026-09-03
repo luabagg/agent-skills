@@ -129,7 +129,7 @@ test("list tools --kind filters and rejects unknown kinds", () => {
 test("list curated prints sources; --plugins switches inventory", () => {
   const sources = runCli(["list", "curated"]);
   assert.equal(sources.status, 0);
-  assert.match(combined(sources), /superpowers|caveman/);
+  assert.match(combined(sources), /superpowers|show-me/);
 
   const plugins = runCli(["list", "curated", "--plugins"]);
   assert.equal(plugins.status, 0);

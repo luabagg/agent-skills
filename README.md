@@ -98,6 +98,7 @@ Current personal skills:
 | --- | --- |
 | `agentfolio-operator` | Choose Agentfolio profiles and commands. Do not edit live harness files by hand |
 | `branch-port` | Port a feature across heavily diverged branches without unsafe merges |
+| `code-comments` | Decide when a comment is needed and write it in plain words |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
 | `natural-copy-editing` | Rewrite, polish, translate, and correct text in a natural voice |
 | `thorough-pr-review` | Review PRs and branches for correctness, reliability, and merge-readiness |

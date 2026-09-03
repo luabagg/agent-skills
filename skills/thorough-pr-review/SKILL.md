@@ -10,29 +10,22 @@ description: >
 
 # Thorough PR Review
 
-Review a code change for correctness, reliability, and scope alignment — with
-evidence, not vibes.
+Review a code change for correctness, reliability, and scope alignment. Back each finding with evidence.
 
 ## When NOT to use
 
-- **Tiny changes** — a one-line typo or doc fix doesn't need the full template.
-  One sentence is the right answer.
-- **Mid-conflict PRs** — if the branch is actively being rebased or has unresolved
-  conflicts, wait.
-- **Re-reviewing unchanged code** — if the PR hasn't moved since a prior review,
-  say so and don't repeat the work.
-- **Pure security audit** — use `security-review` instead.
+- **Tiny changes.** A one-line typo or doc fix does not need the full template. One sentence is the right answer.
+- **Mid-conflict PRs.** If the branch is being rebased or has unresolved conflicts, wait.
+- **Re-reviewing unchanged code.** If the PR has not changed since a prior review, say so and stop.
+- **Pure security audit.** Use `security-review` instead.
 
 ## Anti-hallucination rule
 
-Framing biases agents toward finding problems. Resist it.
+Review framing biases agents toward finding problems. Resist it.
 
-- If the change is small, correct, and follows convention, **say so and stop**.
-  A three-line PR deserves a three-line review.
-- Don't pad the output with nitpicks to feel thorough. Low-priority items
-  should be genuinely useful, not filler.
-- When uncertain, label the finding as a hypothesis and say what would confirm
-  or refute it — don't assert.
+- If the change is small, correct, and follows convention, say so and stop. A three-line PR deserves a three-line review.
+- Do not pad the output with nitpicks. Each Low item must be useful.
+- When uncertain, label the finding as a hypothesis. Say what would confirm or refute it.
 
 ## Workflow
 
@@ -45,8 +38,7 @@ gh pr view <number-or-url> --json title,body,url,number,files,commits,baseRefNam
 gh pr checks <number-or-url>
 ```
 
-`reviews` / `comments` tell you if someone already reviewed — don't repeat them.
-`checks` tells you what CI already caught.
+`reviews` and `comments` show whether someone already reviewed. Do not repeat their findings. `checks` shows what CI already caught.
 
 If no PR is given, review the local branch:
 
@@ -59,28 +51,22 @@ git diff <base-branch>...HEAD
 
 ### 2. Gather intent
 
-Read the PR title and body. If a linked issue/ticket is mentioned, fetch it. You
-are reviewing against stated intent — if intent is missing or unclear, ask the
-user before proceeding.
+Read the PR title and body. If a linked issue or ticket is mentioned, fetch it. You review against stated intent. If intent is missing or unclear, ask the user before you continue.
 
 ### 3. Read in context
 
-For each changed file, read the modified sections **with their surroundings** —
-adjacent functions, callers, tests, configs. A line can look wrong in isolation
-and be correct in context (or vice versa).
+For each changed file, read the modified sections with their surroundings: adjacent functions, callers, tests, configs. A line can look wrong in isolation and be correct in context, or the reverse.
 
 ### 4. Evaluate
 
-Walk the change through the heuristics in `references/heuristics.md`. Each
-heuristic is a concrete check ("flag a new abstraction with only one caller"),
-not a principle ("apply SRP"). Apply them where the change type calls for it —
-don't mechanically scan all ten on a 20-line PR.
+Walk the change through the heuristics in `references/heuristics.md`. Each heuristic is a concrete check ("flag a new abstraction with only one caller"), not a principle ("apply SRP"). Apply the checks that fit the change type. Do not scan all ten on a 20-line PR.
 
 Also verify:
-- **Alignment** — does the implementation match what the PR description says?
-- **Scope** — does it do more than claimed (risky scope creep) or less (missing work)?
-- **CI signal** — if checks are failing, surface the failure; don't re-derive it.
-- **Tests** — do new paths have coverage? Are failing tests `@skip`/`xfail`-ed to hide problems?
+
+- **Alignment.** Does the implementation match the PR description?
+- **Scope.** Does it do more than claimed (scope creep) or less (missing work)?
+- **CI signal.** If checks fail, report the failure. Do not re-derive it.
+- **Tests.** Do new paths have coverage? Are failing tests marked `@skip` or `xfail` to hide problems?
 
 ### 5. Classify findings
 
@@ -96,26 +82,23 @@ Do not inflate severity. Style preference is not High. Uncertainty is not Critic
 ### 6. Write output
 
 Use the templates in `references/output-format.md`:
-- **Short form** for Low severity: one-line-per-issue with `file:line`.
-- **Long form** for Critical and High: issue / why it matters / suggested fix.
-- Medium: author's choice based on depth needed.
 
-Note what was done well — this isn't politeness, it's signal (the author knows
-what parts you don't want changed in revision).
+- **Short form** for Low severity: one line per issue with `file:line`.
+- **Long form** for Critical and High: issue, why it matters, suggested fix.
+- **Medium:** choose the form that fits the depth needed.
 
-End with a clear recommendation: **Approve**, **Request changes**, or
-**Needs discussion**, plus the top 1–3 blockers if not approving.
+Note what was done well. This is signal, not politeness. The author learns which parts to leave alone in revision.
 
-### 7. Posting inline comments (halt)
+End with one recommendation: **Approve**, **Request changes**, or **Needs discussion**. If not approving, list the top 1 to 3 blockers.
 
-If the user asks you to post the review on the PR, **ask first before any write**
-— this fires notifications to the author and is hard to unsend.
+### 7. Post inline comments (halt)
 
-When approved, post as a **single pending review** (not per-line `pulls/comments`
-calls). Shape and safety rules live in `references/posting-comments.md`.
+If the user asks you to post the review on the PR, ask before any write. Posting notifies the author and is hard to undo.
+
+When approved, post one pending review, not per-line `pulls/comments` calls. Shape and safety rules are in `references/posting-comments.md`.
 
 ## References
 
-- `references/heuristics.md` — concrete, checkable heuristics by category.
-- `references/output-format.md` — short-form and long-form templates.
-- `references/posting-comments.md` — safe `gh` API shape for posting the review.
+- `references/heuristics.md`: concrete, checkable heuristics by category.
+- `references/output-format.md`: short-form and long-form templates.
+- `references/posting-comments.md`: safe `gh` API shape for posting the review.

@@ -1,6 +1,6 @@
 # Review heuristics
 
-Concrete, checkable signals. Apply what fits the change type — don't run every
+Concrete, checkable signals. Apply what fits the change type. Do not run every
 check on every PR.
 
 ## Correctness

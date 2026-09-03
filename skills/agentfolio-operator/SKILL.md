@@ -5,7 +5,7 @@ description: Use when configuring this Agentfolio collection, selecting Pi/Curso
 
 # Agentfolio Operator
 
-Agentfolio orchestrates `collection.yaml`; this repository's adapter owns harness behavior. Never hand-edit live harness configuration when a declared action exists.
+Agentfolio orchestrates `collection.yaml`. This repository's adapter owns harness behavior. Do not hand-edit live harness configuration when a declared action exists.
 
 ## Start with the collection
 
@@ -42,7 +42,7 @@ agentfolio apply --profile pi
 
 ## Collection-owned model commands
 
-Model discovery and generated catalog files are implemented by `agent-skills`, not Agentfolio core:
+`agent-skills` implements model discovery and generated catalog files, not Agentfolio core:
 
 ```bash
 agent-skills models check
@@ -50,11 +50,11 @@ agent-skills models diff
 agent-skills models refresh
 ```
 
-Edit `harnesses/catalog.yaml`; generated lock/provider targets are outputs. Run `models check`, preview with `models diff`, and use `models refresh` only when the policy and discovery results are ready to commit. Apply Pi changes through `agentfolio apply --profile pi --dry-run`.
+Edit `harnesses/catalog.yaml`. Generated lock and provider targets are outputs. Run `models check`, then preview with `models diff`. Use `models refresh` only when the policy and discovery results are ready to commit. Apply Pi changes through `agentfolio apply --profile pi --dry-run`.
 
 ## Decision rules
 
-- Change workflow intent in `collection.yaml`; change execution semantics in `scripts/agentfolio-adapter.mjs` or the relevant setup script.
+- Change workflow intent in `collection.yaml`. Change execution semantics in `scripts/agentfolio-adapter.mjs` or the relevant setup script.
 - Use `agentfolio list harnesses`, `plan`, `doctor`, and `verify` for inspection.
 - Treat direct `agent-skills setup|install` commands as adapter implementations or debugging surfaces.
 - Keep credentials outside the collection. Never copy OAuth tokens, API keys, or login state.
@@ -64,4 +64,12 @@ Edit `harnesses/catalog.yaml`; generated lock/provider targets are outputs. Run 
 
 ## Canonical onboarding and safety
 
-Clone this collection and run `npm ci`; install or verify Agentfolio from its canonical repository. Then run `agentfolio doctor --collection .`, `agentfolio plan --profile pi --collection .`, and `agentfolio apply --profile pi --dry-run --collection .` before apply. The adapter is generic while this collection owns setup policy. Use native keychain/login authentication first, keep fallback environment keys ephemeral, and rely on dry-run and rollback safeguards. The Cursor bridge accepts only fixed `127.0.0.1` endpoints.
+Clone this collection and run `npm ci`. Install or verify Agentfolio from its canonical repository. Before apply, run:
+
+```bash
+agentfolio doctor --collection .
+agentfolio plan --profile pi --collection .
+agentfolio apply --profile pi --dry-run --collection .
+```
+
+The adapter is generic. This collection owns setup policy. Use native keychain or login authentication first. Keep fallback environment keys ephemeral. Rely on dry-run and rollback safeguards. The Cursor bridge accepts only fixed `127.0.0.1` endpoints.
