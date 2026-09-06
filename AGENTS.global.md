@@ -46,7 +46,9 @@ For docs, code comments, commit messages, PR descriptions, reports, and technica
 ## Default Skill Use
 
 - Use the `superpowers` skill set by default for software work when it is installed. It is the baseline for planning, debugging, TDD, reviews, verification, and branch finishing.
-- For rewrites, translations, English corrections, message polishing, tone adaptation, or text restructuring, use the `natural-copy-editing` skill.
+- Use the `ponytail` skill for coding tasks when it is installed. It governs implementation size, not scope. Deliver every requested behavior.
+- For translations, English corrections, message polishing, tone adaptation, or text restructuring, use the `natural-copy-editing` skill.
+- To remove AI-sounding patterns from prose, use the `humanizer` skill. When both text skills apply, keep the `natural-copy-editing` output format.
 - If a skill set is unavailable, continue with the closest built-in workflow. Mention the missing skill only when it affects the task.
 - Explicit user instructions, safety constraints, repository rules, and specific skill triggers such as `branch-port`, `memory-palace`, or `thorough-pr-review` override default skill routing.
 

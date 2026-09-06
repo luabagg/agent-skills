@@ -66,6 +66,29 @@
       "skills": [
         "show-me"
       ]
+    },
+    {
+      "name": "ponytail",
+      "description": "Lazy-senior-dev coding mode: YAGNI, stdlib and native platform features before dependencies, shortest working diff. Plus a review skill that hunts over-engineering only.",
+      "source": "DietrichGebert/ponytail",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "notes": "Only the core skill and the review skill. ponytail-audit, ponytail-debt, ponytail-gain, and ponytail-help are one-shot reports or display cards. The upstream plugin's always-on hooks are not installed by the skills CLI, so ponytail activates on trigger words, not on every prompt. Ponytail governs implementation size, not scope; every requested behavior still ships.",
+      "skills": [
+        "ponytail",
+        "ponytail-review"
+      ]
+    },
+    {
+      "name": "humanizer",
+      "description": "Rewrite AI-sounding text so it reads like a person wrote it, using the 35 patterns from Wikipedia's Signs of AI writing.",
+      "source": "blader/humanizer",
+      "sourceType": "github",
+      "preferredInstall": "skills-cli",
+      "notes": "Owns AI-pattern removal. natural-copy-editing owns translation, English correction, and plain copy-paste output. When both apply, natural-copy-editing's output format wins.",
+      "skills": [
+        "humanizer"
+      ]
     }
   ],
   "pluginReferences": [

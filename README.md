@@ -100,7 +100,7 @@ Current personal skills:
 | `branch-port` | Port a feature across heavily diverged branches without unsafe merges |
 | `code-comments` | Decide when a comment is needed and write it in plain words |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
-| `natural-copy-editing` | Rewrite, polish, translate, and correct text in a natural voice |
+| `natural-copy-editing` | Translate, correct, and polish text as clean copy-paste output. AI-pattern removal belongs to the curated `humanizer` skill |
 | `thorough-pr-review` | Review PRs and branches for correctness, reliability, and merge-readiness |
 
 List skills:

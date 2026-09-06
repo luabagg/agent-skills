@@ -1,6 +1,6 @@
 ---
 name: natural-copy-editing
-description: Use when the user asks to rewrite, improve, reformat, translate, correct English, polish a message, adapt tone, or structure text.
+description: Use when the user asks to translate, correct English, polish a message, adapt tone, or restructure text and wants clean copy-paste output. For removing AI-sounding patterns, use humanizer.
 ---
 
 # Natural Copy Editing
@@ -14,9 +14,9 @@ Assume the user wants clean copy-paste output. Give the revised text, not commen
 - Preserve the user's original tone unless they request a different one.
 - If the text is casual, keep it casual.
 - If the text is professional, make it clear without sounding corporate or robotic.
-- Prefer natural, direct writing over polished AI-style writing. Remove all mannered prose.
-- Avoid generic LLM phrasing like "not only..., but also...", "it is important to note that...", and "this allows for..." unless it fits.
-- Avoid corporate filler like "I hope this message finds you well", "at your earliest convenience", and "kindly" unless it matches the user's tone.
+- Prefer natural, direct writing. Remove all mannered prose.
+- If the text sounds machine-written, apply the `humanizer` pattern list. Keep this skill's output format: final text only, no critique.
+- Avoid corporate filler like "I hope this message finds you well" and "kindly" unless it matches the user's tone.
 - Use straight apostrophes only: I'm, don't, it's, you're.
 - Do not use em dashes. Use a hyphen "-" when a dash is needed.
 

@@ -109,6 +109,42 @@
         }
       ],
       "agentUse": "Use autoskills when the user wants automatic skill discovery or a quick context-aware skill recommendation pass."
+    },
+    {
+      "name": "rtk",
+      "kind": "cli",
+      "description": "Rust CLI proxy that filters and compresses command output (git, test runners, linters, cloud CLIs, and more) before it reaches the agent's context.",
+      "source": "https://github.com/rtk-ai/rtk",
+      "package": "rtk",
+      "install": "cargo install rtk",
+      "commands": [
+        {
+          "name": "git",
+          "command": "rtk git status",
+          "purpose": "Compact git status, diff, and log output."
+        },
+        {
+          "name": "grep",
+          "command": "rtk grep <pattern>",
+          "purpose": "Compact grep, grouped by file, whitespace stripped."
+        },
+        {
+          "name": "test",
+          "command": "rtk test <cmd>",
+          "purpose": "Run a test command and show only failures."
+        },
+        {
+          "name": "err",
+          "command": "rtk err <cmd>",
+          "purpose": "Run a command and show only errors and warnings."
+        },
+        {
+          "name": "proxy",
+          "command": "rtk proxy <cmd>",
+          "purpose": "Run a command unfiltered while still tracking usage."
+        }
+      ],
+      "agentUse": "Prefix shell commands with rtk when the user's global instructions require it, to keep tool output small. rtk passes commands through unfiltered when it has no matching filter, so prefixing is always safe. Use rtk proxy <cmd> for raw output needed for debugging."
     }
   ]
 }

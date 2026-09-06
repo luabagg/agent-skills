@@ -1,14 +1,15 @@
 ---
 name: code-comments
 description: >
-  Use when writing or reviewing a code comment, a type comment, a tuned constant, or a README sentence that states a measured fact.
+  Use when writing or reviewing a code comment, a type comment, a tuned constant, a file header, or a README sentence that states a measured fact.
 ---
 
 # Code Comments
 
 A comment carries what names, types, and structure cannot.
 Write it for a reader who knows the product but not the code, the library, or the field's jargon.
-Comment only when the code cannot say it. Most code needs no comment.
+Most code needs no comment.
+When one is needed, it reads without the body: a reader who has not opened the function must understand every sentence.
 
 ## When to comment
 
@@ -19,19 +20,37 @@ Write a comment when one of these is true:
 - The code follows an order that matters and the order is not obvious.
 - A value is tuned and a different value has a known cost.
 
-## When not to comment or when to delete
+## When not to comment
 
-- Do not comment a function whose name and signature say what it does.
-- Do not comment a type whose name and fields say what it holds. Make types self-describing. Rename a field before you explain it.
+- A trivial function gets no comment.
+- Do not comment a type whose name and fields say what it holds. Rename a field before you explain it.
 - Do not comment an ordinary block inside a function. Extract a named function instead.
-- Do not restate a name, narrate the implementation, or write a full docstring.
+- Do not narrate the implementation or write a full docstring.
+- A file gets a header only when it is an index, or when the file-level rule is not the sum of its functions' comments.
 
-## Placement
+## Shape
 
-- A function gets at most one comment, above the function. The first sentence states the function's objective. The next sentences cite the behavior a reader would not expect. Do not put that behavior in a comment inside the body.
-- A type gets a comment only when it holds an invariant the fields cannot express. Examples: two fields that must agree, a unit, a range, a lifecycle rule. Do not comment fields or union members.
-- A tuned constant gets a comment that states the failure the value prevents.
-- When a comment lists an order or several distinct points, write a numbered or bulleted list. Do not join the points into one paragraph.
+- A function gets at most one comment, above it. The first sentence says what the function does. The sentences after it carry the rule, edge case, guarantee, or failure the signature cannot show.
+- The first sentence may overlap the name. It exists so the reader does not have to open the body. "Do not restate the name" applies to the sentences after it.
+- A type or table comment opens with what it holds, then states the invariant its fields cannot express: two fields that must agree, a unit, a range, a lifecycle rule. Do not comment fields or union members.
+- A tuned constant states the failure the value prevents.
+- When a comment lists an order or several distinct points, write a list. Do not join the points into one paragraph.
+
+## The test, per sentence
+
+Write the comment. Then read each sentence after the first and ask: where else does the reader get this fact?
+
+- From the signature or the body below: delete the sentence.
+- From a neighboring function or the type: delete the sentence.
+- Nowhere: keep it.
+
+Length is not the test. Never trade a fact for brevity.
+A comment that still needs more than four sentences after the test usually marks a function that does too much. Extract before you cut.
+
+## One reason, one place
+
+- A reason lives once, next to the mechanism it explains. The function that takes the lock explains the lock. A caller names the effect it depends on, not the reason again.
+- When a fact lives in a comment and a README, keep the words identical. Two phrasings drift into two claims.
 
 ## Words
 
@@ -39,7 +58,8 @@ Write a comment when one of these is true:
 - Use plain words. Name the effect in the product, not the mechanism.
   Write "one letter may differ in a word of seven or more letters", not "edit tolerance 0.15".
 - Do not use field jargon. If a term has no plain form, define it in the comment.
-- Write complete, direct sentences of 20 words or fewer. No fragments. No em dashes.
+- Write complete, direct sentences of 20 words or fewer. Every sentence has a subject and a verb. No em dashes.
+- "Null unless every line reports it" and "Dates the row" are fragments. They make sense only after reading the body.
 
 ## Facts
 
@@ -48,9 +68,8 @@ Write a comment when one of these is true:
   "A looser setting let 'student' match 'presidential' and pushed one-word payers out of the list."
 - A number is a rounded plain statement of what was measured against what.
   "About 4 in 5 new texts", never "> 80%" when the measurement was 79.6%.
-- When a fact lives in a comment and a README, keep the words identical. Two phrasings drift into two claims.
 
-## Bad
+## Bad: too much
 
 ```ts
 // A payer suggestion shown in the review picker.
@@ -113,8 +132,33 @@ export function getSenderSuggestions(input: ExtractedSender) {
 The type has no comment because its fields describe it.
 The function comment states the objective, then cites the order and the exclusion a reader would question.
 
+## Bad: too little
+
+```ts
+// Null unless every line reports it. A partial sum would reach the merge as fact.
+function sumAmountsIfFullyReported(
+  amounts: (string | null)[],
+): number | null | "invalid"
+```
+
+Neither sentence has a subject. "Null" is the return value, but the reader learns that only from the body.
+The comment passed the deletion test and failed the reader.
+
+## Good
+
+```ts
+// Sums the amounts in cents. Returns null when any amount is missing, so a
+// partial total never reaches the merge as if it were the whole.
+function sumAmountsIfFullyReported(
+  amounts: (string | null)[],
+): number | null | "invalid"
+```
+
+The first sentence says the job. The second carries the one rule the signature cannot show.
+
 ## Check
 
 Read the comment as the user would.
-If it needs the code, the library docs, or a second file to make sense, rewrite it.
+Can a reader who has not opened the body tell what the function does from the first sentence? If not, write it.
+If a later sentence needs the code, the library docs, or a second file to make sense, rewrite it.
 If deleting the comment loses nothing, delete it.
