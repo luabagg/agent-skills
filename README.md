@@ -98,6 +98,7 @@ Current personal skills:
 | --- | --- |
 | `agentfolio-operator` | Choose Agentfolio profiles and commands. Do not edit live harness files by hand |
 | `branch-port` | Port a feature across heavily diverged branches without unsafe merges |
+| `cognitive-refactor` | Restructure code for readers: one loop per stage, relation names with both ends |
 | `code-comments` | Decide when a comment is needed and write it in plain words |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
 | `natural-copy-editing` | Translate, correct, and polish text as clean copy-paste output. AI-pattern removal belongs to the curated `humanizer` skill |
