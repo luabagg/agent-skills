@@ -1,5 +1,5 @@
 {
-  "policyDigest": "sha256:09431108eafb35f6c35c7c61253ae2db33cd32e4767abfc614466a412d6a567e",
+  "policyDigest": "sha256:3331b7413e21f342546a18acac31fb7a29a4ee1f4c0b4ccf514d26fd5f6eba23",
   "providers": {
     "cursor": {
       "models": {
@@ -275,6 +275,216 @@
           "maxTokens": 256000,
           "name": "Cursor Claude 4.6 Sonnet Medium Thinking",
           "reasoning": false
+        },
+        "claude-fable-5-1-high": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 High",
+          "reasoning": false
+        },
+        "claude-fable-5-1-low": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Low",
+          "reasoning": false
+        },
+        "claude-fable-5-1-max": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Max",
+          "reasoning": false
+        },
+        "claude-fable-5-1-medium": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Medium",
+          "reasoning": false
+        },
+        "claude-fable-5-1-thinking-high": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Thinking High",
+          "reasoning": false
+        },
+        "claude-fable-5-1-thinking-low": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Thinking Low",
+          "reasoning": false
+        },
+        "claude-fable-5-1-thinking-max": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Thinking Max",
+          "reasoning": false
+        },
+        "claude-fable-5-1-thinking-medium": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Claude Fable 5 1 Thinking Medium",
+          "reasoning": false
+        },
+        "claude-fable-5-1-thinking-xhigh": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 128000,
+          "name": "Cursor Claude Fable 5 1 Thinking Xhigh",
+          "reasoning": true
+        },
+        "claude-fable-5-1-xhigh": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 128000,
+          "name": "Cursor Claude Fable 5 1 Xhigh",
+          "reasoning": true
         },
         "claude-fable-5-high": {
           "compat": {
@@ -2418,6 +2628,69 @@
           "name": "Cursor Gemini 3.7 Flash Medium",
           "reasoning": false
         },
+        "gemini-3.8-flash-high": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Gemini 3.8 Flash High",
+          "reasoning": false
+        },
+        "gemini-3.8-flash-low": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Gemini 3.8 Flash Low",
+          "reasoning": false
+        },
+        "gemini-3.8-flash-medium": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Gemini 3.8 Flash Medium",
+          "reasoning": false
+        },
         "glm-5.2-high": {
           "compat": {
             "supportsDeveloperRole": false,
@@ -4286,9 +4559,135 @@
           "maxTokens": 256000,
           "name": "Cursor Kimi K3 Max",
           "reasoning": false
+        },
+        "muse-spark-1.3-high": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Muse Spark 1.3 High",
+          "reasoning": false
+        },
+        "muse-spark-1.3-low": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Muse Spark 1.3 Low",
+          "reasoning": false
+        },
+        "muse-spark-1.3-max": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Muse Spark 1.3 Max",
+          "reasoning": false
+        },
+        "muse-spark-1.3-medium": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Muse Spark 1.3 Medium",
+          "reasoning": false
+        },
+        "muse-spark-1.3-minimal": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 256000,
+          "name": "Cursor Muse Spark 1.3 Minimal",
+          "reasoning": false
+        },
+        "muse-spark-1.3-xhigh": {
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "supportsStore": false
+          },
+          "contextWindow": 1000000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 128000,
+          "name": "Cursor Muse Spark 1.3 Xhigh",
+          "reasoning": true
         }
       },
-      "snapshotDigest": "sha256:05f4eae869f5adf03a8a2c0c42b5f6381b118333276a0c41856e5c34ca8f1889"
+      "snapshotDigest": "sha256:9fa5ec57aeb82708edbdcbc551cd012c6dd5e82629f993f76e507bea004f29bd"
     },
     "openai-codex": {
       "models": {
@@ -4402,9 +4801,25 @@
           "maxTokens": 128000,
           "name": "GPT 5.6 Terra",
           "reasoning": true
+        },
+        "gpt-6-astra": {
+          "contextWindow": 272000,
+          "cost": {
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "input": 0,
+            "output": 0
+          },
+          "input": [
+            "image",
+            "text"
+          ],
+          "maxTokens": 128000,
+          "name": "Gpt 6 Astra",
+          "reasoning": true
         }
       },
-      "snapshotDigest": "sha256:c631130ddfdf9521e5ef8903049f447679c632120c43d6c05f1dfd96c086f16d"
+      "snapshotDigest": "sha256:7073773a63df6e707f41b3c699ccfe077697e0ae45e3882f6e7991aecc4190df"
     },
     "xai": {
       "models": {
@@ -4450,9 +4865,74 @@
       "modelId": "auto",
       "provider": "cursor"
     },
+    "cursor-claude-high": {
+      "mode": "exact",
+      "modelId": "claude-sonnet-5-high",
+      "provider": "cursor"
+    },
+    "cursor-claude-low": {
+      "mode": "exact",
+      "modelId": "claude-sonnet-5-low",
+      "provider": "cursor"
+    },
+    "cursor-claude-max": {
+      "mode": "exact",
+      "modelId": "claude-sonnet-5-max",
+      "provider": "cursor"
+    },
+    "cursor-claude-medium": {
+      "mode": "exact",
+      "modelId": "claude-sonnet-5-medium",
+      "provider": "cursor"
+    },
+    "cursor-claude-xhigh": {
+      "mode": "exact",
+      "modelId": "claude-sonnet-5-xhigh",
+      "provider": "cursor"
+    },
     "cursor-coder": {
       "mode": "familyLatest",
       "modelId": "composer-2.5-fast",
+      "provider": "cursor"
+    },
+    "cursor-grok-high": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-high",
+      "provider": "cursor"
+    },
+    "cursor-grok-high-fast": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-high-fast",
+      "provider": "cursor"
+    },
+    "cursor-grok-low": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-low",
+      "provider": "cursor"
+    },
+    "cursor-grok-low-fast": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-low-fast",
+      "provider": "cursor"
+    },
+    "cursor-grok-medium": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-medium",
+      "provider": "cursor"
+    },
+    "cursor-grok-medium-fast": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-medium-fast",
+      "provider": "cursor"
+    },
+    "cursor-grok-xhigh": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-xhigh",
+      "provider": "cursor"
+    },
+    "cursor-grok-xhigh-fast": {
+      "mode": "exact",
+      "modelId": "cursor-grok-4.6-xhigh-fast",
       "provider": "cursor"
     },
     "openai-luna": {

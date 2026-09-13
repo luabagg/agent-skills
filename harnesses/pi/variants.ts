@@ -6,7 +6,7 @@
  * base model and toggled like Claude Code's Fast mode.
  *
  * Usage:
- *   /models                 open picker (model list, ←→ effort, tab fast)
+ *   /models                 open picker (Favorites first, Tab changes list, Ctrl+F toggles fast)
  *   /models grok-4.6        switch model (optional :effort, e.g. grok-4.6:high)
  *   /effort                 pick effort for the current model
  *   /effort medium          set effort directly
@@ -66,6 +66,7 @@ const LEVEL_DESCRIPTIONS: Record<ThinkingLevel, string> = {
 
 const ALL_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
 const FAST_SUFFIXES = ["-fast", "-highspeed", "-turbo"] as const;
+const HIDDEN_PROVIDERS = new Set(["anthropic"]);
 const THINKING_COLORS: Record<ThinkingLevel, string> = {
 	off: "thinkingOff",
 	minimal: "thinkingMinimal",
@@ -103,10 +104,28 @@ function isFastModelId(id: string): boolean {
 	return fastSuffixOf(id) !== undefined;
 }
 
+type CursorVariant = {
+	baseId: string;
+	effort: ThinkingLevel;
+	fast: boolean;
+};
+
+type EffortModels = Partial<Record<ThinkingLevel, { standard?: Model; fast?: Model }>>;
+
+function cursorVariant(model: Model): CursorVariant | undefined {
+	if (model.provider !== "cursor") return undefined;
+	const fast = isFastModelId(model.id);
+	const id = baseModelId(model.id);
+	const match = /-(minimal|low|medium|high|xhigh|max)$/.exec(id);
+	if (!match || !isThinkingLevel(match[1])) return undefined;
+	return { baseId: id.slice(0, -match[0].length), effort: match[1], fast };
+}
+
 type ModelRow = {
 	key: string;
 	model: Model;
 	fastModel?: Model;
+	effortModels?: EffortModels;
 	searchText: string;
 };
 
@@ -119,50 +138,42 @@ function modelKey(model: Model): string {
 	return `${model.provider}/${model.id}`;
 }
 
+function rowModels(row: ModelRow): Model[] {
+	const variants = Object.values(row.effortModels ?? {}).flatMap((pair) => [pair?.standard, pair?.fast]);
+	return [row.model, row.fastModel, ...variants].filter((model): model is Model => Boolean(model));
+}
+
 function rowSearchText(row: ModelRow): string {
-	const ids = [row.model.id, row.fastModel?.id].filter(Boolean).join(" ");
-	const name = row.model.name ? ` ${row.model.name}` : "";
-	const fastName = row.fastModel?.name ? ` ${row.fastModel.name}` : "";
-	return `${row.model.provider} ${row.model.provider}/${row.model.id} ${ids}${name}${fastName}`;
+	return rowModels(row)
+		.flatMap((model) => [model.provider, `${model.provider}/${model.id}`, model.id, model.name ?? ""])
+		.join(" ");
 }
 
 function buildRows(models: readonly Model[]): ModelRow[] {
 	const grouped = new Map<string, ModelRow>();
 
 	for (const model of models) {
-		const baseId = baseModelId(model.id);
+		const variant = cursorVariant(model);
+		const baseId = variant?.baseId ?? baseModelId(model.id);
 		const key = `${model.provider}/${baseId}`;
-		const existing = grouped.get(key);
-		const fast = isFastModelId(model.id);
+		const existing = grouped.get(key) ?? { key, model, searchText: "" };
 
-		if (!existing) {
-			grouped.set(key, {
-				key,
-				model,
-				fastModel: fast ? model : undefined,
-				searchText: "",
-			});
-			continue;
-		}
-
-		if (fast) {
-			if (!existing.fastModel || existing.fastModel.id === existing.model.id) {
-				existing.fastModel = model;
-			}
-			if (isFastModelId(existing.model.id)) existing.model = model;
+		if (variant) {
+			existing.effortModels ??= {};
+			const pair = existing.effortModels[variant.effort] ?? {};
+			pair[variant.fast ? "fast" : "standard"] = model;
+			existing.effortModels[variant.effort] = pair;
+			const preferred = existing.effortModels.medium?.standard ?? existing.effortModels.high?.standard;
+			if (preferred) existing.model = preferred;
+		} else if (isFastModelId(model.id)) {
+			existing.fastModel = model;
 		} else {
 			existing.model = model;
 		}
+		grouped.set(key, existing);
 	}
 
-	const rows = [...grouped.values()].filter((row) => {
-		// A fast-only id with no standard sibling still shows as its own row.
-		if (isFastModelId(row.model.id) && row.fastModel && row.fastModel.id === row.model.id) {
-			row.fastModel = undefined;
-		}
-		return true;
-	});
-
+	const rows = [...grouped.values()];
 	for (const row of rows) row.searchText = rowSearchText(row);
 	return rows;
 }
@@ -180,28 +191,46 @@ function sortRows(rows: ModelRow[], current: Model | undefined): ModelRow[] {
 }
 
 function isCurrentRow(row: ModelRow, current: Model | undefined): boolean {
-	if (!current) return false;
-	return modelsAreEqual(row.model, current) || (row.fastModel ? modelsAreEqual(row.fastModel, current) : false);
+	return Boolean(current && rowModels(row).some((model) => modelsAreEqual(model, current)));
 }
 
-function targetModel(row: ModelRow, fast: boolean): Model {
+function effortLevels(row: ModelRow, fast: boolean): ThinkingLevel[] {
+	if (row.effortModels) {
+		return ALL_LEVELS.filter((level) => Boolean(row.effortModels?.[level]?.[fast ? "fast" : "standard"]));
+	}
+	const model = fast && row.fastModel ? row.fastModel : row.model;
+	return levelsFor(model).filter((level) => (model.reasoning ? true : level === "off"));
+}
+
+function targetModel(row: ModelRow, fast: boolean, effort: ThinkingLevel): Model {
+	const pair = row.effortModels?.[effort];
+	const variant = pair?.[fast ? "fast" : "standard"];
+	if (variant) return variant;
 	return fast && row.fastModel ? row.fastModel : row.model;
 }
 
 function defaultDraft(row: ModelRow, current: Model | undefined, currentEffort: ThinkingLevel): RowDraft {
-	const onFast = Boolean(current && row.fastModel && modelsAreEqual(row.fastModel, current));
-	const model = targetModel(row, onFast);
+	const currentVariant = current ? cursorVariant(current) : undefined;
+	const onFast = Boolean(current && isCurrentRow(row, current) && isFastModelId(current.id));
+	const effort = currentVariant && currentVariant.baseId === row.key.slice(row.key.indexOf("/") + 1)
+		? currentVariant.effort
+		: currentEffort;
+	const available = effortLevels(row, onFast);
 	return {
-		effort: clampThinkingLevel(model, currentEffort) as ThinkingLevel,
+		effort: available.includes(effort) ? effort : (available[0] ?? "off"),
 		fast: onFast,
 	};
 }
 
+function visibleModels(models: readonly Model[]): Model[] {
+	return models.filter((model) => !HIDDEN_PROVIDERS.has(model.provider));
+}
+
 function catalogModels(ctx: ExtensionContext, scope: "scoped" | "all"): Model[] {
 	if (scope === "scoped" && ctx.scopedModels.length > 0) {
-		return ctx.scopedModels.map((item) => item.model);
+		return visibleModels(ctx.scopedModels.map((item) => item.model));
 	}
-	return ctx.modelRegistry.getAvailable();
+	return visibleModels(ctx.modelRegistry.getAvailable());
 }
 
 function findModel(models: readonly Model[], query: string): Model | undefined {
@@ -231,7 +260,8 @@ function parseModelArg(raw: string): { query: string; effort?: ThinkingLevel } {
 
 function updateStatus(ctx: ExtensionContext, pi: ExtensionAPI) {
 	const theme = ctx.ui.theme;
-	const level = pi.getThinkingLevel() as ThinkingLevel;
+	const variant = ctx.model ? cursorVariant(ctx.model) : undefined;
+	const level = variant?.effort ?? (pi.getThinkingLevel() as ThinkingLevel);
 	ctx.ui.setStatus("effort", theme.fg("accent", `effort:${level}`));
 
 	const fast = ctx.model ? isFastModelId(ctx.model.id) : false;
@@ -370,9 +400,14 @@ class ModelsPicker extends Container implements Focusable {
 		const kb = getKeybindings();
 
 		if (kb.matches(keyData, "tui.input.tab")) {
+			if (this.scopedRows.length > 0) this.toggleScope();
+			this.requestRender();
+			return;
+		}
+
+		if (matchesKey(keyData, "ctrl+f")) {
 			const row = this.filtered[this.selectedIndex];
 			if (row?.fastModel) this.toggleFast(row);
-			else if (this.scopedRows.length > 0) this.toggleScope();
 			this.requestRender();
 			return;
 		}
@@ -444,19 +479,19 @@ class ModelsPicker extends Container implements Focusable {
 	}
 
 	private toggleFast(row: ModelRow): void {
-		if (!row.fastModel) return;
+		if (!row.fastModel && effortLevels(row, true).length === 0) return;
 		const draft = this.draft(row);
 		draft.fast = !draft.fast;
-		draft.effort = clampThinkingLevel(targetModel(row, draft.fast), draft.effort) as ThinkingLevel;
+		const levels = effortLevels(row, draft.fast);
+		if (!levels.includes(draft.effort)) draft.effort = levels[0] ?? "off";
 		this.drafts.set(row.key, draft);
 		this.updateList();
 	}
 
 	private cycleEffort(row: ModelRow, direction: 1 | -1): void {
 		const draft = this.draft(row);
-		const model = targetModel(row, draft.fast);
-		const levels = levelsFor(model).filter((level) => (model.reasoning ? true : level === "off"));
-		if (!supportsEffort(model) || levels.length === 0) return;
+		const levels = effortLevels(row, draft.fast);
+		if (levels.length <= 1) return;
 		const currentIndex = Math.max(0, levels.indexOf(draft.effort));
 		const next = levels[(currentIndex + direction + levels.length) % levels.length];
 		if (!next) return;
@@ -471,7 +506,7 @@ class ModelsPicker extends Container implements Focusable {
 		const draft = this.draft(row);
 		this.closed = true;
 		this.onSelect({
-			model: targetModel(row, draft.fast),
+			model: targetModel(row, draft.fast, draft.effort),
 			thinkingLevel: draft.effort,
 		});
 	}
@@ -495,20 +530,21 @@ class ModelsPicker extends Container implements Focusable {
 			),
 		);
 
+		const currentVariant = this.currentModel ? cursorVariant(this.currentModel) : undefined;
 		const current = this.currentModel
-			? `Currently using ${this.currentModel.id}${this.currentModel.reasoning ? ` · ${this.currentEffort} effort` : ""}${this.currentModel && isFastModelId(this.currentModel.id) ? " · Fast mode ON" : ""}.`
+			? `Currently using ${this.currentModel.id}${currentVariant ? ` · ${currentVariant.effort} effort` : this.currentModel.reasoning ? ` · ${this.currentEffort} effort` : ""}${isFastModelId(this.currentModel.id) ? " · Fast mode ON" : ""}.`
 			: "No model selected.";
 		this.currentText.setText(this.theme.fg("muted", current));
 
 		if (this.scopeText && this.scopeHintText) {
-			const allText = this.scope === "all" ? this.theme.fg("accent", "all") : this.theme.fg("muted", "all");
-			const scopedText = this.scope === "scoped" ? this.theme.fg("accent", "scoped") : this.theme.fg("muted", "scoped");
-			this.scopeText.setText(`${this.theme.fg("muted", "Scope: ")}${allText}${this.theme.fg("muted", " | ")}${scopedText}`);
-			this.scopeHintText.setText(this.theme.fg("dim", "tab cycles scope when the highlighted model has no fast sibling"));
+			const favoritesText = this.scope === "scoped" ? this.theme.fg("accent", "Favorites") : this.theme.fg("muted", "Favorites");
+			const allText = this.scope === "all" ? this.theme.fg("accent", "All") : this.theme.fg("muted", "All");
+			this.scopeText.setText(`${favoritesText}${this.theme.fg("muted", " | ")}${allText}`);
+			this.scopeHintText.setText(this.theme.fg("dim", "Tab changes list. Direct Anthropic API models are hidden."));
 		}
 
 		this.helpText.setText(
-			this.theme.fg("dim", "type to filter · ↑↓ select · ←→ effort · tab fast/scope · enter confirm · esc cancel"),
+			this.theme.fg("dim", "type to filter · ↑↓ select · ←→ effort · tab list · ctrl+f fast · enter confirm · esc cancel"),
 		);
 	}
 
@@ -552,12 +588,13 @@ class ModelsPicker extends Container implements Focusable {
 		const row = this.filtered[this.selectedIndex];
 		if (!row) return;
 		const draft = this.draft(row);
-		const model = targetModel(row, draft.fast);
+		const model = targetModel(row, draft.fast, draft.effort);
+		const levels = effortLevels(row, draft.fast);
 
 		this.listContainer.addChild(new Spacer(1));
 		this.listContainer.addChild(new Text(this.theme.fg("muted", `  Model Name: ${model.name || model.id}`), 1, 0));
 
-		if (supportsEffort(model)) {
+		if (row.effortModels || supportsEffort(model)) {
 			const icon = this.theme.fg(THINKING_COLORS[draft.effort], "●");
 			const label = draft.effort === "xhigh" ? "xHigh" : draft.effort;
 			const isDefault = draft.effort === this.currentEffort && isCurrentRow(row, this.currentModel);
@@ -577,13 +614,19 @@ class ModelsPicker extends Container implements Focusable {
 			);
 		}
 
-		if (row.fastModel) {
+		const fastLevels = effortLevels(row, true);
+		const fastModel = row.effortModels
+			? fastLevels.length > 0
+				? targetModel(row, true, fastLevels.includes(draft.effort) ? draft.effort : fastLevels[0] ?? draft.effort)
+				: undefined
+			: row.fastModel;
+		if (fastModel) {
 			if (draft.fast) {
 				this.listContainer.addChild(
 					new Text(
 						this.theme.fg(
 							"muted",
-							`Fast mode is ${this.theme.bold("ON")} and available with ${row.fastModel.id}. Tab toggles. Switching to other models turns off fast mode.`,
+							`Fast mode is ${this.theme.bold("ON")} and available with ${fastModel.id}. Ctrl+F toggles. Switching to other models turns off fast mode.`,
 						),
 						1,
 						0,
@@ -592,7 +635,7 @@ class ModelsPicker extends Container implements Focusable {
 			} else {
 				this.listContainer.addChild(
 					new Text(
-						this.theme.fg("muted", `Use Tab to turn on Fast mode (${row.fastModel.id}).`),
+						this.theme.fg("muted", `Use Ctrl+F to turn on Fast mode (${fastModel.id}).`),
 						1,
 						0,
 					),
@@ -607,8 +650,8 @@ async function showModelsPicker(
 	ctx: ExtensionCommandContext,
 	initialQuery?: string,
 ): Promise<void> {
-	const allModels = ctx.modelRegistry.getAvailable();
-	const scopedModels = ctx.scopedModels.map((item) => item.model);
+	const allModels = visibleModels(ctx.modelRegistry.getAvailable());
+	const scopedModels = visibleModels(ctx.scopedModels.map((item) => item.model));
 
 	if (allModels.length === 0 && scopedModels.length === 0) {
 		ctx.ui.notify("No models available. Use /login to add providers.", "warning");
@@ -637,6 +680,7 @@ async function showEffortSelector(
 	pi: ExtensionAPI,
 	ctx: ExtensionCommandContext,
 	levels: ThinkingLevel[],
+	row?: ModelRow,
 ): Promise<void> {
 	const current = pi.getThinkingLevel() as ThinkingLevel;
 	const items: SelectItem[] = levels.map((level) => ({
@@ -681,7 +725,8 @@ async function showEffortSelector(
 	});
 
 	if (!result || !isThinkingLevel(result) || !ctx.model) return;
-	await applySelection(pi, ctx, ctx.model, result);
+	const model = row ? targetModel(row, isFastModelId(ctx.model.id), result) : ctx.model;
+	await applySelection(pi, ctx, model, result);
 }
 
 async function handleModelsCommand(
@@ -731,15 +776,17 @@ async function handleEffortCommand(
 		ctx.ui.notify("No model selected", "error");
 		return;
 	}
-	if (!ctx.model.reasoning) {
+	const row = buildRows(catalogModels(ctx, "all")).find((item) => isCurrentRow(item, ctx.model));
+	const levels = row?.effortModels
+		? effortLevels(row, isFastModelId(ctx.model.id))
+		: levelsFor(ctx.model);
+	if (!row?.effortModels && !ctx.model.reasoning) {
 		ctx.ui.notify("Effort is not supported by the current model", "warning");
 		return;
 	}
-
-	const levels = levelsFor(ctx.model);
 	const raw = args?.trim().toLowerCase();
 	if (!raw) {
-		await showEffortSelector(pi, ctx, levels);
+		await showEffortSelector(pi, ctx, levels, row);
 		return;
 	}
 	if (!isThinkingLevel(raw)) {
@@ -750,7 +797,8 @@ async function handleEffortCommand(
 		ctx.ui.notify(`Effort "${raw}" not supported. Available: ${levels.join(", ")}`, "error");
 		return;
 	}
-	await applySelection(pi, ctx, ctx.model, raw);
+	const model = row?.effortModels ? targetModel(row, isFastModelId(ctx.model.id), raw) : ctx.model;
+	await applySelection(pi, ctx, model, raw);
 }
 
 async function handleFastCommand(
@@ -765,12 +813,12 @@ async function handleFastCommand(
 
 	const rows = buildRows(catalogModels(ctx, "all"));
 	const row = rows.find((item) => isCurrentRow(item, ctx.model));
-	if (!row?.fastModel) {
+	if (!row || (!row.fastModel && effortLevels(row, true).length === 0)) {
 		ctx.ui.notify(`Fast mode is not available for ${ctx.model.id}`, "warning");
 		return;
 	}
 
-	const currentlyFast = modelsAreEqual(ctx.model, row.fastModel);
+	const currentlyFast = isFastModelId(ctx.model.id);
 	const raw = args?.trim().toLowerCase();
 	let nextFast = !currentlyFast;
 	if (raw === "on" || raw === "true" || raw === "1") nextFast = true;
@@ -780,8 +828,10 @@ async function handleFastCommand(
 		return;
 	}
 
-	const model = nextFast ? row.fastModel : row.model;
-	await applySelection(pi, ctx, model, pi.getThinkingLevel() as ThinkingLevel);
+	const variant = cursorVariant(ctx.model);
+	const effort = variant?.effort ?? (pi.getThinkingLevel() as ThinkingLevel);
+	const model = targetModel(row, nextFast, effort);
+	await applySelection(pi, ctx, model, effort);
 }
 
 function modelCompletions(ctx: ExtensionCommandContext | undefined, prefix: string) {

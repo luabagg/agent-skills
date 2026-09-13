@@ -127,6 +127,45 @@ selectors:
   cursor-auto:
     provider: cursor
     exact: auto
+  cursor-claude-low:
+    provider: cursor
+    exact: claude-sonnet-5-low
+  cursor-claude-medium:
+    provider: cursor
+    exact: claude-sonnet-5-medium
+  cursor-claude-high:
+    provider: cursor
+    exact: claude-sonnet-5-high
+  cursor-claude-xhigh:
+    provider: cursor
+    exact: claude-sonnet-5-xhigh
+  cursor-claude-max:
+    provider: cursor
+    exact: claude-sonnet-5-max
+  cursor-grok-low:
+    provider: cursor
+    exact: cursor-grok-4.6-low
+  cursor-grok-low-fast:
+    provider: cursor
+    exact: cursor-grok-4.6-low-fast
+  cursor-grok-medium:
+    provider: cursor
+    exact: cursor-grok-4.6-medium
+  cursor-grok-medium-fast:
+    provider: cursor
+    exact: cursor-grok-4.6-medium-fast
+  cursor-grok-high:
+    provider: cursor
+    exact: cursor-grok-4.6-high
+  cursor-grok-high-fast:
+    provider: cursor
+    exact: cursor-grok-4.6-high-fast
+  cursor-grok-xhigh:
+    provider: cursor
+    exact: cursor-grok-4.6-xhigh
+  cursor-grok-xhigh-fast:
+    provider: cursor
+    exact: cursor-grok-4.6-xhigh-fast
   cursor-coder:
     provider: cursor
     familyLatest:
@@ -142,6 +181,19 @@ piScopes:
     - openai-sol
     - openai-terra
     - cursor-auto
+    - cursor-claude-low
+    - cursor-claude-medium
+    - cursor-claude-high
+    - cursor-claude-xhigh
+    - cursor-claude-max
+    - cursor-grok-low
+    - cursor-grok-low-fast
+    - cursor-grok-medium
+    - cursor-grok-medium-fast
+    - cursor-grok-high
+    - cursor-grok-high-fast
+    - cursor-grok-xhigh
+    - cursor-grok-xhigh-fast
     - cursor-coder
 
 opencodeRoles:

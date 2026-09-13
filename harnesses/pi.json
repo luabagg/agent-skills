@@ -116,14 +116,14 @@
   "localExtensions": [
     {
       "name": "variants.ts",
-      "description": "Claude-style /models picker: model list, \u2190\u2192 effort, and fast-mode toggle for sibling models (e.g. grok-4.6-fast). Also registers /effort, /fast, /variants.",
+      "description": "Claude-style /models picker: Favorites first, Tab switches lists, \u2190\u2192 changes effort, and Ctrl+F toggles fast siblings. Direct Anthropic API models stay hidden. Also registers /effort, /fast, /variants.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "variants.ts",
       "path": "~/.pi/agent/extensions/variants.ts",
       "recommended": true,
       "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. Adds effort:<level> and fast status chips. Restart pi after install so the commands are registered."
+      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. The enabledModels Scope is the Favorites list. The picker omits provider anthropic but keeps Claude models routed through Cursor. Adds effort:<level> and fast status chips. Restart pi after install so the commands are registered."
     },
     {
       "name": "xai.ts",
@@ -161,7 +161,7 @@
   ],
   "settings": {
     "catalogScope": "default",
-    "notes": "The /model Scope tab is resolved from harnesses/catalog.yaml plus catalog.lock.json. The All tab still shows every model registered by the xAI extension and generated Cursor provider."
+    "notes": "The custom /models picker opens on Favorites, resolved from harnesses/catalog.yaml plus catalog.lock.json. Its All tab hides direct Anthropic API models. Generated Cursor installation is limited to the same curated Scope."
   },
   "modelProviders": [
     {
