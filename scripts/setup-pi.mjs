@@ -463,6 +463,7 @@ async function setupCursorBridge() {
   const service = replaceTemplate(serviceTemplate, {
     CURSOR_CONFIG_HOME: configHome,
     PATH: systemdEnvironmentValue(process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin"),
+    CURSOR_AGENT_BIN: systemdEnvironmentValue(paths["cursor-agent"]),
     OPENCODE_BIN: paths.opencode,
     CURL_BIN: paths.curl,
     WORKSPACE_URL: encodeURIComponent(workspace).replaceAll("%2F", "/"),

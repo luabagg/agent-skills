@@ -7,6 +7,8 @@ Wants=network-online.target
 Type=simple
 Environment=XDG_CONFIG_HOME={{CURSOR_CONFIG_HOME}}
 Environment="PATH={{PATH}}"
+Environment=CURSOR_AGENT_EXECUTABLE={{CURSOR_AGENT_BIN}}
+Environment=CURSOR_ACP_SESSION_RESUME=true
 ExecStart={{OPENCODE_BIN}} serve --hostname 127.0.0.1 --port 32125 --log-level INFO
 ExecStartPost={{CURL_BIN}} --retry 20 --retry-delay 1 --retry-connrefused --fail --silent --show-error --output /dev/null "http://127.0.0.1:32125/config?directory={{WORKSPACE_URL}}"
 Restart=on-failure
