@@ -127,6 +127,42 @@ selectors:
   cursor-auto:
     provider: cursor
     exact: auto
+  cursor-muse-spark-low:
+    provider: cursor
+    familyLatest:
+      family: muse-spark
+      suffix: -low
+      versionScheme: numeric-dotted
+  cursor-muse-spark-medium:
+    provider: cursor
+    familyLatest:
+      family: muse-spark
+      suffix: -medium
+      versionScheme: numeric-dotted
+  cursor-muse-spark-high:
+    provider: cursor
+    familyLatest:
+      family: muse-spark
+      suffix: -high
+      versionScheme: numeric-dotted
+  cursor-muse-spark-max:
+    provider: cursor
+    familyLatest:
+      family: muse-spark
+      suffix: -max
+      versionScheme: numeric-dotted
+  cursor-muse-spark-minimal:
+    provider: cursor
+    familyLatest:
+      family: muse-spark
+      suffix: -minimal
+      versionScheme: numeric-dotted
+  cursor-muse-spark-xhigh:
+    provider: cursor
+    familyLatest:
+      family: muse-spark
+      suffix: -xhigh
+      versionScheme: numeric-dotted
   cursor-claude-low:
     provider: cursor
     exact: claude-sonnet-5-low
@@ -181,6 +217,12 @@ piScopes:
     - openai-sol
     - openai-terra
     - cursor-auto
+    - cursor-muse-spark-low
+    - cursor-muse-spark-medium
+    - cursor-muse-spark-high
+    - cursor-muse-spark-max
+    - cursor-muse-spark-minimal
+    - cursor-muse-spark-xhigh
     - cursor-claude-low
     - cursor-claude-medium
     - cursor-claude-high

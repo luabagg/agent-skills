@@ -7,6 +7,7 @@
  *
  * Usage:
  *   /models                 open picker (Favorites first, Tab changes list, Ctrl+F toggles fast)
+ *   Alt+M                   open picker
  *   /models grok-4.6        switch model (optional :effort, e.g. grok-4.6:high)
  *   /effort                 pick effort for the current model
  *   /effort medium          set effort directly
@@ -121,6 +122,15 @@ function cursorVariant(model: Model): CursorVariant | undefined {
 	return { baseId: id.slice(0, -match[0].length), effort: match[1], fast };
 }
 
+function getModelFamilyKey(model: Model): string {
+	const variant = cursorVariant(model);
+	const id = variant?.baseId ?? baseModelId(model.id);
+	const familyId = model.provider === "cursor" && id.startsWith("cursor-")
+		? id.slice("cursor-".length)
+		: id;
+	return `${model.provider}/${familyId}`;
+}
+
 type ModelRow = {
 	key: string;
 	model: Model;
@@ -149,13 +159,18 @@ function rowSearchText(row: ModelRow): string {
 		.join(" ");
 }
 
+function effortLabels(row: ModelRow): string[] {
+	const standard = ALL_LEVELS.filter((level) => row.effortModels?.[level]?.standard);
+	const fast = ALL_LEVELS.filter((level) => row.effortModels?.[level]?.fast).map((level) => `${level}-fast`);
+	return [...standard, ...fast];
+}
+
 function buildRows(models: readonly Model[]): ModelRow[] {
 	const grouped = new Map<string, ModelRow>();
 
 	for (const model of models) {
 		const variant = cursorVariant(model);
-		const baseId = variant?.baseId ?? baseModelId(model.id);
-		const key = `${model.provider}/${baseId}`;
+		const key = getModelFamilyKey(model);
 		const existing = grouped.get(key) ?? { key, model, searchText: "" };
 
 		if (variant) {
@@ -212,7 +227,7 @@ function targetModel(row: ModelRow, fast: boolean, effort: ThinkingLevel): Model
 function defaultDraft(row: ModelRow, current: Model | undefined, currentEffort: ThinkingLevel): RowDraft {
 	const currentVariant = current ? cursorVariant(current) : undefined;
 	const onFast = Boolean(current && isCurrentRow(row, current) && isFastModelId(current.id));
-	const effort = currentVariant && currentVariant.baseId === row.key.slice(row.key.indexOf("/") + 1)
+	const effort = current && currentVariant && getModelFamilyKey(current) === row.key
 		? currentVariant.effort
 		: currentEffort;
 	const available = effortLevels(row, onFast);
@@ -407,7 +422,7 @@ class ModelsPicker extends Container implements Focusable {
 
 		if (matchesKey(keyData, "ctrl+f")) {
 			const row = this.filtered[this.selectedIndex];
-			if (row?.fastModel) this.toggleFast(row);
+			if (row && (row.fastModel || effortLevels(row, true).length > 0)) this.toggleFast(row);
 			this.requestRender();
 			return;
 		}
@@ -564,11 +579,12 @@ class ModelsPicker extends Container implements Focusable {
 			const current = isCurrentRow(row, this.currentModel);
 			const draft = this.draft(row);
 			const prefix = selected ? this.theme.fg("accent", "→ ") : "  ";
-			const id = selected ? this.theme.fg("accent", row.model.id) : row.model.id;
-			const provider = this.theme.fg("muted", `[${row.model.provider}]`);
+			const label = effortLabels(row);
+			const id = selected ? this.theme.fg("accent", row.key) : row.key;
+			const efforts = label.length > 0 ? this.theme.fg("dim", ` [${label.join(", ")}]`) : "";
 			const check = current ? this.theme.fg("success", " ✓") : "";
 			const fastBadge = draft.fast ? this.theme.fg("accent", " fast") : "";
-			this.listContainer.addChild(new Text(`${prefix}${id} ${provider}${check}${fastBadge}`, 1, 0));
+			this.listContainer.addChild(new Text(`${prefix}${id}${efforts}${check}${fastBadge}`, 1, 0));
 		}
 
 		if (startIndex > 0 || endIndex < this.filtered.length) {
@@ -647,7 +663,7 @@ class ModelsPicker extends Container implements Focusable {
 
 async function showModelsPicker(
 	pi: ExtensionAPI,
-	ctx: ExtensionCommandContext,
+	ctx: ExtensionCommandContext | ExtensionContext,
 	initialQuery?: string,
 ): Promise<void> {
 	const allModels = visibleModels(ctx.modelRegistry.getAvailable());
@@ -856,6 +872,11 @@ function modelCompletions(ctx: ExtensionCommandContext | undefined, prefix: stri
 }
 
 export default function variantsExtension(pi: ExtensionAPI) {
+	pi.registerShortcut("alt+m", {
+		description: "Open grouped model picker",
+		handler: async (ctx) => showModelsPicker(pi, ctx),
+	});
+
 	pi.registerCommand("models", {
 		description: "Select model, effort, and fast mode (Claude-style)",
 		getArgumentCompletions: (prefix) => modelCompletions(undefined, prefix),

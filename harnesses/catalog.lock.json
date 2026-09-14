@@ -1,5 +1,5 @@
 {
-  "policyDigest": "sha256:3331b7413e21f342546a18acac31fb7a29a4ee1f4c0b4ccf514d26fd5f6eba23",
+  "policyDigest": "sha256:f7c0a049ce6dce786453161a57e276de92dbebcb1ea2c8c229d3f66c89e24dfc",
   "providers": {
     "cursor": {
       "models": {
@@ -4933,6 +4933,36 @@
     "cursor-grok-xhigh-fast": {
       "mode": "exact",
       "modelId": "cursor-grok-4.6-xhigh-fast",
+      "provider": "cursor"
+    },
+    "cursor-muse-spark-high": {
+      "mode": "familyLatest",
+      "modelId": "muse-spark-1.3-high",
+      "provider": "cursor"
+    },
+    "cursor-muse-spark-low": {
+      "mode": "familyLatest",
+      "modelId": "muse-spark-1.3-low",
+      "provider": "cursor"
+    },
+    "cursor-muse-spark-max": {
+      "mode": "familyLatest",
+      "modelId": "muse-spark-1.3-max",
+      "provider": "cursor"
+    },
+    "cursor-muse-spark-medium": {
+      "mode": "familyLatest",
+      "modelId": "muse-spark-1.3-medium",
+      "provider": "cursor"
+    },
+    "cursor-muse-spark-minimal": {
+      "mode": "familyLatest",
+      "modelId": "muse-spark-1.3-minimal",
+      "provider": "cursor"
+    },
+    "cursor-muse-spark-xhigh": {
+      "mode": "familyLatest",
+      "modelId": "muse-spark-1.3-xhigh",
       "provider": "cursor"
     },
     "openai-luna": {

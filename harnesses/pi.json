@@ -116,7 +116,7 @@
   "localExtensions": [
     {
       "name": "variants.ts",
-      "description": "Claude-style /models picker: Favorites first, Tab switches lists, \u2190\u2192 changes effort, and Ctrl+F toggles fast siblings. Direct Anthropic API models stay hidden. Also registers /effort, /fast, /variants.",
+      "description": "Grouped /models picker: Alt+M opens it, Tab switches lists, \u2190\u2192 changes effort, and Ctrl+F toggles fast siblings. Direct Anthropic API models stay hidden. Also registers /effort, /fast, /variants.",
       "kind": "local-extension",
       "scope": "global",
       "sourceFile": "variants.ts",
@@ -161,7 +161,7 @@
   ],
   "settings": {
     "catalogScope": "default",
-    "notes": "The custom /models picker opens on Favorites, resolved from harnesses/catalog.yaml plus catalog.lock.json. Its All tab hides direct Anthropic API models. Generated Cursor installation is limited to the same curated Scope."
+    "notes": "The custom /models picker opens on Favorites, resolved from harnesses/catalog.yaml plus catalog.lock.json. Its All tab hides direct Anthropic API models. Pi reserves /model and Ctrl+L for its native picker. Generated Cursor installation is limited to the same curated Scope."
   },
   "modelProviders": [
     {
