@@ -1,6 +1,6 @@
 ---
 name: branch-port
-description: Port a feature across heavily diverged branches when rebase/merge is impractical.
+description: Use when a feature must move between branches that have diverged too far for rebase or merge to be practical.
 ---
 
 # Branch Port
