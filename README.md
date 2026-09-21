@@ -102,6 +102,7 @@ Current personal skills:
 | `code-comments` | Decide when a comment is needed and write it in plain words |
 | `memory-palace` | Ingest, query, and lint the personal Obsidian knowledge vault |
 | `natural-copy-editing` | Translate, correct, and polish text as clean copy-paste output. AI-pattern removal belongs to the curated `humanizer` skill |
+| `testing-business-rules` | Select behavior-focused tests, honest boundaries, and meaningful coverage using Google testing guidance |
 | `thorough-pr-review` | Review PRs and branches for correctness, reliability, and merge-readiness |
 
 List skills:

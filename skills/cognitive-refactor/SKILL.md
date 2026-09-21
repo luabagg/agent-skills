@@ -41,14 +41,65 @@ for (const row of rows) {
 
 Check: pick one item and count the functions a reader opens to learn what happens to it. The loop and the helpers it calls fit on one screen.
 
+## Loops: a built-in beats a hand-rolled accumulator
+
+Before extracting a helper for a loop, check whether the loop only rebuilds a `Map`, `Set`, or grouping that a built-in already returns. When it does, delete the loop and the type that describes its shape. Keeping the helper does not make the code simpler. It adds one more place to open for a fact the language already tracks.
+
+```ts
+// Wrong: 20 lines walk `claims` by hand to build a workspace-by-PCN map,
+// with a second Set to remember which PCNs turned out ambiguous.
+export function getUniqueClaimWorkspaceByPcn(claims) {
+  const workspaceIdByPcn = new Map<string, string>()
+  const ambiguousPcns = new Set<string>()
+  for (const claim of claims) {
+    // ...
+  }
+  return { workspaceIdByPcn, ambiguousPcns }
+}
+
+// Right: the built-in groups; the call site reads the invariant directly
+// and no exported type describes the group-by result.
+const claimsByPcn = Map.groupBy(claims, (claim) => claim.patientControlNumber)
+const matches = claimsByPcn.get(item.itemKey)
+if (matches == null) {
+  // unmatched
+} else if (matches.length !== 1) {
+  // ambiguous
+}
+```
+
+Check: grep the diff for a deleted function. A real simplification removes the hand-rolled helper; if it only moved, the loop did not get simpler.
+
 ## Names: a relation names both ends
 
 1. List the words that mean two things in the module. Example: "claim" is the payer's printed entry on an EOP and also our submitted claim record.
 2. The side the codebase already writes bare keeps the bare word (`claimId`). The other side carries its owner in every name (`eopClaimRow`, `derivedEopClaims`).
 3. A name for a relation between two things names both ends and puts a word between them: `EopToClaimMatch`, `linksFromDocumentToRecord`, `rowsPayingClaim`. Test: read the name as one compound noun. `EopClaimMatch` reads as "(EOP claim) match", so it fails. `EopToClaimMatch` cannot be read that way, so it passes.
 4. A type is named by what it is. `evidence`, `info`, `data`, `item`, `entry`, `result` are not what it is.
+5. A type's plurality matches what one instance holds. `CignaWatchlistItemsToExpire` named the fields of a single item; the plural read as if it held a list. Renaming it to `CignaWatchlistItemToExpire` matched the array that held many.
 
 The name is read in imports, signatures, and log lines, where its fields are not visible. A field inside the type cannot repair the type's name.
+
+## Contracts: a result type names every outcome
+
+A function that decides something is often written first as `T | null`, and a caller learns what `null` means only by reading the `if` around the call. Once there is more than one way to say "no," or a second caller might exist, name every outcome instead of overloading the absent value.
+
+```ts
+// Wrong: null means "keep it open" only because the one caller checks it
+// that way today. A second caller cannot tell null from "not decided yet".
+function decideCignaWatchlistItemExpiry(...): { reason: string } | null
+
+// Right: the return type states both outcomes, and the function name asks
+// the question the type answers.
+type CignaWatchlistItemDecision =
+  | { result: "expire"; reason: string }
+  | { result: "keep-opened" }
+function shouldExpireCignaWatchlistItem(...): CignaWatchlistItemDecision
+```
+
+A container is a contract too. `Set<CignaWatchlistItemToExpire>` promised deduplication that nothing produced duplicates to need; switching to `CignaWatchlistItemToExpire[]` dropped the promise along with the `.size` and `Array.from()` calls it forced at every call site.
+
+Check: rename the function to a yes/no question (`should...`, `is...`, `can...`). If the current return type cannot answer that question without a comment at the call site, the contract is still a sentinel.
 
 ## Rationalizations
 
@@ -59,6 +110,8 @@ The name is read in imports, signatures, and log lines, where its fields are not
 | "Extracted unchanged, so equivalence checks by inspection" | Inspection now spans N functions and N argument lists. |
 | "The field inside the type blocks the double reading" | The type name appears without its fields in every import and signature. |
 | "Bare 'claim' is ours everywhere else" | True. So the other side carries the qualifier, and the relation name separates the two. |
+| "The hand-rolled map/set is one small function" | The reader still has to open it to learn the language already does that grouping. |
+| "It returns null today, and the caller already handles it" | A second caller cannot tell "not decided" from "decided no." |
 
 ## Red flags
 
@@ -66,5 +119,8 @@ The name is read in imports, signatures, and log lines, where its fields are not
 - The main function has no loop and the file has four.
 - A type name that relates two things and still reads as one compound noun.
 - A module, type, or function named with `evidence`, `info`, `data`, `item`, `helper`, or `util`.
+- A hand-rolled `Map`/`Set` builder loop where `Map.groupBy`, `Object.groupBy`, or a `Set` constructor would do.
+- A decision function returning `T | null` where `null` carries meaning beyond absence.
+- A type name that is plural but its fields describe one instance.
 
 For comments on the result, use `code-comments`.
