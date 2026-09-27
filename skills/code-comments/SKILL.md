@@ -23,7 +23,7 @@ Write a comment when one of these is true:
 ## When not to comment
 
 - A trivial function gets no comment.
-- Do not comment a type whose name and fields say what it holds. Rename a field before you explain it.
+- Do not comment a type whose name and fields say what it holds. Rename a field before you explain it. Use `code-naming` to find the name.
 - Do not comment an ordinary block inside a function. Extract a named function instead.
 - Do not narrate the implementation or write a full docstring.
 - A file gets a header only when it is an index, or when the file-level rule is not the sum of its functions' comments.
@@ -33,8 +33,10 @@ Write a comment when one of these is true:
 - A function gets at most one comment, above it. The first sentence says what the function does. The sentences after it carry the rule, edge case, guarantee, or failure the signature cannot show.
 - The first sentence may overlap the name. It exists so the reader does not have to open the body. "Do not restate the name" applies to the sentences after it.
 - A type or table comment opens with what it holds, then states the invariant its fields cannot express: two fields that must agree, a unit, a range, a lifecycle rule. Do not comment fields or union members.
-- A tuned constant states the failure the value prevents.
+- A tuned constant states the failure the value prevents. When the obvious value fails, state the cause that makes it fail.
+- An order comment states what breaks under the other order.
 - When a comment lists an order or several distinct points, write a list. Do not join the points into one paragraph.
+- Start a list on the line after the sentence that introduces it. Do not put a blank `//` line before the first item.
 
 ## The test, per sentence
 
@@ -51,6 +53,7 @@ A comment that still needs more than four sentences after the test usually marks
 
 - A reason lives once, next to the mechanism it explains. The function that takes the lock explains the lock. A caller names the effect it depends on, not the reason again.
 - When a fact lives in a comment and a README, keep the words identical. Two phrasings drift into two claims.
+- When a change adds a case, find every comment and doc that lists the cases, and add it. A new way for a column to be null goes in the column comment. A new reason code goes in the list of known codes.
 
 ## Words
 
@@ -112,7 +115,6 @@ type SenderSuggestion = {
 const PAYER_SHORTLIST_LIMIT = 30
 
 // Payers the picker offers before the reviewer types, in this order:
-//
 // 1. The payer reviewers chose for this same text before.
 // 2. Directory payers whose name contains the extracted payer name.
 // 3. Directory payers whose name contains the extracted sender name.

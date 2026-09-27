@@ -1,7 +1,7 @@
 ---
 name: cognitive-refactor
 description: >
-  Use when restructuring code so a reader can follow it: a cognitive or cyclomatic complexity threshold fails, a long function or loop needs helpers extracted, a type, module, or function must be named where one domain word means two things, or a module written quickly needs clear contracts.
+  Use when restructuring code so a reader can follow it: a cognitive or cyclomatic complexity threshold fails, a long function or loop needs helpers extracted, a function returns a sentinel or a bag of unrelated answers, or a module written quickly needs clear contracts.
 ---
 
 # Cognitive Refactor
@@ -70,16 +70,6 @@ if (matches == null) {
 
 Check: grep the diff for a deleted function. A real simplification removes the hand-rolled helper; if it only moved, the loop did not get simpler.
 
-## Names: a relation names both ends
-
-1. List the words that mean two things in the module. Example: "claim" is the payer's printed entry on an EOP and also our submitted claim record.
-2. The side the codebase already writes bare keeps the bare word (`claimId`). The other side carries its owner in every name (`eopClaimRow`, `derivedEopClaims`).
-3. A name for a relation between two things names both ends and puts a word between them: `EopToClaimMatch`, `linksFromDocumentToRecord`, `rowsPayingClaim`. Test: read the name as one compound noun. `EopClaimMatch` reads as "(EOP claim) match", so it fails. `EopToClaimMatch` cannot be read that way, so it passes.
-4. A type is named by what it is. `evidence`, `info`, `data`, `item`, `entry`, `result` are not what it is.
-5. A type's plurality matches what one instance holds. `CignaWatchlistItemsToExpire` named the fields of a single item; the plural read as if it held a list. Renaming it to `CignaWatchlistItemToExpire` matched the array that held many.
-
-The name is read in imports, signatures, and log lines, where its fields are not visible. A field inside the type cannot repair the type's name.
-
 ## Contracts: a result type names every outcome
 
 A function that decides something is often written first as `T | null`, and a caller learns what `null` means only by reading the `if` around the call. Once there is more than one way to say "no," or a second caller might exist, name every outcome instead of overloading the absent value.
@@ -99,6 +89,19 @@ function shouldExpireCignaWatchlistItem(...): CignaWatchlistItemDecision
 
 A container is a contract too. `Set<CignaWatchlistItemToExpire>` promised deduplication that nothing produced duplicates to need; switching to `CignaWatchlistItemToExpire[]` dropped the promise along with the `.size` and `Array.from()` calls it forced at every call site.
 
+A type states which outcomes exclude each other. A write fulfills the item or expires it, never both. With `never`, a write that sets both does not compile.
+
+```ts
+export type WatchlistItemStateWrite = { state: WatchlistItemState } & (
+  | { fulfill?: WatchlistItemFulfillment; expire?: never }
+  | { expire?: WatchlistItemExpiration; fulfill?: never }
+)
+```
+
+A return value carries every fact the caller acts on. `updateWatchlistItemState` returned `fulfilledReason: string | null`. The caller could not tell a fulfillment from an expiry, or its own write from another actor's write. It now returns `{ as: "fulfilled" | "expired"; reason; byOtherActor }`, and the caller's log states all three.
+
+One function answers one question. `loadAvailityClaimStatusPollingCounts(name, since)` returned `{ openNow, cappedSince }`, and only `cappedSince` used `since`. When a parameter serves only one field of the result, split the function: one count per question.
+
 Check: rename the function to a yes/no question (`should...`, `is...`, `can...`). If the current return type cannot answer that question without a comment at the call site, the contract is still a sentinel.
 
 ## Rationalizations
@@ -108,8 +111,6 @@ Check: rename the function to a yes/no question (`should...`, `is...`, `can...`)
 | "N passes are negligible for a handful of rows" | Cost is not the objection. The reader now reassembles one row from N functions. |
 | "Each helper owns its loop and guards" | A helper that takes the collection hides a loop. A helper that takes one item names a rule. |
 | "Extracted unchanged, so equivalence checks by inspection" | Inspection now spans N functions and N argument lists. |
-| "The field inside the type blocks the double reading" | The type name appears without its fields in every import and signature. |
-| "Bare 'claim' is ours everywhere else" | True. So the other side carries the qualifier, and the relation name separates the two. |
 | "The hand-rolled map/set is one small function" | The reader still has to open it to learn the language already does that grouping. |
 | "It returns null today, and the caller already handles it" | A second caller cannot tell "not decided" from "decided no." |
 
@@ -117,10 +118,9 @@ Check: rename the function to a yes/no question (`should...`, `is...`, `can...`)
 
 - `helper(rows.map((row) => row.x))` to compute one field.
 - The main function has no loop and the file has four.
-- A type name that relates two things and still reads as one compound noun.
-- A module, type, or function named with `evidence`, `info`, `data`, `item`, `helper`, or `util`.
 - A hand-rolled `Map`/`Set` builder loop where `Map.groupBy`, `Object.groupBy`, or a `Set` constructor would do.
 - A decision function returning `T | null` where `null` carries meaning beyond absence.
-- A type name that is plural but its fields describe one instance.
+- A write type whose optional fields can all be set, when the domain allows only one.
+- A parameter that only one field of the result uses.
 
-For comments on the result, use `code-comments`.
+For names, use `code-naming`. For comments on the result, use `code-comments`.

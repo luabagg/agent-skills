@@ -57,6 +57,8 @@ Name the condition and promised outcome:
 
 Use multiple assertions when they jointly establish one outcome. Use named parameterized cases for meaningful variants of one rule. Choose distinct, non-default values to expose ignored or swapped inputs; include zero, negative, empty, and boundary values when they challenge the contract.
 
+When outcomes exclude each other, assert that the other outcome is absent. A test that checks only that the item expired still passes when the code also fulfills it. When a change adds an outcome, add its absence check to each existing test that expects no outcome. When a change moves a case from one outcome to another, name both in the test: `expires, not fulfills, once the re-read cap is reached`.
+
 Assert observable results, state, or contractual interactions. Derive expected values independently of production logic. Avoid private structure and call order unless order itself is the guarantee. Names should explain arrange/act/assert; comments explain only non-obvious reasons.
 
 ### 5. Verify, then prune
