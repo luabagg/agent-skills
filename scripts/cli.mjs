@@ -340,7 +340,7 @@ function printRootHelp() {
 
 Usage:
   agent-skills <command> [subcommand] [flags]
-  npx agent-skills <command> ...
+  npm run agent-skills -- <command> ...
 
 Browse:
   list skills [--installed] [--json]

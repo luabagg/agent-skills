@@ -226,14 +226,14 @@ test("config memory-palace --dry-run forwards --vault value", () => {
   }
 });
 
-test("npx agent-skills --help works", () => {
-  const result = spawnSync("npx", ["agent-skills", "--help"], {
+test("npm run agent-skills --help runs this repo's CLI", () => {
+  const result = spawnSync("npm", ["run", "--silent", "agent-skills", "--", "--help"], {
     cwd: repoRoot,
     encoding: "utf8",
     env: process.env,
   });
   assert.equal(result.status, 0);
-  assert.match(combined(result), /agent-skills/);
+  assert.match(combined(result), /personal skills, harness setup, and models/);
 });
 
 test("shellQuote leaves safe tokens alone and quotes the rest", () => {
