@@ -65,10 +65,10 @@ Profiles:
 - `default`: personal skills, curated skills, and global instructions
 - `skills`: personal skills only
 - `pi`, `cursor`, `opencode`: personal skills plus the selected harness
-- `pi-catalog`: committed Pi model lock, Scope, and providers only
+- `pi-catalog`: committed Pi model lock and Scope only
 - `all`: personal skills plus global, Pi, Cursor, and OpenCode harnesses
 
-Authentication uses the keychain or native login first (`pi`, `claude login`, or `cursor-agent login`). Child processes read environment API keys as a fallback. Setup never persists them. Plans and dry runs do not change files or run installers. A failed apply rolls back managed changes. The optional Cursor bridge binds only to fixed localhost endpoints and never copies Cursor credentials.
+Authentication uses the keychain or each harness's native login first. Pi uses its own `/login`, without a Claude CLI or Cursor bridge. Child processes read environment API keys as a fallback. Setup never persists them. Plans and dry runs do not change files or run installers. A failed apply rolls back managed changes.
 
 ### Direct CLI
 
@@ -245,12 +245,14 @@ agent-skills models check
 
 ### Model catalog
 
-Policy lives in `harnesses/catalog.yaml`. Model commands produce the lock and the generated Cursor provider. Do not edit them by hand. Model catalog generation stays in this repo. Agentfolio does not run `models check`, `models diff`, or `models refresh`.
+Policy lives in `harnesses/catalog.yaml`. Model commands produce `harnesses/catalog.lock.json`. Do not edit the lock by hand. Model catalog generation stays in this repo. Agentfolio does not run `models check`, `models diff`, or `models refresh`.
+
+The current Scope selects GPT-6.1 Sol, GPT-6 Luna, GPT-6 Astra, and the optional xAI models. OpenAI model discovery uses `opencode models openai --verbose` with OpenCode's native authentication. Pi uses the same model IDs through `openai-codex`, with a separate native Pi login. Credentials are not shared between harnesses.
 
 ```bash
 agent-skills models check     # offline validate
 agent-skills models diff      # live preview
-agent-skills models refresh   # write lock + generated targets
+agent-skills models refresh   # write model lock
 agent-skills setup pi --catalog-only   # apply models/Scope only
 ```
 
@@ -258,7 +260,17 @@ Contract, failure modes, and Pi phase flags: [`docs/model-catalog.md`](docs/mode
 
 ### OpenCode
 
-Tracked in `harnesses/opencode.json`. Setup installs agent files, prints manual plugin installer hints, and only mutates config for selected plugins.
+Tracked in `harnesses/opencode.json`. Setup installs agent files, applies model defaults, and adds a managed copy of `AGENTS.global.md` to the instructions list. It preserves existing MCP servers, plugins, instructions, and unrelated agent settings. The emitted settings use the current OpenCode schema, validated with OpenCode 1.19.0.
+
+| Agent | Model | Reasoning |
+| --- | --- | --- |
+| Build, the default | GPT-6.1 Sol | medium |
+| Plan | GPT-6.1 Sol | high |
+| Explore | GPT-6 Luna | low |
+| Coder | GPT-6.1 Sol | medium |
+| Advisor | GPT-6.1 Sol | xhigh |
+
+Writing and Brainstorming use the default model. Brainstorming is read-only and has self-contained guidance. Workflow instructions scale planning and verification to the task instead of requiring the same ceremony for every edit.
 
 ```bash
 agent-skills setup opencode --dry-run
@@ -273,21 +285,36 @@ Agent templates use `{{catalogRole:<role>}}`; setup renders concrete models from
 Tracked in `harnesses/pi.json` with extensions under `harnesses/pi/`.
 
 ```bash
-# Models / Scope / providers only (usual after models refresh)
+# Models / Scope only (usual after models refresh)
 agent-skills setup pi --catalog-only
-
-# Full harness without Cursor bridge
-agent-skills setup pi --skip-cursor-bridge
 
 # Full harness + optional recommended entries
 agent-skills setup pi --dry-run
 agent-skills setup pi --enable-recommended
-PI_CURSOR_WORKSPACE="$PWD" agent-skills setup pi
+agent-skills setup pi
 ```
 
-Phases: **catalog** (always) → packages → extensions → cursor-bridge (skippable). Setup consumes the committed lock only; it does not re-discover models.
+Phases: **catalog** (always) → packages → extensions. Setup consumes the committed lock only; it does not re-discover models. It preserves user-owned `models.json` configuration.
 
-Cursor credentials stay local via `cursor-agent login`. Bridge ports bind to `127.0.0.1`. After bridge config changes, run `models diff` / `models refresh` if model IDs changed, then re-apply with `--catalog-only`.
+Use Pi's native `/model` picker and thinking-level controls. The collection no longer installs a custom picker, Claude CLI provider, or Cursor bridge. Sign in directly with `/login` in Pi.
+
+Pi setup selects `openai-codex/gpt-6.1-sol` with medium thinking as the startup default. Sign in with `/login openai-codex` before making a model request. The five configured Pi packages remain enabled.
+
+For an existing installation, retire the old copied extensions before restarting Pi:
+
+```bash
+mkdir -p ~/.pi/agent/retired-extensions
+mv ~/.pi/agent/extensions/claude.ts ~/.pi/agent/retired-extensions/
+mv ~/.pi/agent/extensions/variants.ts ~/.pi/agent/retired-extensions/
+```
+
+Run each move only if the source exists. Keep any local edits in the retired copies. On Linux, stop the old bridge if it was installed:
+
+```bash
+systemctl --user disable --now pi-cursor-provider.service
+```
+
+Remove the old `providers.cursor` entry from `~/.pi/agent/models.json`, and remove `cursor/` and `claude-cli/` model patterns from `~/.pi/agent/settings.json`. If either was the saved default provider, select a direct provider in Pi. These are migration steps for prior installations; setup does not delete local provider configuration or credentials.
 
 ### Cursor subagents
 

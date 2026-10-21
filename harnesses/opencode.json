@@ -7,19 +7,29 @@
     "dryRunCommand": "agentfolio apply --profile opencode --dry-run",
     "includedInDefaultSetup": false
   },
+  "instructionsFile": "AGENTS.global.md",
+  "defaults": {
+    "modelRole": "primary",
+    "defaultAgent": "build",
+    "agents": {
+      "build": { "modelRole": "primary", "variant": "medium" },
+      "plan": { "modelRole": "primary", "variant": "high" },
+      "explore": { "modelRole": "explore", "variant": "low" }
+    }
+  },
   "agents": [
     {
       "name": "brainstorming",
-      "description": "Primary agent for design-first work: higher temperature, brainstorming skill, no implementation until design approval.",
+      "description": "Primary read-only agent for exploring requirements and comparing designs before implementation.",
       "kind": "agent",
       "recommended": true,
       "defaultEnabled": true,
       "sourceFile": "agents/brainstorming.md",
-      "notes": "Installs ~/.config/opencode/agent/brainstorming.md. Requires the brainstorming skill under ~/.agents/skills/ (personal skills setup)."
+      "notes": "Installs ~/.config/opencode/agent/brainstorming.md. Uses the default model and self-contained design guidance."
     },
     {
       "name": "writing",
-      "description": "Primary agent for natural copy editing and translation: higher temperature, natural-copy-editing skill, no repo edits.",
+      "description": "Primary agent for natural copy editing and translation with the natural-copy-editing skill and no repo edits.",
       "kind": "agent",
       "recommended": true,
       "defaultEnabled": true,
@@ -28,7 +38,7 @@
     },
     {
       "name": "coder",
-      "description": "Subagent for Build-delegated implementation work using xAI Composer 2.5 Fast.",
+      "description": "Subagent for delegated implementation work using the catalog's coding model.",
       "kind": "agent",
       "recommended": true,
       "defaultEnabled": true,
@@ -38,7 +48,7 @@
     },
     {
       "name": "advisor",
-      "description": "Read-only deep technical advisor for architecture, tradeoffs, plans, risks, and code review using xAI Grok 4.5.",
+      "description": "Read-only technical advisor for architecture, tradeoffs, plans, risks, and code review using the catalog's advisor model.",
       "kind": "agent",
       "recommended": true,
       "defaultEnabled": true,

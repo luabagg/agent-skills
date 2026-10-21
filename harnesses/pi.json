@@ -115,17 +115,6 @@
   ],
   "localExtensions": [
     {
-      "name": "variants.ts",
-      "description": "Grouped /models picker: Alt+M opens it, Tab switches lists, \u2190\u2192 changes effort, and Ctrl+F toggles fast siblings. Direct Anthropic API models stay hidden. Also registers /effort, /fast, /variants.",
-      "kind": "local-extension",
-      "scope": "global",
-      "sourceFile": "variants.ts",
-      "path": "~/.pi/agent/extensions/variants.ts",
-      "recommended": true,
-      "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/variants.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi; not added to settings.json packages. The enabledModels Scope is the Favorites list. The picker omits provider anthropic but keeps Claude models routed through Cursor. Adds effort:<level> and fast status chips. Restart pi after install so the commands are registered."
-    },
-    {
       "name": "xai.ts",
       "description": "xAI provider for pi with Grok 4.6, Grok 4.6 Fast, API-key auth, optional xAI device-code OAuth, live model discovery, and pi thinking-level mappings.",
       "kind": "local-extension",
@@ -146,44 +135,12 @@
       "recommended": true,
       "defaultEnabled": true,
       "notes": "Repo source: harnesses/pi/env-permissions.ts. Installed by agentfolio apply --profile pi into ~/.pi/agent/extensions/. Auto-discovered by pi. Deny list is PERMISSIONS in the file; optional overlay ~/.pi/agent/extensions/env-permissions.json. Restart pi or /reload after install."
-    },
-    {
-      "name": "claude.ts",
-      "description": "Claude Code CLI bridge for pi. Uses the official local `claude` command and its own auth; no Claude OAuth tokens are handled by pi.",
-      "kind": "local-extension",
-      "scope": "global",
-      "sourceFile": "claude.ts",
-      "path": "~/.pi/agent/extensions/claude.ts",
-      "recommended": true,
-      "defaultEnabled": true,
-      "notes": "Repo source: harnesses/pi/claude.ts. Registers provider id `claude-cli`. Run `claude login` separately. The bridge shells out to `claude --print` with safe `--permission-mode plan` defaults."
     }
   ],
   "settings": {
     "catalogScope": "default",
-    "notes": "The custom /models picker opens on Favorites, resolved from harnesses/catalog.yaml plus catalog.lock.json. Its All tab hides direct Anthropic API models. Pi reserves /model and Ctrl+L for its native picker. Generated Cursor installation is limited to the same curated Scope."
-  },
-  "modelProviders": [
-    {
-      "name": "cursor",
-      "description": "Cursor subscription models exposed to pi through an isolated OpenCursor ACP-to-OpenAI-compatible bridge.",
-      "sourceFile": "cursor-provider.json",
-      "path": "~/.pi/agent/models.json#/providers/cursor",
-      "defaultEnabled": true,
-      "includeModelsFromPiScope": "default"
-    }
-  ],
-  "cursorBridge": {
-    "enabled": true,
-    "package": "@rama_nigg/open-cursor@2.5.2",
-    "configHome": "~/.config/opencode-pi-cursor",
-    "controlUrl": "http://127.0.0.1:32125",
-    "providerUrl": "http://127.0.0.1:32124/v1",
-    "systemdUnit": "~/.config/systemd/user/pi-cursor-provider.service",
-    "serviceTemplate": "pi-cursor-provider.service.template",
-    "refreshScript": "pi-cursor-provider-refresh.template",
-    "refreshPath": "~/.local/bin/pi-cursor-provider-refresh",
-    "workspaceEnv": "PI_CURSOR_WORKSPACE",
-    "notes": "Requires cursor-agent and opencode on PATH plus cursor-agent login. PI_CURSOR_WORKSPACE selects the bridge workspace during setup; defaults to the user home directory. Ports bind to 127.0.0.1 without client authentication, so this assumes a trusted single-user machine. No Cursor credentials are copied into the repo."
+    "defaultSelector": "openai-sol",
+    "defaultThinkingLevel": "medium",
+    "notes": "Scope models are resolved from harnesses/catalog.yaml and catalog.lock.json. Use Pi's native /model picker and thinking-level controls. Authenticate directly through Pi's /login."
   }
 }

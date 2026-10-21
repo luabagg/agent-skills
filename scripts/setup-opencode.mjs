@@ -15,6 +15,7 @@ const dryRun = args.has("--dry-run");
 const enableRecommended = args.has("--enable-recommended");
 const manifestPath = new URL("../harnesses/opencode.json", import.meta.url);
 const harnessRoot = resolve(fileURLToPath(new URL("../harnesses/opencode/", import.meta.url)));
+const repoRoot = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const catalogPath = new URL("../harnesses/catalog.yaml", import.meta.url);
 const catalogLockPath = new URL("../harnesses/catalog.lock.json", import.meta.url);
@@ -26,6 +27,7 @@ const agentDir = resolve(join(configDir, "agent"));
 const jsoncPath = resolve(join(configDir, "opencode.jsonc"));
 const jsonPath = resolve(join(configDir, "opencode.json"));
 const configPath = existsSync(jsoncPath) ? jsoncPath : existsSync(jsonPath) ? jsonPath : jsoncPath;
+const instructionsPath = resolve(join(configDir, "agent-skills.md"));
 const MANAGED_AGENT_MARKER = "<!-- managed-by: agent-skills -->";
 
 function validateManifest(value) {
@@ -70,6 +72,15 @@ function validateManifest(value) {
     if (plugin.kind === "manual-installer") {
       if (!plugin.install || plugin.displayOnly !== true) throw new Error(`${plugin.name} needs a display-only executable vector.`);
       validateVector(`${plugin.name}.install`, "opencode", plugin.install);
+    }
+  }
+
+  if (value.defaults) {
+    for (const role of [value.defaults.modelRole, ...Object.values(value.defaults.agents ?? {}).map((agent) => agent.modelRole)]) {
+      if (!catalog.opencodeRoles?.[role]) throw new Error(`OpenCode defaults reference unknown modelRole ${role}.`);
+    }
+    if (!["build", "plan"].includes(value.defaults.defaultAgent)) {
+      throw new Error("OpenCode defaults.defaultAgent must be build or plan.");
     }
   }
 }
@@ -137,16 +148,11 @@ function markManagedAgent(content) {
   return `${MANAGED_AGENT_MARKER}\n${content}`;
 }
 
-async function installAgentFile(agent) {
-  const source = resolve(harnessRoot, agent.sourceFile);
-  const target = resolve(join(agentDir, `${agent.name}.md`));
-
+async function installManagedFile(source, target, desiredContent) {
   if (!existsSync(source)) {
     throw new Error(`Missing agent template: ${source}`);
   }
 
-  const sourceContent = renderAgentTemplate(agent, await readFile(source, "utf8"));
-  const desiredContent = markManagedAgent(sourceContent);
   const currentContent = await readUtf8IfExists(target);
 
   if (await isSymlink(target)) {
@@ -162,7 +168,7 @@ async function installAgentFile(agent) {
 
   console.log(`${dryRun ? "would write" : "write"} ${target} <- ${source}`);
   if (!dryRun) {
-    await mkdir(agentDir, { recursive: true });
+    await mkdir(dirname(target), { recursive: true });
     await writeFile(target, desiredContent, "utf8");
   }
 
@@ -170,11 +176,27 @@ async function installAgentFile(agent) {
 }
 
 function nextConfig(currentConfig, selectedPlugins) {
-  if (selectedPlugins.length === 0) {
-    return currentConfig;
+  const next = { ...currentConfig, $schema: currentConfig.$schema ?? "https://opencode.ai/config.json" };
+  const defaults = manifest.defaults;
+  if (defaults) {
+    next.model = resolvedRoleModel(defaults.modelRole);
+    next.default_agent = defaults.defaultAgent;
+    next.agents = { ...(currentConfig.agents ?? {}) };
+    for (const [name, agent] of Object.entries(defaults.agents ?? {})) {
+      const [providerID, ...model] = resolvedRoleModel(agent.modelRole).split("/");
+      next.agents[name] = {
+        ...(next.agents[name] ?? {}),
+        model: { providerID, model: model.join("/"), variant: agent.variant },
+      };
+    }
   }
-
-  const next = { ...currentConfig };
+  if (manifest.instructionsFile) {
+    if (next.instructions !== undefined && !Array.isArray(next.instructions)) {
+      throw new Error('OpenCode config field "instructions" must be an array.');
+    }
+    next.instructions = [...new Set([...(next.instructions ?? []), instructionsPath])];
+  }
+  if (selectedPlugins.length === 0) return next;
   const existing = next.plugin ?? [];
 
   if (!Array.isArray(existing)) {
@@ -250,7 +272,16 @@ printManualInstallers();
 
 let agentsChanged = false;
 for (const agent of selectedAgents) {
-  if (await installAgentFile(agent)) {
+  const source = resolve(harnessRoot, agent.sourceFile);
+  const target = resolve(join(agentDir, `${agent.name}.md`));
+  const content = markManagedAgent(renderAgentTemplate(agent, await readFile(source, "utf8")));
+  if (await installManagedFile(source, target, content)) {
+    agentsChanged = true;
+  }
+}
+if (manifest.instructionsFile) {
+  const source = resolve(repoRoot, manifest.instructionsFile);
+  if (await installManagedFile(source, instructionsPath, markManagedAgent(await readFile(source, "utf8")))) {
     agentsChanged = true;
   }
 }
@@ -261,16 +292,21 @@ if (!configChanged && !agentsChanged) {
 }
 
 if (!configChanged) {
-  console.log("\nOpenCode config already matches selected plugin entries.");
+  console.log("\nOpenCode config already matches selected defaults and plugin entries.");
   process.exit(0);
 }
 
-const nextContent = setJsoncValue(
-  currentContent ?? "{}\n",
-  ["plugin"],
-  updatedConfig.plugin,
-  configPath,
-);
+let nextContent = currentContent ?? "{}\n";
+for (const key of ["$schema", "model", "default_agent", "instructions", "plugin"]) {
+  if (JSON.stringify(updatedConfig[key]) !== JSON.stringify(currentConfig[key])) {
+    nextContent = setJsoncValue(nextContent, [key], updatedConfig[key], configPath);
+  }
+}
+for (const name of Object.keys(manifest.defaults?.agents ?? {})) {
+  if (JSON.stringify(updatedConfig.agents[name].model) !== JSON.stringify(currentConfig.agents?.[name]?.model)) {
+    nextContent = setJsoncValue(nextContent, ["agents", name, "model"], updatedConfig.agents[name].model, configPath);
+  }
+}
 
 if (dryRun) {
   console.log("\nWould write OpenCode config:");

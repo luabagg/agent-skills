@@ -39,74 +39,16 @@ providers:
   openai-codex:
     harnessIds:
       pi: openai-codex
+      opencode: openai
     discovery:
-      kind: pi-list-models
-      provider: openai-codex
+      kind: opencode-list-models
+      provider: openai
     modelDefaults:
       reasoning: true
       input: [text, image]
-      contextWindow: 272000
+      contextWindow: 1050000
       maxTokens: 128000
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-    fallbackMetadata:
-      gpt-5.6-luna:
-        includeWhenUndiscovered: true
-        reason: Keeps GPT 5.6 Luna available when Codex discovery is unavailable.
-        model:
-          name: GPT 5.6 Luna
-          reasoning: true
-          input: [text, image]
-          contextWindow: 272000
-          maxTokens: 128000
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-      gpt-5.6-sol:
-        includeWhenUndiscovered: true
-        reason: Keeps GPT 5.6 Sol available when Codex discovery is unavailable.
-        model:
-          name: GPT 5.6 Sol
-          reasoning: true
-          input: [text, image]
-          contextWindow: 272000
-          maxTokens: 128000
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-      gpt-5.6-terra:
-        includeWhenUndiscovered: true
-        reason: Keeps GPT 5.6 Terra available when Codex discovery is unavailable.
-        model:
-          name: GPT 5.6 Terra
-          reasoning: true
-          input: [text, image]
-          contextWindow: 272000
-          maxTokens: 128000
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-
-  cursor:
-    harnessIds:
-      pi: cursor
-    discovery:
-      kind: openai-models
-      url: http://127.0.0.1:32124/v1/models
-    piTransport:
-      name: Cursor Subscription
-      baseUrl: http://127.0.0.1:32124/v1
-      api: openai-completions
-      apiKey: local-bridge
-      authHeader: true
-      compat:
-        supportsDeveloperRole: false
-        supportsReasoningEffort: false
-        supportsStore: false
-    modelDefaults:
-      reasoning: false
-      input: [text, image]
-      contextWindow: 1000000
-      maxTokens: 256000
-      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-    modelRules:
-      - match: -xhigh$
-        overrides:
-          reasoning: true
-          maxTokens: 128000
 
 selectors:
   xai-chat:
@@ -117,130 +59,24 @@ selectors:
     exact: grok-4.6-fast
   openai-luna:
     provider: openai-codex
-    exact: gpt-5.6-luna
+    exact: gpt-6-luna
   openai-sol:
     provider: openai-codex
-    exact: gpt-5.6-sol
-  openai-terra:
+    exact: gpt-6.1-sol
+  openai-astra:
     provider: openai-codex
-    exact: gpt-5.6-terra
-  cursor-auto:
-    provider: cursor
-    exact: auto
-  cursor-muse-spark-low:
-    provider: cursor
-    familyLatest:
-      family: muse-spark
-      suffix: -low
-      versionScheme: numeric-dotted
-  cursor-muse-spark-medium:
-    provider: cursor
-    familyLatest:
-      family: muse-spark
-      suffix: -medium
-      versionScheme: numeric-dotted
-  cursor-muse-spark-high:
-    provider: cursor
-    familyLatest:
-      family: muse-spark
-      suffix: -high
-      versionScheme: numeric-dotted
-  cursor-muse-spark-max:
-    provider: cursor
-    familyLatest:
-      family: muse-spark
-      suffix: -max
-      versionScheme: numeric-dotted
-  cursor-muse-spark-minimal:
-    provider: cursor
-    familyLatest:
-      family: muse-spark
-      suffix: -minimal
-      versionScheme: numeric-dotted
-  cursor-muse-spark-xhigh:
-    provider: cursor
-    familyLatest:
-      family: muse-spark
-      suffix: -xhigh
-      versionScheme: numeric-dotted
-  cursor-claude-low:
-    provider: cursor
-    exact: claude-sonnet-5-low
-  cursor-claude-medium:
-    provider: cursor
-    exact: claude-sonnet-5-medium
-  cursor-claude-high:
-    provider: cursor
-    exact: claude-sonnet-5-high
-  cursor-claude-xhigh:
-    provider: cursor
-    exact: claude-sonnet-5-xhigh
-  cursor-claude-max:
-    provider: cursor
-    exact: claude-sonnet-5-max
-  cursor-grok-low:
-    provider: cursor
-    exact: cursor-grok-4.6-low
-  cursor-grok-low-fast:
-    provider: cursor
-    exact: cursor-grok-4.6-low-fast
-  cursor-grok-medium:
-    provider: cursor
-    exact: cursor-grok-4.6-medium
-  cursor-grok-medium-fast:
-    provider: cursor
-    exact: cursor-grok-4.6-medium-fast
-  cursor-grok-high:
-    provider: cursor
-    exact: cursor-grok-4.6-high
-  cursor-grok-high-fast:
-    provider: cursor
-    exact: cursor-grok-4.6-high-fast
-  cursor-grok-xhigh:
-    provider: cursor
-    exact: cursor-grok-4.6-xhigh
-  cursor-grok-xhigh-fast:
-    provider: cursor
-    exact: cursor-grok-4.6-xhigh-fast
-  cursor-coder:
-    provider: cursor
-    familyLatest:
-      family: composer
-      suffix: -fast
-      versionScheme: numeric-dotted
+    exact: gpt-6-astra
 
 piScopes:
   default:
+    - openai-sol
+    - openai-luna
+    - openai-astra
     - xai-chat
     - xai-coder
-    - openai-luna
-    - openai-sol
-    - openai-terra
-    - cursor-auto
-    - cursor-muse-spark-low
-    - cursor-muse-spark-medium
-    - cursor-muse-spark-high
-    - cursor-muse-spark-max
-    - cursor-muse-spark-minimal
-    - cursor-muse-spark-xhigh
-    - cursor-claude-low
-    - cursor-claude-medium
-    - cursor-claude-high
-    - cursor-claude-xhigh
-    - cursor-claude-max
-    - cursor-grok-low
-    - cursor-grok-low-fast
-    - cursor-grok-medium
-    - cursor-grok-medium-fast
-    - cursor-grok-high
-    - cursor-grok-high-fast
-    - cursor-grok-xhigh
-    - cursor-grok-xhigh-fast
-    - cursor-coder
 
 opencodeRoles:
-  advisor: xai-chat
-  coder: xai-coder
-
-generatedTargets:
-  cursorProvider: harnesses/pi/cursor-provider.json
+  primary: openai-sol
+  explore: openai-luna
+  advisor: openai-sol
+  coder: openai-sol

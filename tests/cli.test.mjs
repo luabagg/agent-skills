@@ -17,6 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { shellQuote, windowsQuote } from "../scripts/lib/command.mjs";
+import { parseJsonc } from "../scripts/lib/jsonc.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = resolve(repoRoot, "scripts/cli.mjs");
@@ -136,10 +137,10 @@ test("list curated prints sources; --plugins switches inventory", () => {
   assert.match(combined(plugins), /sentry|github-review-workflows|NAME/);
 });
 
-test("setup pi rejects --catalog-only with --skip-cursor-bridge", () => {
-  const result = runCli(["setup", "pi", "--catalog-only", "--skip-cursor-bridge"]);
+test("setup pi rejects the removed Cursor bridge flag", () => {
+  const result = runCli(["setup", "pi", "--skip-cursor-bridge"]);
   assert.equal(result.status, 1);
-  assert.match(combined(result), /`--catalog-only` already skips the Cursor bridge/);
+  assert.match(combined(result), /Unknown flag --skip-cursor-bridge/);
 });
 
 test("value flag --vault requires a value", () => {
@@ -203,6 +204,56 @@ test("child exit-code propagation: models check failure is not zeroed", () => {
   assert.notEqual(result.status, 0);
   assert.equal(result.status, 1);
   assert.match(combined(result), /no such file or directory|ENOENT|missing-catalog-policy/i);
+});
+
+test("Pi catalog apply preserves local providers and preferences and is idempotent", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-pi-catalog-"));
+  const piDir = join(home, ".pi", "agent");
+  const settingsPath = join(piDir, "settings.json");
+  const modelsPath = join(piDir, "models.json");
+  const settings = {
+    packages: ["npm:personal-pi-tools"],
+    enabledModels: ["personal/local-model", "xai/old-model"],
+    theme: "personal-theme",
+  };
+  const models = '{\n  "providers": { "personal": { "baseUrl": "http://localhost:4321/v1" } }\n}\n';
+  mkdirSync(piDir, { recursive: true });
+  writeFileSync(settingsPath, JSON.stringify(settings));
+  writeFileSync(modelsPath, models);
+  try {
+    const preview = runCli(["setup", "pi", "--catalog-only", "--dry-run"], { env: { HOME: home } });
+    assert.equal(preview.status, 0, combined(preview));
+    assert.deepEqual(JSON.parse(readFileSync(settingsPath, "utf8")), settings);
+    assert.equal(readFileSync(modelsPath, "utf8"), models);
+    assert.deepEqual(readdirSync(piDir).sort(), ["models.json", "settings.json"]);
+
+    const applied = runCli(["setup", "pi", "--catalog-only"], { env: { HOME: home } });
+    assert.equal(applied.status, 0, combined(applied));
+    const next = JSON.parse(readFileSync(settingsPath, "utf8"));
+    assert.deepEqual(next.packages, settings.packages);
+    assert.equal(next.theme, settings.theme);
+    assert.equal(next.defaultProvider, "openai-codex");
+    assert.equal(next.defaultModel, "gpt-6.1-sol");
+    assert.equal(next.defaultThinkingLevel, "medium");
+    assert.ok(next.enabledModels.includes("personal/local-model"));
+    assert.ok(next.enabledModels.includes("xai/grok-4.6"));
+    assert.ok(!next.enabledModels.includes("xai/old-model"));
+    assert.ok(next.enabledModels.every((model) => !model.startsWith("cursor/")));
+    assert.equal(readFileSync(modelsPath, "utf8"), models);
+    assert.ok(!readdirSync(piDir).includes("extensions"));
+    assert.ok(readdirSync(piDir).some((name) => name.startsWith("settings.json.bak-")));
+
+    const entries = readdirSync(piDir).sort();
+    const contents = readFileSync(settingsPath, "utf8");
+    const repeated = runCli(["setup", "pi", "--catalog-only"], { env: { HOME: home } });
+    assert.equal(repeated.status, 0, combined(repeated));
+    assert.equal(readFileSync(settingsPath, "utf8"), contents);
+    assert.equal(readFileSync(modelsPath, "utf8"), models);
+    assert.deepEqual(readdirSync(piDir).sort(), entries);
+    assert.match(combined(repeated), /already matches/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 });
 
 test("child success: models check via dispatcher exits 0", () => {
@@ -398,6 +449,55 @@ test("setup opencode preserves JSONC comments when adding plugins", () => {
   }
 });
 
+test("OpenCode setup applies model defaults without replacing local configuration and is idempotent", () => {
+  const home = mkdtempSync(join(tmpdir(), "agent-skills-opencode-defaults-"));
+  const configDir = join(home, ".config", "opencode");
+  const configPath = join(configDir, "opencode.jsonc");
+  mkdirSync(configDir, { recursive: true });
+  const initial = `{
+  // preserve local tool settings
+  "mcp": { "servers": { "local": { "type": "local", "command": ["local-tool"] } } },
+  "plugin": ["existing-plugin"],
+  "instructions": ["personal.md"],
+  "agents": { "build": { "description": "my build agent" }, "personal": { "mode": "subagent" } },
+}\n`;
+  writeFileSync(configPath, initial);
+  const env = { HOME: home };
+  try {
+    const preview = runCli(["setup", "opencode", "--dry-run"], { env });
+    assert.equal(preview.status, 0, combined(preview));
+    assert.equal(readFileSync(configPath, "utf8"), initial);
+    assert.deepEqual(readdirSync(configDir), ["opencode.jsonc"]);
+
+    const applied = runCli(["setup", "opencode"], { env });
+    assert.equal(applied.status, 0, combined(applied));
+    const content = readFileSync(configPath, "utf8");
+    const config = parseJsonc(content);
+    assert.match(content, /preserve local tool settings/);
+    assert.equal(config.model, "openai/gpt-6.1-sol");
+    assert.equal(config.default_agent, "build");
+    assert.deepEqual(config.agents.build.model, { providerID: "openai", model: "gpt-6.1-sol", variant: "medium" });
+    assert.equal(config.agents.plan.model.variant, "high");
+    assert.equal(config.agents.explore.model.model, "gpt-6-luna");
+    assert.equal(config.agents.build.description, "my build agent");
+    assert.deepEqual(config.agents.personal, { mode: "subagent" });
+    assert.deepEqual(config.plugin, ["existing-plugin"]);
+    assert.deepEqual(config.mcp, parseJsonc(initial).mcp);
+    assert.deepEqual(config.instructions, ["personal.md", join(configDir, "agent-skills.md")]);
+    assert.match(readFileSync(join(configDir, "agent-skills.md"), "utf8"), /Do not require design approval/);
+    assert.match(readFileSync(join(configDir, "agent", "advisor.md"), "utf8"), /model: openai\/gpt-6\.1-sol/);
+
+    const entries = readdirSync(configDir).sort();
+    const repeated = runCli(["setup", "opencode"], { env });
+    assert.equal(repeated.status, 0, combined(repeated));
+    assert.equal(readFileSync(configPath, "utf8"), content);
+    assert.deepEqual(readdirSync(configDir).sort(), entries);
+    assert.match(combined(repeated), /already matches/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
 test("setup opencode refuses an unmanaged symlink with a managed-looking target", () => {
   const home = mkdtempSync(join(tmpdir(), "agent-skills-opencode-link-"));
   const local = join(home, "local-opencode-agent.md");
@@ -421,7 +521,7 @@ test("setup pi propagates package installer failures", () => {
   mkdirSync(bin, { recursive: true });
   writeFileSync(fakePi, "#!/bin/sh\nexit 23\n", { mode: 0o755 });
   try {
-    const result = runCli(["setup", "pi", "--skip-cursor-bridge"], {
+    const result = runCli(["setup", "pi"], {
       env: { HOME: home, PATH: `${bin}:${process.env.PATH}` },
     });
     assert.notEqual(result.status, 0);

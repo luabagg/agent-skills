@@ -7,6 +7,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { parseOpenCodeModels } from "./lib/model-discovery.mjs";
 
 const repoRoot = resolve(fileURLToPath(new URL("../", import.meta.url)));
 const policyPath = resolve(process.env.CATALOG_POLICY_PATH || resolve(repoRoot, "harnesses/catalog.yaml"));
@@ -57,7 +58,7 @@ function validateModel(model, path, partial = false) {
 }
 
 function validatePolicy(policy) {
-  assertKeys(policy, new Set(["schemaVersion", "providers", "selectors", "piScopes", "opencodeRoles", "generatedTargets"]), "catalog");
+  assertKeys(policy, new Set(["schemaVersion", "providers", "selectors", "piScopes", "opencodeRoles"]), "catalog");
   assert(policy.schemaVersion === 1, "schemaVersion must be 1");
   assert(policy.providers && Object.keys(policy.providers).length > 0, "providers are required");
 
@@ -65,7 +66,7 @@ function validatePolicy(policy) {
     assertId(providerId, `providers.${providerId}`);
     assertKeys(provider, new Set(["harnessIds", "discovery", "piTransport", "modelDefaults", "modelRules", "fallbackMetadata"]), `providers.${providerId}`);
     assert(provider.harnessIds && typeof provider.harnessIds === "object", `providers.${providerId}.harnessIds is required`);
-    assert(provider.discovery && ["openai-models", "pi-list-models"].includes(provider.discovery.kind), `providers.${providerId}.discovery.kind is invalid`);
+    assert(provider.discovery && ["openai-models", "pi-list-models", "opencode-list-models"].includes(provider.discovery.kind), `providers.${providerId}.discovery.kind is invalid`);
     validateModel({ name: providerId, ...provider.modelDefaults }, `providers.${providerId}.modelDefaults`);
     for (const [index, rule] of (provider.modelRules ?? []).entries()) {
       assertKeys(rule, new Set(["match", "overrides"]), `providers.${providerId}.modelRules[${index}]`);
@@ -105,7 +106,6 @@ function validatePolicy(policy) {
     assertId(role, `opencodeRoles.${role}`);
     assert(policy.selectors[selector], `opencodeRoles.${role} references missing selector ${selector}`);
   }
-  assert(policy.generatedTargets?.cursorProvider, "generatedTargets.cursorProvider is required");
 }
 
 function sorted(value) {
@@ -133,13 +133,12 @@ function parseCompactNumber(value) {
   return Math.round(Number(match[1]) * multiplier);
 }
 
-function titleFromId(id, providerId) {
-  const title = id.split("-").map((part) => /^\d/.test(part) ? part : `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
-  return providerId === "cursor" ? `Cursor ${title}` : title;
+function titleFromId(id) {
+  return id.split("-").map((part) => /^\d/.test(part) ? part : `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`).join(" ");
 }
 
 function applyMetadata(providerId, provider, id, discovered = {}) {
-  let model = { name: titleFromId(id, providerId), ...provider.modelDefaults, ...discovered };
+  let model = { name: titleFromId(id), ...provider.modelDefaults, ...discovered };
   for (const rule of provider.modelRules ?? []) {
     if (new RegExp(rule.match).test(id)) model = { ...model, ...rule.overrides };
   }
@@ -181,6 +180,13 @@ async function discoverPiModels(providerId, provider) {
 
 async function discoverProvider(providerId, provider) {
   if (provider.discovery.kind === "openai-models") return discoverOpenAi(providerId, provider);
+  if (provider.discovery.kind === "opencode-list-models") {
+    const output = execFileSync("opencode", ["models", provider.discovery.provider, "--verbose"], {
+      encoding: "utf8", timeout: 30000, maxBuffer: 8 * 1024 * 1024,
+    });
+    const models = parseOpenCodeModels(output, provider.discovery.provider);
+    return Object.fromEntries(Object.entries(models).map(([id, model]) => [id, applyMetadata(providerId, provider, id, model)]));
+  }
   return discoverPiModels(providerId, provider);
 }
 
@@ -228,6 +234,7 @@ function resolveSelectors(policy, providers) {
 
 function buildLock(policy, providerModels) {
   const providers = Object.fromEntries(Object.entries(providerModels).map(([id, models]) => [id, {
+    policyDigest: digest(policy.providers[id]),
     snapshotDigest: digest(models),
     models,
   }]));
@@ -253,6 +260,9 @@ function validateLock(policy, lock) {
   assert(lock.policyDigest === digest(policy), "catalog.lock.json is stale for catalog.yaml; run agent-skills models refresh");
   for (const providerId of Object.keys(policy.providers)) {
     assert(lock.providers?.[providerId]?.models, `lock is missing provider ${providerId}`);
+    if (lock.providers[providerId].policyDigest) {
+      assert(lock.providers[providerId].policyDigest === digest(policy.providers[providerId]), `lock policy digest mismatch for ${providerId}`);
+    }
   }
   const expected = resolveSelectors(policy, lock.providers);
   assert(canonical(expected) === canonical(lock.resolvedSelectors), "lock resolvedSelectors are stale");
@@ -263,17 +273,6 @@ function resolvedModelId(policy, lock, selectorId, harness) {
   const prefix = policy.providers[resolved.provider].harnessIds[harness];
   assert(prefix, `provider ${resolved.provider} has no ${harness} harness ID`);
   return `${prefix}/${resolved.modelId}`;
-}
-
-function buildCursorProvider(policy, lock) {
-  const provider = policy.providers.cursor;
-  const models = Object.entries(lock.providers.cursor.models).sort(([a], [b]) => a.localeCompare(b)).map(([id, model]) => ({ id, ...model }));
-  return { ...provider.piTransport, models };
-}
-
-function expectedTargets(policy, lock) {
-  const cursorPath = resolve(repoRoot, policy.generatedTargets.cursorProvider);
-  return new Map([[cursorPath, canonical(buildCursorProvider(policy, lock))]]);
 }
 
 async function writeAtomic(path, content) {
@@ -305,7 +304,10 @@ async function discoverWithLockFallback(policy, oldLock) {
     } catch (error) {
       const locked = oldLock?.providers?.[providerId]?.models;
       if (!locked) throw error;
-      if (oldLock.policyDigest !== digest(policy)) {
+      const policyUnchanged = oldLock.providers[providerId].policyDigest
+        ? oldLock.providers[providerId].policyDigest === digest(provider)
+        : oldLock.policyDigest === digest(policy);
+      if (!policyUnchanged) {
         throw new Error(
           `${providerId} discovery failed while catalog policy changed; refusing to bless stale metadata. Restore discovery or revert the policy before refresh. Cause: ${error.message}`,
         );
@@ -317,9 +319,10 @@ async function discoverWithLockFallback(policy, oldLock) {
   return models;
 }
 
-function printDiff(oldLock, nextLock, targets) {
+function printDiff(oldLock, nextLock) {
   if (canonical(oldLock) === canonical(nextLock)) console.log("catalog lock: no changes");
   else {
+    console.log("catalog lock: would update");
     for (const providerId of Object.keys(nextLock.providers)) {
       const before = oldLock?.providers?.[providerId]?.models ?? {};
       const after = nextLock.providers[providerId].models;
@@ -333,33 +336,23 @@ function printDiff(oldLock, nextLock, targets) {
       if (!old || old.modelId !== resolved.modelId) console.log(`selector ${id}: ${old?.modelId ?? "<none>"} -> ${resolved.modelId}`);
     }
   }
-  for (const [path, content] of targets) {
-    const current = existsSync(path) ? execFileSync("cat", [path], { encoding: "utf8" }) : null;
-    console.log(`${path.slice(repoRoot.length + 1)}: ${current === content ? "unchanged" : "would update"}`);
-  }
 }
 
 const policy = await loadPolicy();
 if (command === "check") {
   const lock = await loadLock(policy);
-  let failed = false;
-  for (const [path, expected] of expectedTargets(policy, lock)) {
-    const current = existsSync(path) ? await readFile(path, "utf8") : null;
-    if (current !== expected) {
-      console.error(`stale generated target: ${path.slice(repoRoot.length + 1)}`);
-      failed = true;
-    }
+  for (const selector of Object.values(policy.opencodeRoles)) {
+    resolvedModelId(policy, lock, selector, "opencode");
   }
-  for (const [role, selector] of Object.entries(policy.opencodeRoles)) {
-    const agent = JSON.parse(await readFile(resolve(repoRoot, "harnesses/opencode.json"), "utf8")).agents.find((item) => item.name === role);
-    assert(agent?.modelRole === role, `OpenCode agent ${role} must declare modelRole ${role}`);
+  const manifest = JSON.parse(await readFile(resolve(repoRoot, "harnesses/opencode.json"), "utf8"));
+  for (const agent of manifest.agents.filter((item) => item.modelRole)) {
+    const role = agent.modelRole;
+    assert(policy.opencodeRoles[role], `OpenCode agent ${agent.name} references missing role ${role}`);
     const template = await readFile(resolve(repoRoot, "harnesses/opencode", agent.sourceFile), "utf8");
     assert((template.match(/^model:\s*\{\{catalogRole:[a-z0-9._-]+\}\}$/gm) ?? []).length === 1, `agent template ${agent.sourceFile} must contain exactly one catalog model placeholder`);
     assert(template.includes(`{{catalogRole:${role}}}`), `agent template ${agent.sourceFile} role does not match ${role}`);
-    resolvedModelId(policy, lock, selector, "opencode");
   }
-  if (failed) process.exitCode = 1;
-  else console.log("catalog check passed");
+  console.log("catalog check passed");
 } else {
   const oldLock = existsSync(lockPath) ? await readJson(lockPath) : null;
   if (oldLock) {
@@ -368,11 +361,9 @@ if (command === "check") {
   }
   const providerModels = await discoverWithLockFallback(policy, oldLock);
   const nextLock = buildLock(policy, providerModels);
-  const targets = expectedTargets(policy, nextLock);
-  printDiff(oldLock, nextLock, targets);
+  printDiff(oldLock, nextLock);
   if (command === "refresh") {
     await writeAtomic(lockPath, canonical(nextLock));
-    for (const [path, content] of targets) await writeAtomic(path, content);
     console.log("catalog refresh complete");
   }
 }

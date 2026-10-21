@@ -36,7 +36,7 @@ harnesses:
     adapter: agent-skills
     actions:
       - action: configure
-        summary: Configure Pi packages, extensions, models, and Cursor bridge
+        summary: Configure Pi packages, extensions, and model Scope
         config:
           manifest: ./harnesses/pi.json
           catalog: ./harnesses/catalog.yaml
@@ -46,7 +46,7 @@ harnesses:
     adapter: agent-skills
     actions:
       - action: configure
-        summary: Apply committed Pi model lock, Scope, and providers
+        summary: Apply committed Pi model lock and Scope
         config:
           manifest: ./harnesses/pi.json
           catalog: ./harnesses/catalog.yaml
@@ -65,7 +65,7 @@ harnesses:
     adapter: agent-skills
     actions:
       - action: configure-plugins-and-agents
-        summary: Configure OpenCode plugins and agents
+        summary: Configure OpenCode model defaults, instructions, plugins, and agents
         config:
           manifest: ./harnesses/opencode.json
           source: ./harnesses/opencode/agents

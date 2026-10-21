@@ -2,6 +2,7 @@
 description: Execute implementation instructions delegated by Build mode. Use for coding tasks that need file edits, shell commands, and verification.
 mode: subagent
 model: {{catalogRole:coder}}
+variant: medium
 color: accent
 ---
 

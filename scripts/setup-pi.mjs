@@ -2,18 +2,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import {
-  chmod,
-  copyFile,
-  lstat,
-  mkdir,
-  readFile,
-  readlink,
-  rename,
-  rm,
-  symlink,
-  writeFile,
-} from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,19 +14,12 @@ const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const enableRecommended = args.has("--enable-recommended");
 const catalogOnly = args.has("--catalog-only");
-const skipCursorBridge = args.has("--skip-cursor-bridge") || catalogOnly;
 const unknownArgs = [...args].filter(
-  (arg) =>
-    ![
-      "--dry-run",
-      "--enable-recommended",
-      "--catalog-only",
-      "--skip-cursor-bridge",
-    ].includes(arg),
+  (arg) => !["--dry-run", "--enable-recommended", "--catalog-only"].includes(arg),
 );
 if (unknownArgs.length > 0) {
   console.error(
-    `Unknown setup-pi flag(s): ${unknownArgs.join(", ")}. Supported: --dry-run, --enable-recommended, --catalog-only, --skip-cursor-bridge.`,
+    `Unknown setup-pi flag(s): ${unknownArgs.join(", ")}. Supported: --dry-run, --enable-recommended, --catalog-only.`,
   );
   process.exit(1);
 }
@@ -51,9 +33,7 @@ const catalog = parseYaml(await readFile(catalogPath, "utf8"));
 const catalogLock = JSON.parse(await readFile(catalogLockPath, "utf8"));
 
 const piDir = resolve(join(homedir(), ".pi", "agent"));
-const extensionsDir = resolve(join(piDir, "extensions"));
 const settingsPath = resolve(join(piDir, "settings.json"));
-const modelsPath = resolve(join(piDir, "models.json"));
 const installedCatalogLockPath = resolve(join(piDir, "catalog.lock.json"));
 
 function validateManifest(value) {
@@ -88,56 +68,26 @@ function validateManifest(value) {
   if (settings && (!settings.catalogScope || !catalog.piScopes?.[settings.catalogScope])) {
     throw new Error("pi settings.catalogScope must reference a catalog piScope.");
   }
-
-  for (const provider of value.modelProviders ?? []) {
-    if (!provider.name || !provider.sourceFile || typeof provider.defaultEnabled !== "boolean") {
-      throw new Error("Each modelProvider needs name, sourceFile, and defaultEnabled.");
-    }
-    if (
-      provider.includeModelsFromPiScope &&
-      !catalog.piScopes?.[provider.includeModelsFromPiScope]
-    ) {
-      throw new Error(
-        `${provider.name}.includeModelsFromPiScope must reference a catalog piScope.`,
-      );
-    }
+  if (settings?.defaultSelector && !catalog.piScopes[settings.catalogScope].includes(settings.defaultSelector)) {
+    throw new Error("pi settings.defaultSelector must belong to the selected catalog Scope.");
   }
-
-  const bridge = value.cursorBridge;
-  if (bridge?.enabled) {
-    for (const key of ["package", "configHome", "serviceTemplate", "systemdUnit"]) {
-      if (!bridge[key]) throw new Error(`cursorBridge.${key} is required.`);
-    }
+  if (settings?.defaultThinkingLevel && !["off", "minimal", "low", "medium", "high", "xhigh", "max"].includes(settings.defaultThinkingLevel)) {
+    throw new Error("pi settings.defaultThinkingLevel is invalid.");
   }
 }
 
 async function readUtf8IfExists(filePath) {
   try {
     return await readFile(filePath, "utf8");
-  } catch {
-    return null;
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
   }
 }
 
 function expandTilde(value) {
   if (value.startsWith("~/")) return resolve(join(homedir(), value.slice(2)));
   return resolve(value);
-}
-
-function packagesToInstall() {
-  return (manifest.packages ?? []).filter((pkg) => pkg.defaultEnabled || enableRecommended);
-}
-
-function localExtensionsToInstall() {
-  return (manifest.localExtensions ?? []).filter(
-    (ext) => ext.defaultEnabled || enableRecommended,
-  );
-}
-
-function modelProvidersToInstall() {
-  return (manifest.modelProviders ?? []).filter(
-    (provider) => provider.defaultEnabled || enableRecommended,
-  );
 }
 
 function currentPackageSet(settings) {
@@ -189,6 +139,12 @@ function nextSettings(currentSettings, sources) {
       ),
       ...resolved.enabledModels,
     ];
+    if (managed.defaultSelector) {
+      const selected = catalogLock.resolvedSelectors[managed.defaultSelector];
+      next.defaultProvider = catalog.providers[selected.provider].harnessIds.pi;
+      next.defaultModel = selected.modelId;
+    }
+    if (managed.defaultThinkingLevel) next.defaultThinkingLevel = managed.defaultThinkingLevel;
   }
 
   return next;
@@ -245,368 +201,72 @@ async function installLocalExtension(ext) {
   return true;
 }
 
-function filterProviderModelsFromPiScope(providerName, providerConfig, scopeId) {
-  if (!scopeId) return providerConfig;
-
-  const resolved = resolvedScope(scopeId);
-  const prefix = `${providerName}/`;
-  const allowedIds = new Set(
-    resolved.enabledModels
-      .filter((id) => id.startsWith(prefix))
-      .map((id) => id.slice(prefix.length)),
-  );
-
-  if (allowedIds.size === 0) {
-    console.warn(`  ${providerName}: piScope ${scopeId} selects no models for this provider`);
-    return providerConfig;
-  }
-
-  const models = Array.isArray(providerConfig.models) ? providerConfig.models : [];
-  const filtered = models.filter((model) => allowedIds.has(model.id));
-  console.log(
-    `  ${providerName}: limiting models from ${models.length} to ${filtered.length} via piScope ${scopeId}`,
-  );
-  return { ...providerConfig, models: filtered };
-}
-
-async function nextModels(currentModels, providers) {
-  const next = { ...currentModels, providers: { ...(currentModels.providers ?? {}) } };
-  for (const provider of providers) {
-    const source = resolve(harnessRoot, provider.sourceFile);
-    if (!existsSync(source)) throw new Error(`Missing provider source: ${source}`);
-    const providerConfig = JSON.parse(await readFile(source, "utf8"));
-    next.providers[provider.name] = filterProviderModelsFromPiScope(
-      provider.name,
-      providerConfig,
-      provider.includeModelsFromPiScope,
-    );
-  }
-  return next;
-}
-
-function commandPath(name) {
-  try {
-    return execFileSync("which", [name], { encoding: "utf8" }).trim();
-  } catch {
-    return null;
-  }
-}
-
-export function renderService(template, values) {
-  const rendered = template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => {
-    if (!(key in values)) throw new Error(`Missing template value: ${key}`);
-    return values[key];
+async function main() {
+  execFileSync(process.execPath, [fileURLToPath(new URL("./catalog.mjs", import.meta.url)), "check"], {
+    stdio: "inherit",
   });
-  if (/\$\(|`/.test(rendered)) throw new Error("Unsafe shell substitution in bridge template");
-  return rendered;
-}
+  validateManifest(manifest);
 
-const LOOPBACK = {
-  controlUrl: "http://127.0.0.1:32125",
-  providerUrl: "http://127.0.0.1:32124/v1",
-};
+  const selectedPackages = catalogOnly ? [] : (manifest.packages ?? []).filter(
+    (pkg) => pkg.defaultEnabled || enableRecommended,
+  );
+  const selectedLocalExtensions = catalogOnly ? [] : (manifest.localExtensions ?? []).filter(
+    (ext) => ext.defaultEnabled || enableRecommended,
+  );
+  const currentSettingsContent = await readUtf8IfExists(settingsPath);
+  const currentSettings = currentSettingsContent ? JSON.parse(currentSettingsContent) : {};
+  const currentPackages = currentPackageSet(currentSettings);
+  const sourcesToAdd = selectedPackages
+    .filter((pkg) => !currentPackages.has(pkg.source))
+    .map((pkg) => pkg.source);
+  const updatedSettings = nextSettings(currentSettings, sourcesToAdd);
 
-export function validateBridgeConfig(value) {
-  if (!value || value.controlUrl !== LOOPBACK.controlUrl || value.providerUrl !== LOOPBACK.providerUrl) {
-    throw new Error("Bridge URLs must use fixed loopback HTTP endpoints and ports");
+  console.log(
+    `Pi harness: ${(manifest.packages ?? []).length} packages, ${(manifest.localExtensions ?? []).length} local extensions.`,
+  );
+  console.log(`Harness root: ${harnessRoot}`);
+  console.log(`Mode: ${dryRun ? "dry-run" : "write"}`);
+  console.log(`Phases: ${catalogOnly ? "catalog" : "catalog, packages, extensions"}`);
+  if (catalogOnly) {
+    console.log("Catalog-only: applying lock and Scope models; skipping packages/extensions.");
+  } else {
+    console.log("\nSelected pi packages:");
+    for (const pkg of selectedPackages) {
+      console.log(`- ${pkg.name} (${pkg.source}) [${currentPackages.has(pkg.source) ? "ok" : "missing"}]`);
+    }
   }
-  return value;
-}
 
-export function validateWorkspace(value, root = homedir()) {
-  if (typeof value !== "string" || !value || /[\\$`;&|\n]/.test(value)) throw new Error("Unsafe workspace value");
-  const candidate = resolve(value);
-  const base = resolve(root);
-  if (candidate !== base && !candidate.startsWith(`${base}${process.platform === "win32" ? "\\\\" : "/"}`)) throw new Error("Workspace must stay inside approved local root");
-  return candidate;
-}
+  let changed = await writeJsonWithBackup(settingsPath, updatedSettings, `Pi settings: ${settingsPath}`);
+  changed = (await installCatalogLock()) || changed;
 
-export function planBridge(value) {
-  validateBridgeConfig(value);
-  return { controlUrl: value.controlUrl, providerUrl: value.providerUrl, cursorAuthDir: value.cursorAuthDir ?? null, auth: "native Cursor login" };
-}
-
-const replaceTemplate = renderService;
-
-function systemdEnvironmentValue(value) {
-  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("%", "%%");
-}
-
-function commandSucceeds(command, args) {
-  try {
-    execFileSync(command, args, { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
+  for (const pkg of selectedPackages) {
+    if (!sourcesToAdd.includes(pkg.source)) continue;
+    if (dryRun) {
+      console.log(` would run: ${pkg.install.executable} ${pkg.install.args.join(" ")} (${pkg.name})`);
+    } else {
+      console.log(`Running: ${pkg.install.executable} ${pkg.install.args.join(" ")} (${pkg.name})`);
+      const result = await spawnInherited({ executable: pkg.install.executable, args: pkg.install.args, cwd: repoRoot, env: process.env });
+      if (result.status !== 0) throw new Error(`Command failed with status ${result.status}: ${pkg.name}`);
+    }
+    changed = true;
   }
-}
 
-async function symlinkMatches(target, source) {
-  try {
-    const info = await lstat(target);
-    if (!info.isSymbolicLink()) return false;
-    return resolve(dirname(target), await readlink(target)) === resolve(source);
-  } catch {
-    return false;
-  }
-}
-
-function packageParts(spec) {
-  const separator = spec.lastIndexOf("@");
-  if (separator <= 0) return { name: spec, version: null };
-  return { name: spec.slice(0, separator), version: spec.slice(separator + 1) };
-}
-
-function globalPackageMatches(npmBin, spec) {
-  const { name, version } = packageParts(spec);
-  try {
-    const output = execFileSync(npmBin, ["list", "--global", "--depth=0", "--json"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    const installed = JSON.parse(output).dependencies?.[name]?.version;
-    return Boolean(installed && (!version || installed === version));
-  } catch {
-    return false;
-  }
-}
-
-async function setupCursorBridge() {
-  const bridge = manifest.cursorBridge;
-  if (!bridge?.enabled) return false;
-  validateBridgeConfig(bridge);
-
-  const configHome = expandTilde(bridge.configHome);
-  const opencodeConfig = join(configHome, "opencode", "opencode.json");
-  const pluginDir = join(configHome, "opencode", "plugin");
-  const cursorAuthDir = join(homedir(), ".config", "cursor");
-  const isolatedCursorDir = join(configHome, "cursor");
-  const servicePath = expandTilde(bridge.systemdUnit);
-  const refreshPath = expandTilde(bridge.refreshPath);
-  const workspace = validateWorkspace(process.env[bridge.workspaceEnv] || homedir(), homedir());
-
-  console.log("\nCursor ACP provider bridge:");
-  console.log(`- package: ${bridge.package}`);
-  console.log(`- config: ${configHome}`);
-  console.log(`- workspace: ${workspace}`);
-  console.log(`- service: ${servicePath}`);
-
-  const required = ["npm", "npx", "opencode", "cursor-agent", "curl", "systemctl"];
-  const paths = Object.fromEntries(required.map((name) => [name, commandPath(name)]));
-  const missing = required.filter((name) => !paths[name]);
-  if (missing.length > 0) {
-    console.warn(`  skipped: missing commands: ${missing.join(", ")}`);
-    return false;
+  if (!catalogOnly) {
+    console.log("\nLocal extensions:");
+    for (const ext of selectedLocalExtensions) {
+      changed = (await installLocalExtension(ext)) || changed;
+    }
   }
 
   if (dryRun) {
-    console.log(`  would install ${bridge.package} globally`);
-    console.log(`  would configure isolated OpenCursor bridge and enable systemd user service`);
-    return true;
-  }
-
-  let bridgeChanged = false;
-  if (!globalPackageMatches(paths.npm, bridge.package)) {
-    execFileSync(paths.npm, ["install", "--global", bridge.package], { stdio: "inherit" });
-    bridgeChanged = true;
+    console.log("\nDry-run complete. Re-run without --dry-run to apply.");
+  } else if (!changed) {
+    console.log("\nPi harness already matches selected entries.");
+  } else if (catalogOnly) {
+    console.log("\nPi catalog apply complete. Restart pi to load updated Scope models.");
   } else {
-    console.log(`  ${bridge.package} [ok]`);
+    console.log("\nPi harness setup complete. Restart pi to load updated models/extensions.");
   }
-
-  const openCursor = commandPath("open-cursor");
-  if (!openCursor) throw new Error("open-cursor missing after global install.");
-
-  const pluginPath = join(pluginDir, "cursor-acp.js");
-  if (!existsSync(opencodeConfig) || !existsSync(pluginPath)) {
-    await mkdir(pluginDir, { recursive: true });
-    execFileSync(
-      openCursor,
-      [
-        "install",
-        "--variants",
-        "--compact",
-        "--no-backup",
-        "--config",
-        opencodeConfig,
-        "--plugin-dir",
-        pluginDir,
-      ],
-      { stdio: "inherit" },
-    );
-    bridgeChanged = true;
-  } else {
-    console.log("  isolated OpenCursor config [ok]");
-  }
-
-  if (!(await symlinkMatches(isolatedCursorDir, cursorAuthDir))) {
-    try {
-      const existing = await lstat(isolatedCursorDir);
-      if (existing.isSymbolicLink()) {
-        await rm(isolatedCursorDir, { force: true });
-      } else {
-        const backup = `${isolatedCursorDir}.bak-${new Date().toISOString().replaceAll(":", "-")}`;
-        await rename(isolatedCursorDir, backup);
-        console.log(`  backed up existing Cursor config: ${backup}`);
-      }
-    } catch {
-      // Missing target is expected on first setup.
-    }
-    await mkdir(dirname(isolatedCursorDir), { recursive: true });
-    await symlink(cursorAuthDir, isolatedCursorDir, "dir");
-    bridgeChanged = true;
-  }
-  if (!existsSync(cursorAuthDir)) {
-    console.warn("  Cursor is not logged in. Run `cursor-agent login`, then restart the service.");
-  }
-
-  const serviceTemplate = await readFile(resolve(harnessRoot, bridge.serviceTemplate), "utf8");
-  const service = replaceTemplate(serviceTemplate, {
-    CURSOR_CONFIG_HOME: configHome,
-    PATH: systemdEnvironmentValue(process.env.PATH ?? "/usr/local/bin:/usr/bin:/bin"),
-    CURSOR_AGENT_BIN: systemdEnvironmentValue(paths["cursor-agent"]),
-    OPENCODE_BIN: paths.opencode,
-    CURL_BIN: paths.curl,
-    WORKSPACE_URL: encodeURIComponent(workspace).replaceAll("%2F", "/"),
-  });
-  const currentService = await readUtf8IfExists(servicePath);
-  const serviceChanged = currentService !== service;
-  if (serviceChanged) {
-    await mkdir(dirname(servicePath), { recursive: true });
-    await writeFile(servicePath, service, "utf8");
-    bridgeChanged = true;
-  } else {
-    console.log("  systemd service [ok]");
-  }
-
-  const refreshSource = resolve(harnessRoot, bridge.refreshScript);
-  const refreshContent = await readFile(refreshSource, "utf8");
-  const currentRefresh = await readUtf8IfExists(refreshPath);
-  if (currentRefresh !== refreshContent) {
-    await mkdir(dirname(refreshPath), { recursive: true });
-    await writeFile(refreshPath, refreshContent, "utf8");
-    bridgeChanged = true;
-  }
-  await chmod(refreshPath, 0o755);
-
-  const serviceActive = commandSucceeds(paths.systemctl, [
-    "--user",
-    "is-active",
-    "--quiet",
-    "pi-cursor-provider.service",
-  ]);
-  if (serviceChanged) {
-    execFileSync(paths.systemctl, ["--user", "daemon-reload"], { stdio: "inherit" });
-  }
-  if (!serviceActive || serviceChanged) {
-    execFileSync(paths.systemctl, ["--user", "enable", "pi-cursor-provider.service"], {
-      stdio: "inherit",
-    });
-    execFileSync(paths.systemctl, ["--user", "restart", "pi-cursor-provider.service"], {
-      stdio: "inherit",
-    });
-    bridgeChanged = true;
-  } else {
-    console.log("  pi-cursor-provider.service [active]");
-  }
-
-  console.log(`  health: ${bridge.providerUrl.replace(/\/v1$/, "")}/health`);
-  return bridgeChanged;
-}
-
-async function main() {
-execFileSync(process.execPath, [fileURLToPath(new URL("./catalog.mjs", import.meta.url)), "check"], {
-  stdio: "inherit",
-});
-validateManifest(manifest);
-
-const selectedPackages = catalogOnly ? [] : packagesToInstall();
-const selectedLocalExtensions = catalogOnly ? [] : localExtensionsToInstall();
-const selectedProviders = modelProvidersToInstall();
-const currentSettingsContent = await readUtf8IfExists(settingsPath);
-const currentSettings = currentSettingsContent ? JSON.parse(currentSettingsContent) : {};
-const currentPackages = currentPackageSet(currentSettings);
-const sourcesToAdd = selectedPackages
-  .filter((pkg) => !currentPackages.has(pkg.source))
-  .map((pkg) => pkg.source);
-// Catalog-only still reconciles Scope models from the lock; package sources stay untouched.
-const updatedSettings = nextSettings(
-  currentSettings,
-  catalogOnly ? [] : sourcesToAdd,
-);
-
-const currentModelsContent = await readUtf8IfExists(modelsPath);
-const currentModels = currentModelsContent ? JSON.parse(currentModelsContent) : {};
-const updatedModels = await nextModels(currentModels, selectedProviders);
-
-const phases = ["catalog"];
-if (!catalogOnly) phases.push("packages", "extensions");
-if (!skipCursorBridge) phases.push("cursor-bridge");
-
-console.log(
-  `Pi harness: ${(manifest.packages ?? []).length} packages, ${(manifest.localExtensions ?? []).length} local extensions, ${(manifest.modelProviders ?? []).length} model providers.`,
-);
-console.log(`Harness root: ${harnessRoot}`);
-console.log(`Mode: ${dryRun ? "dry-run" : "write"}`);
-console.log(`Phases: ${phases.join(", ")}`);
-if (catalogOnly) {
-  console.log("Catalog-only: applying lock, Scope models, and model providers; skipping packages/extensions/bridge.");
-}
-
-if (!catalogOnly) {
-  console.log("\nSelected pi packages:");
-  for (const pkg of selectedPackages) {
-    console.log(`- ${pkg.name} (${pkg.source}) [${currentPackages.has(pkg.source) ? "ok" : "missing"}]`);
-  }
-}
-
-let changed = false;
-
-// Phase: catalog — Scope models + committed lock + generated providers
-changed = (await writeJsonWithBackup(settingsPath, updatedSettings, `Pi settings: ${settingsPath}`)) || changed;
-changed = (await writeJsonWithBackup(modelsPath, updatedModels, `Pi models: ${modelsPath}`)) || changed;
-changed = (await installCatalogLock()) || changed;
-
-// Phase: packages
-if (!catalogOnly && !dryRun && sourcesToAdd.length > 0) {
-  for (const pkg of selectedPackages) {
-    if (!sourcesToAdd.includes(pkg.source)) continue;
-    console.log(`Running: ${pkg.install.executable} ${pkg.install.args.join(" ")} (${pkg.name})`);
-    const result = await spawnInherited({ executable: pkg.install.executable, args: pkg.install.args, cwd: repoRoot, env: process.env });
-    if (result.status !== 0) throw new Error(`Command failed with status ${result.status}: ${pkg.name}`);
-  }
-  changed = true;
-} else if (!catalogOnly && dryRun && sourcesToAdd.length > 0) {
-  for (const pkg of selectedPackages) {
-    if (!sourcesToAdd.includes(pkg.source)) continue;
-    console.log(` would run: ${pkg.install.executable} ${pkg.install.args.join(" ")} (${pkg.name})`);
-  }
-  changed = true;
-}
-
-// Phase: extensions
-if (!catalogOnly) {
-  console.log("\nLocal extensions:");
-  for (const ext of selectedLocalExtensions) {
-    changed = (await installLocalExtension(ext)) || changed;
-  }
-}
-
-// Phase: cursor bridge
-if (!skipCursorBridge) {
-  changed = (await setupCursorBridge()) || changed;
-} else {
-  console.log("\nCursor ACP provider bridge: skipped");
-}
-
-if (dryRun) {
-  console.log("\nDry-run complete. Re-run without --dry-run to apply.");
-} else if (!changed) {
-  console.log("\nPi harness already matches selected entries.");
-} else if (catalogOnly) {
-  console.log("\nPi catalog apply complete. Restart pi to load updated Scope models.");
-} else {
-  console.log("\nPi harness setup complete. Restart pi to load updated models/extensions.");
-}
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();

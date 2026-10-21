@@ -1,13 +1,9 @@
 ---
 description: Rewrite, translate, polish, and structure text with natural voice. Use for copy editing, messages, docs tone, and English correction.
 mode: primary
-temperature: 1.1
 permission:
   edit: deny
   bash: deny
-  skill:
-    natural-copy-editing: allow
-    "*": ask
 ---
 
 You are in **writing** mode. You produce clean copy, not code changes.

@@ -21,11 +21,7 @@ const FLAG_SPECS = {
   },
   catalogOnly: {
     name: "--catalog-only",
-    description: "Pi only: apply model lock, Scope, and providers",
-  },
-  skipCursorBridge: {
-    name: "--skip-cursor-bridge",
-    description: "Pi only: skip Cursor ACP bridge install",
+    description: "Pi only: apply model lock and Scope",
   },
   installed: { name: "--installed", description: "List globally installed skills" },
   json: { name: "--json", description: "Machine-readable JSON output" },
@@ -118,17 +114,13 @@ const COMMANDS = {
           script("setup-opencode.mjs", packFlags(flags, ["dryRun", "enableRecommended"])),
       },
       pi: {
-        description: "Install Pi packages, model Scope, extensions, and optional Cursor bridge",
-        flags: ["dryRun", "enableRecommended", "catalogOnly", "skipCursorBridge"],
-        run(flags) {
-          if (flags.catalogOnly && flags.skipCursorBridge) {
-            fail("`--catalog-only` already skips the Cursor bridge; omit `--skip-cursor-bridge`.");
-          }
-          return script(
+        description: "Install Pi packages, model Scope, and extensions",
+        flags: ["dryRun", "enableRecommended", "catalogOnly"],
+        run: (flags) =>
+          script(
             "setup-pi.mjs",
-            packFlags(flags, ["dryRun", "enableRecommended", "catalogOnly", "skipCursorBridge"]),
-          );
-        },
+            packFlags(flags, ["dryRun", "enableRecommended", "catalogOnly"]),
+          ),
       },
       cursor: {
         description: "Install Cursor user-scope subagents",
@@ -153,7 +145,7 @@ const COMMANDS = {
     description: "Validate or refresh the model/agent catalog",
     subcommands: {
       check: {
-        description: "Offline validation of policy, lock, and generated targets",
+        description: "Offline validation of policy, lock, and agent templates",
         run: () => script("catalog.mjs", ["check"]),
       },
       diff: {
@@ -161,7 +153,7 @@ const COMMANDS = {
         run: () => script("catalog.mjs", ["diff"]),
       },
       refresh: {
-        description: "Refresh lock and generated targets from live discovery",
+        description: "Refresh model lock from live discovery",
         run: () => script("catalog.mjs", ["refresh"]),
       },
     },
