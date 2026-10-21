@@ -26,7 +26,7 @@ Agentfolio also discovers the nearest `collection.yaml` or uses `AGENTFOLIO_COLL
 | Personal + curated skills and global instructions | `default` |
 | Personal skills only | `skills` |
 | Personal skills plus Pi configuration | `pi` |
-| Committed Pi model lock, Scope, and providers only | `pi-catalog` |
+| Committed Pi model lock and Scope only | `pi-catalog` |
 | Personal skills plus Cursor agents | `cursor` |
 | Personal skills plus OpenCode plugins and agents | `opencode` |
 | Personal skills plus global, Pi, Cursor, and OpenCode | `all` |
@@ -50,7 +50,7 @@ agent-skills models diff
 agent-skills models refresh
 ```
 
-Edit `harnesses/catalog.yaml`. Generated lock and provider targets are outputs. Run `models check`, then preview with `models diff`. Use `models refresh` only when the policy and discovery results are ready to commit. Apply Pi changes through `agentfolio apply --profile pi --dry-run`.
+Edit `harnesses/catalog.yaml`. The generated model lock is an output. Run `models check`, then preview with `models diff`. Use `models refresh` only when the policy and discovery results are ready to commit. Apply Pi changes through `agentfolio apply --profile pi --dry-run`.
 
 ## Decision rules
 
@@ -72,4 +72,4 @@ agentfolio plan --profile pi --collection .
 agentfolio apply --profile pi --dry-run --collection .
 ```
 
-The adapter is generic. This collection owns setup policy. Use native keychain or login authentication first. Keep fallback environment keys ephemeral. Rely on dry-run and rollback safeguards. The Cursor bridge accepts only fixed `127.0.0.1` endpoints.
+The adapter is generic. This collection owns setup policy. Use native keychain or login authentication first. Keep fallback environment keys ephemeral. Rely on dry-run and rollback safeguards. Pi uses direct providers and its native model picker.

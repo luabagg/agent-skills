@@ -86,7 +86,6 @@ The exports of a module are its API contract. A reader of the call site must und
 | --- | --- | --- | --- |
 | `checkClaims(claims)` | `const result = await checkClaims(claims)` | Checks what, against what, and returns what? | `lookUpClaimStatusForClaims(claims)` |
 | `isUnchanged(diff)` | `if (isUnchanged(diff))` | Unchanged against what? Every caller calls it right after the diff. | A field of the diff result: `diff.matchesCheckedIn` |
-| `loadAvailityClaimStatusPollingCounts(name, since)` | `if (polling.cappedSince > 0)` | Two answers in one call, and only `cappedSince` uses `since`. "Capped" names the mechanism. | `loadAvailityClaimStatusStillPollingCount(name)` and `loadAvailityClaimStatusGaveUpCount(name, since)` |
 
 ## Types and fields
 
