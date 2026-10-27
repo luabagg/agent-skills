@@ -12,19 +12,23 @@ A comment has one of two jobs:
 - An **implementation comment** sits inside a body. It tells a maintainer why the code is the way it is.
 
 Write for a reader who knows the product but not the code, the library, or the field's jargon.
-Most code needs neither kind. First try to make the code say it. Use a better name (see `code-naming`), extract a function, or return a typed result in place of a sentinel. Comment only what is left.
+Most code needs neither. First try to make the code say it. Use a better name (see `code-naming`), extract a function, or return a typed result in place of a sentinel. Comment only what is left.
+
+## When to write a documentation comment
+
+- **If the name and signature already say it all, write no comment.** For a type, that means its name and fields.
+- **Exports get one by default.** Their callers live in other files and read only the import and the signature. Leave an export without one only when the rule above clearly holds.
 
 ## Documentation comments: functions
 
-Write one when a caller cannot write a correct call from the name and signature alone. A trivial function gets none.
-
 1. The first sentence says what the caller gets or what the function changes. Start it with a third-person verb: "Returns…", "Looks up… and stores…". Do not start with an imperative ("Return…") or a noun phrase ("One row for each…"). Keep it to one fact.
-2. Then state each fact the signature cannot show. Put two or more facts in a list, one per item. Write a case as `condition: effect`. Look for these facts:
-   - when it returns null, an empty value, or a sentinel value
-   - each error a caller can get, and when
-   - each side effect: a write, a delete, a network call, a changed argument
-   - the order of the results, a unit, a limit
-   - a cost a caller would not expect, such as one query per item
+2. Then list the other facts a caller needs, one bullet each. Each bullet is a fact about the behavior, not a step of the body and not something the signature already says. A surprising null, error, side effect, or cost often qualifies.
+   ```ts
+   // Uses spare potatoes to raise demand across workforces.
+   // - Only potatoes older than a week count as spare.
+   // - A workforce with no stock gets nothing.
+   ```
+   Not: "- Takes the input", "- Catches exceptions", "- Returns the potato count".
 3. Stop. Do not say how the body does its work. The body can change while the contract stays the same.
 
 Then test each sentence after the first. If the name, the parameter names, or the types already say it, delete the sentence. The body does not count, because a caller does not read it.
@@ -32,10 +36,9 @@ A function that keeps more than four facts after the test often does too much. E
 
 ## Documentation comments: types, tables, fields, union members
 
-- A type or table comment opens with what one value or row holds. A noun phrase is correct here: "One claim the internal API returned."
-- Then state each invariant the names and types cannot express: fields that must agree, a sentinel value such as null or -1 and what it means, a unit, a range, a lifecycle rule.
-- A field or union member gets a comment only when no better name can carry its meaning. Put that comment on the member. Do not list the members in the type comment.
-- A type whose name and fields say what it holds gets no comment.
+- Open with what one value or row holds: "One claim the internal API returned." Then add what the names and types can't say: fields that must agree, what null or -1 means, a unit, a range, a lifecycle rule.
+- Comment a field or union member only when a better name can't carry its meaning. Put the comment on the member, not in a list on the type.
+- When the members only make sense together, like the methods of one interface, write one comment on the type instead.
 
 ## Documentation comments: constants
 
@@ -43,20 +46,14 @@ A function that keeps more than four facts after the test often does too much. E
 2. Say the limit the value must stay inside, or the failure it prevents.
 3. If a smaller or larger value has a known cost, say it in one sentence.
 
-How you found the value stays out. Dated measurements, averages from logs, and values you tried go in the commit message.
-
 ## Implementation comments
 
-Write one only when a careful maintainer would otherwise "fix" correct code:
+Write one only when a careful maintainer would otherwise "fix" correct code: a workaround for another system's quirk, an order that matters but isn't obvious, or a regular expression or algorithm no name can explain.
 
-- a workaround for a bug or quirk in another system
-- two statements whose order matters, when the order is not obvious
-- a regular expression or an algorithm that no name can explain
-
-Put it on the line above the statement it explains. Say why the code is there. Say what the code does only for a regular expression or an algorithm.
-If a caller needs the fact to use the function, it goes in the documentation comment.
-An ordinary group of steps gets no comment. Extract a named function.
-When a literal argument has no clear meaning at the call site, use a named constant or an options object. If you cannot, write `/* name= */ value`.
+- Put it on the line above the statement and say why the code is there.
+- Keep it to one line. If it needs several, the code is probably the problem: rename, extract a function, or use a named constant first.
+- A fact a caller needs goes in the documentation comment instead.
+- A literal argument with no clear meaning at the call site becomes a named constant or an options object. If it can't, write `/* name= */ value`.
 
 ## TODO comments
 
@@ -67,7 +64,7 @@ A TODO marks code that is temporary or good enough for now.
 // payer API stops returning 502 on the first call of the day.
 ```
 
-- After `TODO: `, put the issue link, then ` - `, then the change. With no issue, write the change only.
+- After `TODO: `, put the issue link, then `-`, then the change. With no issue, write the change only.
 - Name the event or date that ends it. "Later" and "eventually" are not events.
 - Do not name a person or a team as the context.
 - The text makes sense without the link.
@@ -79,8 +76,8 @@ Write one only when a reader uses several declarations in the file together, and
 ## What stays out of a comment
 
 - History. A comment describes the code as it is, not what it used to do or how it changed: "no longer", "previously", "was changed to", "the new version". Put history in the commit message.
-- Evidence. Dated measurements, benchmark results, and experiments go in the commit message or the PR description.
-- A pointer in place of a rule: "as in the snapshot", "see scripts/evaluate.ts", a ticket, a chat. State the rule. A link may add detail. It never replaces the rule.
+- Evidence. How you found a value, dated measurements, averages from logs, benchmark results, and values you tried go in the commit message or the PR description.
+- External references: a ticket, a chat, a URL, another file, "as in the snapshot". Add one only when the reader really needs it, and state the rule in the comment anyway. A link may add detail. It never replaces the rule.
 - A rule another function owns. Describe the callee's result by its role, such as "the next claims to look up". Do not copy its current filter. The callee's comment owns the filter, and a copy goes false when the filter changes.
 - An answer that lives only in code review. When a reviewer asks why, make the code clearer or add the comment. A reply in the review tool does not reach the next reader.
 
@@ -116,73 +113,93 @@ Write one only when a reader uses several declarations in the file together, and
 
 ## Examples
 
-A noun-phrase opener hides what the function does:
+### A noun phrase hides what the function does
+
+Bad:
 
 ```ts
-// One row for each claim of the answer that the PCN names, or one row that
-// says why there is none.
-function convertClaimStatusResultToClaimRows(result: ClaimStatusResult): ClaimRow[]
+// One line for each item of the order, or one line that says why there is none.
+function buildInvoiceLines(order: Order): InvoiceLine[]
 ```
 
+Good:
+
 ```ts
-// Returns table rows for a lookup result:
-// - "found": one row per claim Availity matched to the PCN.
-// - "unconfirmed": one row per claim that may be the PCN's.
-// - Any other result: one row with empty claim columns. Its outcome and
-//   detail say why no claim came back.
-function convertClaimStatusResultToClaimRows(result: ClaimStatusResult): ClaimRow[]
+// Returns the invoice lines for an order.
+// - Each item gets its own line.
+// - An order with no items gets one line whose note says why.
+function buildInvoiceLines(order: Order): InvoiceLine[]
 ```
 
-Fragments leave a caller with questions. Here, nothing says when the function returns `"invalid"`:
+### Fragments leave the caller guessing
+
+Bad, since nothing says when it returns `"invalid"`:
 
 ```ts
-// Null unless every line reports it. A partial sum would reach the merge as fact.
-function sumAmountsIfFullyReported(amounts: (string | null)[]): number | null | "invalid"
+// Null unless every price is there.
+function sumPricesInCents(prices: (string | null)[]): number | null | "invalid"
 ```
 
+Good:
+
 ```ts
-// Sums the amounts in cents.
-// - Any amount is missing: returns null. It never returns a partial total.
-// - Any amount is not a number: returns "invalid".
-function sumAmountsIfFullyReported(amounts: (string | null)[]): number | null | "invalid"
+// Returns the total of the prices, in cents.
+// - A missing price makes it return null, never a partial total.
+// - A price that is not a number makes it return "invalid".
+function sumPricesInCents(prices: (string | null)[]): number | null | "invalid"
 ```
 
-A constant comment that tells the history of the value:
+### A constant comment that tells its history
+
+Bad:
 
 ```ts
-// Measured on 2026-09-12 logs: a page took 2.1s on average and 9s at most,
-// so 25 pages finish in about 50s. See scripts/measure-pages.ts.
+// Measured on 2026-09-12: a page took 2.1s on average, so 25 pages finish in
+// about 50s. See scripts/measure-pages.ts.
 const PAGES_PER_STEP = 25
 ```
 
+Good:
+
 ```ts
-// Pages one step reads. A step must finish inside the 60s request limit.
+// One step must finish inside the 60s request limit.
 const PAGES_PER_STEP = 25
 ```
 
-An implementation comment that stops a maintainer from "fixing" the code. A caller gets the right date either way, so the documentation comment does not mention it:
+### An implementation comment that stops a "fix"
+
+A caller gets the right date either way, so the documentation comment leaves it out:
 
 ```ts
-// Returns the date in a remittance file's MM/DD/YY or MM/DD/YYYY field.
-export function parseRemitDate(text: string): Date {
+// Returns the date in a MM/DD/YY or MM/DD/YYYY field.
+export function parseShortDate(text: string): Date {
   const [month, day, year] = text.split("/")
-  // Some portal exports write a two-digit year, and Date reads "25" as 1925.
+  // Date reads a two-digit year like "25" as 1925.
   const fullYear = year.length === 2 ? `20${year}` : year
   return new Date(`${fullYear}-${month}-${day}`)
 }
 ```
 
-Union members carry their own comments. `"duplicate"` needs none:
+### Comment only the member whose name leaves something out
+
+Every name here says enough except `"payment-pending"`, which doesn't tell you the order ships by itself:
 
 ```ts
-// Why a payment row was not posted.
-type UnpostedReason =
-  // The row names no claim we sent.
-  | "unknown-claim"
-  // The payer paid more than it billed. A refund usually follows, so the row
-  // waits.
-  | "overpaid"
-  | "duplicate"
+type UnshippedReason =
+  | "bad-address"
+  | "out-of-stock"
+  // Ships automatically when the payment clears. Don't retry the shipment.
+  | "payment-pending"
+```
+
+### Members that only make sense together
+
+```ts
+// Holds the cart between visits. Changes made by one tab show up in the others.
+export interface CartStore {
+  load(): Cart
+  save(cart: Cart): void
+}
 ```
 
 ## Check
